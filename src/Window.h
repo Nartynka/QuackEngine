@@ -23,7 +23,7 @@ namespace Quack
 		Window(unsigned int width, unsigned int height);
 
 		void Init(unsigned int width, unsigned int height);
-		void ProcessInput();
+		static void ProcessInput(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 		unsigned int width;
 		unsigned int height;

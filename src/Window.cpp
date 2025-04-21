@@ -8,6 +8,7 @@
 namespace Quack
 {
 	void ResizeCallback(GLFWwindow* window, int width, int height);
+	void ErrorCallback(int error, const char* description);
 
 	Window::Window(unsigned int width, unsigned int height) : width(width), height(height)
 	{
@@ -23,6 +24,8 @@ namespace Quack
 
 	void Window::Init(unsigned int width, unsigned int height)
 	{
+		glfwSetErrorCallback(ErrorCallback);
+		
 		int result = glfwInit();
 
 		assert(result && "Could not initialize GLFW!");
@@ -38,16 +41,14 @@ namespace Quack
 		glfwMakeContextCurrent(window);
 
 		glfwSetFramebufferSizeCallback(window, ResizeCallback);
-
+		glfwSetKeyCallback(window, ProcessInput);
+		
+		glEnable(GL_DEPTH_TEST);
+		
 		// vsync
 		glfwSwapInterval(1);
-	}
 
-	void ResizeCallback(GLFWwindow* window, int width, int height)
-	{
-		glViewport(0, 0, width, height);
 	}
-
 
 	Window* Window::Create(unsigned int width, unsigned int height)
 	{
@@ -57,10 +58,18 @@ namespace Quack
 	void Window::Update()
 	{
 		glfwPollEvents();
-		ProcessInput();
 		ui->StartFrame();
 		ui->EndFrame();
 		glfwSwapBuffers(window);
+	}
+
+	// @TODO: Should this be here? Maybe it should be moved to separate input class
+	void Window::ProcessInput(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		if (key == GLFW_KEY_F && action == GLFW_PRESS)
+			printf("Paying respects\n");
 	}
 
 	GLFWwindow* Window::GetWindow()
@@ -68,10 +77,14 @@ namespace Quack
 		return window;
 	}
 
-	void Window::ProcessInput()
+	void ResizeCallback(GLFWwindow* window, int width, int height)
 	{
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
+		glViewport(0, 0, width, height);
+	}
+
+	void ErrorCallback(int error, const char* description)
+	{
+		printf("Error: %s\n", description);
 	}
 
 	void Window::Shutdown()
