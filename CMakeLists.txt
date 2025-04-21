@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_SUPPRESS_REGENERATION true)
 
-project(GameEngine)
+project(QuackEngine)
 
 find_package(OpenGL REQUIRED)
 
