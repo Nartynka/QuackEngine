@@ -28,12 +28,12 @@ file(GLOB_RECURSE IMGUI_FILES
 source_group("imgui" FILES ${IMGUI_FILES})
 
 
-set(HEADER_FILES
-	
+file(GLOB_RECURSE HEADER_FILES
+	"${CMAKE_SOURCE_DIR}/src/*.h"
 )
 
-set(SOURCE_FILES
-	"${CMAKE_SOURCE_DIR}/src/main.cpp"
+file(GLOB_RECURSE SOURCE_FILES
+	"${CMAKE_SOURCE_DIR}/src/*.cpp"
 )
 
 include_directories(
