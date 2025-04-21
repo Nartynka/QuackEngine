@@ -1,5 +1,7 @@
 #include "Window.h"
 
+#include "UI.h"
+
 #include <cassert>
 #include <GLFW\glfw3.h>
 
@@ -10,6 +12,13 @@ namespace Quack
 	Window::Window(unsigned int width, unsigned int height) : width(width), height(height)
 	{
 		Init(width, height);
+		ui = std::unique_ptr<UI>(UI::Create(window));
+	}
+
+	Window::~Window()
+	{
+		//ui->Shutdown();
+		Shutdown();
 	}
 
 	void Window::Init(unsigned int width, unsigned int height)
@@ -39,10 +48,6 @@ namespace Quack
 		glViewport(0, 0, width, height);
 	}
 
-	Window::~Window()
-	{
-		Shutdown();
-	}
 
 	Window* Window::Create(unsigned int width, unsigned int height)
 	{
@@ -53,7 +58,8 @@ namespace Quack
 	{
 		glfwPollEvents();
 		ProcessInput();
-
+		ui->StartFrame();
+		ui->EndFrame();
 		glfwSwapBuffers(window);
 	}
 

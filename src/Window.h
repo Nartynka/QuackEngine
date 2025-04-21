@@ -1,20 +1,24 @@
 #pragma once
 
+#include <memory>
+
 struct GLFWwindow;
 
 namespace Quack
 {
+	class UI;
+
 	class Window
 	{
 	public:
 		static Window* Create(unsigned int width, unsigned int height);
+		~Window();
 		
 		void Update();
 
 		GLFWwindow* GetWindow();
 
 		void Shutdown();
-		~Window();
 	private:
 		Window(unsigned int width, unsigned int height);
 
@@ -24,5 +28,7 @@ namespace Quack
 		unsigned int width;
 		unsigned int height;
 		GLFWwindow* window;
+		// ui will be moved to renderer later
+		std::unique_ptr<UI> ui;
 	};
 }
