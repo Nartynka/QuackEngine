@@ -1,11 +1,12 @@
 #pragma once
 
-#include "window.h"
-
 #include <memory>
 
 namespace Quack
 {
+	class Window;
+	class Renderer;
+
 	class Engine
 	{
 	public:
@@ -15,6 +16,7 @@ namespace Quack
 		void Run();
 	private:
 		std::unique_ptr<Window> window;
+		std::unique_ptr<Renderer> renderer;
 		//bool bIsRunning = true;
 	};
 }

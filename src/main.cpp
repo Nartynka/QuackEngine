@@ -1,6 +1,8 @@
 #include <iostream>
+#include <GL\glew.h>
 
 #include "Engine.h"
+#include "Window.h"
 
 // This file is the application that will run on the engine
 // Maybe in the future this will become a separate exe
