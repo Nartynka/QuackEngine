@@ -9,33 +9,8 @@
 
 namespace Quack
 {
-	static float vertices[] = {
-		-0.5f, -0.5f,
-		0.5f, -0.5f,
-		0.5f, 0.5f,
-		-0.5f, 0.5f,
-	};
-
-	static int indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
-
 	Renderer::Renderer()
 	{
-		VertexBufferLayout layout;
-		layout.AddElement(2);
-		
-		vb = new VertexBuffer(vertices, 6 * 2 * sizeof(float));
-		va = new VertexArray();
-		va->AddBuffer(*vb, layout);
-
-		ib = new IndexBuffer(indices, 6);
-		ib->Bind();
-
-		shader = new Shader("res/shaders/Basic.shader");
-		shader->Bind();
-		shader->SetUniform4f("color", 0, 0.5f, 0.5f);
 	}
 
 	Renderer* Renderer::Create()
@@ -45,15 +20,15 @@ namespace Quack
 
 	Renderer::~Renderer()
 	{
-		delete va;
-		delete vb;
-		delete ib;
-		delete shader;
 	}
 
 
-	void Renderer::Draw()
+	void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
 	{
+		shader.Bind();
+		va.Bind();
+		ib.Bind();
+
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}
 

@@ -14,12 +14,12 @@ namespace Quack
 		glDeleteVertexArrays(1, &bufferId);
 	}
 
-	void VertexArray::Bind()
+	void VertexArray::Bind() const
 	{
 		glBindVertexArray(bufferId);
 	}
 
-	void VertexArray::Unbind()
+	void VertexArray::Unbind() const
 	{
 		glBindVertexArray(0);
 	}

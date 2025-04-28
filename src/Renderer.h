@@ -3,7 +3,6 @@
 namespace Quack
 {
 	class VertexArray;
-	class VertexBuffer;
 	class IndexBuffer;
 	class Shader;
 
@@ -12,15 +11,11 @@ namespace Quack
 	private:
 		Renderer();
 
-		VertexArray* va;
-		VertexBuffer* vb;
-		IndexBuffer* ib;
-		Shader* shader;
 	public:
 		~Renderer();
 
 		static Renderer* Create();
-		void Draw();
+		void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
 
 	};
 }

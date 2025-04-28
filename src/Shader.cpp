@@ -2,6 +2,7 @@
 
 #include <GL/glew.h>
 
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <cassert>
@@ -125,12 +126,18 @@ namespace Quack
 		glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
 	}
 
+	void Shader::SetUniform4fv(const char* name, const float* value)
+	{
+		glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, value);
+	}
+
 	int Shader::GetUniformLocation(const char* name)
 	{
+		// Cashing uniforms? 
 		int location = glGetUniformLocation(shaderId, name);
 
 		// unused uniforms get stripped out so this should be changed to if statement in future
-		assert(location != -1 && "Uniform 4f not found!");
+		assert(location != -1 && "Uniform not found!");
 
 		return location;
 	}

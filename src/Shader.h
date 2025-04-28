@@ -21,8 +21,8 @@ namespace Quack
 		void Bind() const;
 		void Unbind() const;
 
-		// later maybe change to glm vec4 or something
 		void SetUniform4f(const char* name, float v0, float v1, float v2, float v3 = 1.0f);
+		void SetUniform4fv(const char* name, const float* value);
 
 	private:
 		ShaderSource ParseShader(const char* filepath);
