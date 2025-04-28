@@ -1,5 +1,4 @@
 #include <iostream>
-#include <GL\glew.h>
 
 #include "Engine.h"
 #include "Window.h"
@@ -13,4 +12,6 @@ int main()
 
 	auto* engine = new Quack::Engine();
 	engine->Run();
+	
+	//delete engine;
 }

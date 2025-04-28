@@ -4,16 +4,29 @@
 
 #include <fstream>
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 
 namespace Quack
 {
-	Shader::Shader()
+	Shader::Shader(const char* filepath)
 	{
+		ShaderSource source = ParseShader(filepath);
+		shaderId = CreateShader(source.vertexShader, source.fragmentShader);
 	}
 
 	Shader::~Shader()
 	{
+		glDeleteShader(shaderId);
+	}
+
+	void Shader::Bind() const
+	{
+		glUseProgram(shaderId);
+	}
+
+	void Shader::Unbind() const
+	{
+		glUseProgram(0);
 	}
 
 	ShaderSource Shader::ParseShader(const char* filepath)
@@ -79,7 +92,7 @@ namespace Quack
 			printf("Failed to compile %s shader\n", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"));
 			printf(message);
 
-			//glDeleteShader(id);
+			glDeleteShader(id);
 			return 0;
 		}
 
@@ -101,10 +114,25 @@ namespace Quack
 		glLinkProgram(program);
 		glValidateProgram(program);
 
-		//glDeleteShader(vs);
-		//glDeleteShader(fs);
+		glDeleteShader(vs);
+		glDeleteShader(fs);
 
 		return program;
+	}
+
+	void Shader::SetUniform4f(const char* name, float v0, float v1, float v2, float v3)
+	{
+		glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
+	}
+
+	int Shader::GetUniformLocation(const char* name)
+	{
+		int location = glGetUniformLocation(shaderId, name);
+
+		// unused uniforms get stripped out so this should be changed to if statement in future
+		assert(location != -1 && "Uniform 4f not found!");
+
+		return location;
 	}
 
 }

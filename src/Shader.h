@@ -13,13 +13,22 @@ namespace Quack
 	class Shader
 	{
 	public:
-		Shader();
+		Shader(const char* filepath);
 		~Shader();
 
-		static ShaderSource ParseShader(const char* filepath);
-		static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
+		unsigned int shaderId;
+
+		void Bind() const;
+		void Unbind() const;
+
+		// later maybe change to glm vec4 or something
+		void SetUniform4f(const char* name, float v0, float v1, float v2, float v3 = 1.0f);
 
 	private:
-		static unsigned int CompileShader(unsigned int type, const std::string& source);
+		ShaderSource ParseShader(const char* filepath);
+		unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
+		unsigned int CompileShader(unsigned int type, const std::string& source);
+
+		int GetUniformLocation(const char* name);
 	};
 }

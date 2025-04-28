@@ -33,9 +33,9 @@ namespace Quack
 		ib = new IndexBuffer(indices, 6);
 		ib->Bind();
 
-		ShaderSource source = Shader::ParseShader("D:/Projects/GameEngine/res/shaders/Basic.shader");
-		shaderId = Shader::CreateShader(source.vertexShader, source.fragmentShader);
-		glUseProgram(shaderId);
+		shader = new Shader("res/shaders/Basic.shader");
+		shader->Bind();
+		shader->SetUniform4f("color", 0, 0.5f, 0.5f);
 	}
 
 	Renderer* Renderer::Create()
@@ -48,6 +48,7 @@ namespace Quack
 		delete va;
 		delete vb;
 		delete ib;
+		delete shader;
 	}
 
 
