@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "Log.h"
 
 #include <GL/glew.h>
 
@@ -90,8 +91,8 @@ namespace Quack
 			char* message = (char*)malloc(length * sizeof(char));
 			glGetShaderInfoLog(id, length, &length, message);
 
-			printf("Failed to compile %s shader\n", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"));
-			printf(message);
+			QUACK_ERROR("Failed to compile {} shader", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"));
+			QUACK_ERROR(message);
 
 			glDeleteShader(id);
 			return 0;
