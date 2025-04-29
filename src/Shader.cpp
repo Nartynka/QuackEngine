@@ -1,12 +1,12 @@
 #include "Shader.h"
 #include "Log.h"
+#include "Assert.h"
 
 #include <GL/glew.h>
 
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <cassert>
 
 namespace Quack
 {
@@ -35,7 +35,7 @@ namespace Quack
 	{
 		std::ifstream file(filepath);
 
-		assert(file.good() && "Error opening file!\n");
+		QUACK_ASSERT(file.good(), "Error opening {}", filepath);
 
 		enum class ShaderType
 		{
@@ -73,7 +73,7 @@ namespace Quack
 		return { ss[0].str(), ss[1].str()};
 	}
 
-	unsigned int  Shader::CompileShader(unsigned int type, const std::string& source)
+	unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 	{
 		unsigned int id = glCreateShader(type);
 		const char* src = source.c_str();
@@ -134,11 +134,12 @@ namespace Quack
 
 	int Shader::GetUniformLocation(const char* name)
 	{
-		// Cashing uniforms? 
+		// Cashing uniforms? Right now if the uniform is not found then every time we try to set it the warning gets printed.
+		// If we set that uniform in our main loop then our console is spammed with the warning
 		int location = glGetUniformLocation(shaderId, name);
 
-		// unused uniforms get stripped out so this should be changed to if statement in future
-		assert(location != -1 && "Uniform not found!");
+		if (location == -1)
+			QUACK_WARN("Uniform {} not found. Unused uniforms are removed from shaders", name);
 
 		return location;
 	}

@@ -17,7 +17,7 @@ namespace Quack
 	};
 }
 
-#define QUACK_LOG(...) ::Quack::Log::GetLogger()->trace(__VA_ARGS__);
-#define QUACK_GOOD(...) ::Quack::Log::GetLogger()->info(__VA_ARGS__);
-#define QUACK_WARN(...) ::Quack::Log::GetLogger()->warn(__VA_ARGS__);
+#define QUACK_LOG(...)   ::Quack::Log::GetLogger()->trace(__VA_ARGS__);
+#define QUACK_GOOD(...)  ::Quack::Log::GetLogger()->info(__VA_ARGS__);
+#define QUACK_WARN(...)  ::Quack::Log::GetLogger()->warn(__VA_ARGS__);
 #define QUACK_ERROR(...) ::Quack::Log::GetLogger()->error(__VA_ARGS__);

@@ -1,12 +1,11 @@
 #include "Window.h"
 
 #include "UI.h"
+#include "Log.h"
+#include "Assert.h"
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
-
-#include <cassert>
-#include "Log.h"
 
 namespace Quack
 {
@@ -34,10 +33,10 @@ namespace Quack
 	void Window::Init(unsigned int width, unsigned int height)
 	{	
 		int glfwResult = glfwInit();
-		assert(glfwResult && "Could not initialize GLFW!");
+		QUACK_ASSERT(glfwResult, "Could not initialize GLFW!");
 
 		window = glfwCreateWindow(width, height, "Quack Engine!", NULL, NULL);
-		assert(window && "Could not create window!");
+		QUACK_ASSERT(window, "Could not create window!");
 
 		glfwMakeContextCurrent(window);
 
@@ -54,7 +53,7 @@ namespace Quack
 
 		// init glew
 		int glewResult = glewInit();
-		assert(!glewResult && "Could not initialize GLEW!");
+		QUACK_ASSERT(!glewResult, "Could not initialize GLEW!");
 	}
 
 	void Window::Update()
