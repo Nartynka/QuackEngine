@@ -6,6 +6,7 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Log.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -20,6 +21,8 @@ namespace Quack
 	{
 		window = std::unique_ptr<Window>(Window::Create(1080, 720));
 		renderer = std::unique_ptr<Renderer>(Renderer::Create());
+		Log::Init();
+		QUACK_LOG("Hello Engine!");
 	}
 
 	Engine::~Engine()

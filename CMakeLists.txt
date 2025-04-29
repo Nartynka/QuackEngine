@@ -19,6 +19,8 @@ set(STB_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/stb_image")
 
 set(IMGUI_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 
+set(SPDLOG_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/spdlog/include")
+set(SPDLOG_LIBRARY "${CMAKE_SOURCE_DIR}/lib/spdlog/Debug/spdlogd.lib")
 
 file(GLOB_RECURSE IMGUI_FILES
 	"${CMAKE_SOURCE_DIR}/lib/imgui/*.h"
@@ -42,6 +44,7 @@ include_directories(
 	${GLM_INCLUDE_PATH}
 	${STB_INCLUDE_PATH}
 	${IMGUI_INCLUDE_PATH}
+	${SPDLOG_INCLUDE_PATH}
 )
 
 add_executable(${PROJECT_NAME}
@@ -55,7 +58,10 @@ target_link_libraries(${PROJECT_NAME}
 	${GLFW_LIBRARY}
 	${GLEW_LIBRARY}
 	${STB_LIBRARY}
+	${SPDLOG_LIBRARY}
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE "/utf-8")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"

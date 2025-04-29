@@ -6,6 +6,7 @@
 #include <GLFW\glfw3.h>
 
 #include <cassert>
+#include "Log.h"
 
 namespace Quack
 {
@@ -70,7 +71,7 @@ namespace Quack
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 		if (key == GLFW_KEY_F && action == GLFW_PRESS)
-			printf("Paying respects\n");
+			QUACK_GOOD("Paying respects")
 	}
 
 	void ResizeCallback(GLFWwindow* window, int width, int height)
@@ -80,7 +81,7 @@ namespace Quack
 
 	void ErrorCallback(int error, const char* description)
 	{
-		printf("Error: %s\n", description);
+		QUACK_ERROR("glfw error: {}", description);
 	}
 
 	void Window::Shutdown()
