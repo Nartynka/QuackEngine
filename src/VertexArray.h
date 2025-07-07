@@ -8,7 +8,7 @@ namespace Quack
 	class VertexArray
 	{
 	private:
-		unsigned int bufferId; // well it's not a buffer, but for convention we will it there :D  
+		unsigned int bufferId; // well it's not a buffer, but for convention we will name it that :D
 	
 	public:
 		VertexArray();

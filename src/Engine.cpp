@@ -14,6 +14,7 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#include "Model.h"
 
 namespace Quack
 {
@@ -30,62 +31,45 @@ namespace Quack
 		window->Shutdown();
 	}
 
-	static float vertices[] = {
-		-0.5f, -0.5f,
-		0.5f, -0.5f,
-		0.5f, 0.5f,
-		-0.5f, 0.5f,
-	};
-
-	static int indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
-
 	void Engine::Run()
 	{
-		VertexArray va;
-		VertexBuffer vb(vertices, 6 * 2 * sizeof(float));
-
-		VertexBufferLayout layout;
-		layout.AddElement(2);
-
-		va.AddBuffer(vb, layout);
-
-		IndexBuffer ib(indices, 6);
-
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
 
-		glm::vec3 pos(-1.0f, 0.0f, -5.0f);
-		glm::vec3 pos2(1.0f, 0.0f, -5.0f);
+		glm::vec3 pos(-30.0f, 0.0f, -100.0f);
+		glm::vec3 pos2(3.0f, 0.0f, -10.0f);
 
 		glm::mat4 model;
 		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
 		
 		shader.SetUniform4fv("view", glm::value_ptr(view));
 		shader.SetUniform4fv("projection", glm::value_ptr(projection));
-		
+
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+		Model* duck = new Model("./res/models/duck.obj");
+		Model* cube = new Model("./res/models/cube.obj");
 
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			shader.SetUniform4f("color", 0.0f, 0.5f, 0.5f);
-			model = glm::translate(glm::mat4(1.0f), pos);
-			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-			shader.SetUniform4fv("model", glm::value_ptr(model));
-
-			renderer->Draw(va, ib, shader);
-
 			shader.SetUniform4f("color", 0.5f, 0.0f, 0.5f);
-			model = glm::translate(glm::mat4(1.0f), pos2);
-			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			model = glm::translate(glm::mat4(1.0f), pos);
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.2f));
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 
-			renderer->Draw(va, ib, shader);
+			duck->Draw(shader);
+
+			shader.SetUniform4f("color", 0.0f, 0.5f, 0.5f);
+			model = glm::translate(glm::mat4(1.0f), pos2);
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.3f));
+			shader.SetUniform4fv("model", glm::value_ptr(model));
+
+			cube->Draw(shader);
+
 
 			window->Update();
 		}

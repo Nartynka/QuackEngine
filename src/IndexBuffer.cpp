@@ -2,11 +2,15 @@
 
 #include <GL\glew.h>
 
+#include "Assert.h"
+
 namespace Quack
 {
 	IndexBuffer::IndexBuffer(const int* data, unsigned int count) 
 		: count(count)
 	{
+		QUACK_ASSERT(!*data, "Data for index buffer is empty or nullptr!!");
+
 		glGenBuffers(1, &bufferId);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferId);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), data, GL_STATIC_DRAW);

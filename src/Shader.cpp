@@ -132,6 +132,11 @@ namespace Quack
 		glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, value);
 	}
 
+	void Shader::SetUniformInt(const char* name, int value)
+	{
+		glUniform1i(GetUniformLocation(name), value);
+	}
+
 	int Shader::GetUniformLocation(const char* name)
 	{
 		// Cashing uniforms? Right now if the uniform is not found then every time we try to set it the warning gets printed.

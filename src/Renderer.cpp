@@ -11,6 +11,7 @@ namespace Quack
 {
 	Renderer::Renderer()
 	{
+		//glEnable(GL_DEPTH_TEST);
 	}
 
 	Renderer* Renderer::Create()
@@ -29,7 +30,7 @@ namespace Quack
 		va.Bind();
 		ib.Bind();
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
 }
