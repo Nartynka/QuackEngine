@@ -19,8 +19,10 @@ set(STB_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/stb_image")
 
 set(IMGUI_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 
-set(ASSIMP_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/assimp")
+set(ASSIMP_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/assimp/include")
 set(ASSIMP_LIBRARY "${CMAKE_SOURCE_DIR}/lib/assimp/Debug/assimp-vc143-mtd.lib")
+set(ZLIB_LIBRARY "${CMAKE_SOURCE_DIR}/lib/assimp/Debug/zlibstaticd.lib")
+
 
 set(SPDLOG_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/spdlog/include")
 set(SPDLOG_LIBRARY "${CMAKE_SOURCE_DIR}/lib/spdlog/Debug/spdlogd.lib")
@@ -30,8 +32,13 @@ file(GLOB_RECURSE IMGUI_FILES
 	"${CMAKE_SOURCE_DIR}/lib/imgui/*.cpp"
 )
 
-source_group("imgui" FILES ${IMGUI_FILES})
+source_group("_imgui" FILES ${IMGUI_FILES})
 
+file(GLOB_RECURSE SHADER_FILES
+	"${CMAKE_SOURCE_DIR}/res/shaders/*.shader"
+)
+
+source_group("_shaders" FILES ${SHADER_FILES})
 
 file(GLOB_RECURSE HEADER_FILES
 	"${CMAKE_SOURCE_DIR}/src/*.h"
@@ -55,6 +62,7 @@ add_executable(${PROJECT_NAME}
 	${HEADER_FILES}
 	${SOURCE_FILES}
 	${IMGUI_FILES}
+	${SHADER_FILES}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -63,6 +71,7 @@ target_link_libraries(${PROJECT_NAME}
 	${GLEW_LIBRARY}
 	${STB_LIBRARY}
 	${ASSIMP_LIBRARY}
+	${ZLIB_LIBRARY}
 	${SPDLOG_LIBRARY}
 )
 
