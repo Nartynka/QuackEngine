@@ -19,6 +19,9 @@ set(STB_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/stb_image")
 
 set(IMGUI_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 
+set(ASSIMP_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/assimp")
+set(ASSIMP_LIBRARY "${CMAKE_SOURCE_DIR}/lib/assimp/Debug/assimp-vc143-mtd.lib")
+
 set(SPDLOG_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/spdlog/include")
 set(SPDLOG_LIBRARY "${CMAKE_SOURCE_DIR}/lib/spdlog/Debug/spdlogd.lib")
 
@@ -44,6 +47,7 @@ include_directories(
 	${GLM_INCLUDE_PATH}
 	${STB_INCLUDE_PATH}
 	${IMGUI_INCLUDE_PATH}
+	${ASSIMP_INCLUDE_PATH}
 	${SPDLOG_INCLUDE_PATH}
 )
 
@@ -58,6 +62,7 @@ target_link_libraries(${PROJECT_NAME}
 	${GLFW_LIBRARY}
 	${GLEW_LIBRARY}
 	${STB_LIBRARY}
+	${ASSIMP_LIBRARY}
 	${SPDLOG_LIBRARY}
 )
 
