@@ -19,11 +19,6 @@ namespace Quack
 		ImGui_ImplOpenGL3_Init();
 	}
 
-	UI* UI::Create(GLFWwindow* window)
-	{
-		return new UI(window);
-	}
-
 	UI::~UI()
 	{
 		Shutdown();

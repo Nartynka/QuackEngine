@@ -8,14 +8,10 @@ namespace Quack
 
 	class Renderer
 	{
-	private:
-		Renderer();
-
 	public:
+		Renderer();
 		~Renderer();
 
-		static Renderer* Create();
 		void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
-
 	};
 }

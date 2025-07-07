@@ -14,11 +14,6 @@ namespace Quack
 		//glEnable(GL_DEPTH_TEST);
 	}
 
-	Renderer* Renderer::Create()
-	{
-		return new Renderer();
-	}
-
 	Renderer::~Renderer()
 	{
 	}

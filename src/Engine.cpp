@@ -21,8 +21,8 @@ namespace Quack
 	Engine::Engine()
 	{
 		Log::Init();
-		window = std::unique_ptr<Window>(Window::Create(1080, 720));
-		renderer = std::unique_ptr<Renderer>(Renderer::Create());
+		window = std::make_unique<Window>(1080, 720);
+		renderer = std::make_unique<Renderer>();
 		QUACK_LOG("Hello Engine!");
 	}
 
