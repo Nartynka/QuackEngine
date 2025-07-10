@@ -36,6 +36,8 @@ in vec3 debugColor;
 
 void main()
 {
-	color = texture(sampler, ourTexCoord);
+	vec4 texColor = texture(sampler, ourTexCoord);
+	color = mix(texColor.rgba, ourColor, ourColor.a);
+	//color = texture(sampler, ourTexCoord) * ourColor;
 	//color = vec4(debugColor, 1.0);
 };

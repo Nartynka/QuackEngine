@@ -46,9 +46,10 @@ namespace Quack
 
 		// @TODO: multiple textures for mesh
 		glActiveTexture(GL_TEXTURE0);
-		if(!textures.empty())
+		if (!textures.empty())
 			glBindTexture(GL_TEXTURE_2D, textures[0].id);
-
+		else
+			shader.SetUniform4f("inColor", 0.5, 0.0, 0.5);
 		// @TODO: think about who should make the draw call ?
 		vao->Bind();
 		glDrawElements(GL_TRIANGLES, ibo->GetCount(), GL_UNSIGNED_INT, nullptr);
