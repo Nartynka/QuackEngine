@@ -4,10 +4,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-
-//#include "IndexBuffer.h"
-//#include "VertexBuffer.h"
-//#include "VertexArray.h"
+#include "Texture.h"
 
 namespace Quack
 {
@@ -19,15 +16,7 @@ namespace Quack
 	struct Vertex
 	{
 		glm::vec3 position;
-		//glm::vec3 normal;
-		//glm::vec2 texCoords;
-	};
-
-	struct Texture
-	{
-		unsigned int id;
-		std::string type; // in future maybe change it to enum or smth
-		std::string path; // In future. store path to compare if the texture wasn't already loaded. 
+		glm::vec2 texCoords;
 	};
 
 	class Mesh
@@ -55,7 +44,6 @@ namespace Quack
 		std::vector<int> indices;
 		std::vector<Texture> textures;
 	
-
 		void SetupMesh();
 	};
 }

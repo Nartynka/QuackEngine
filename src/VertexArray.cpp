@@ -29,10 +29,11 @@ namespace Quack
 		Bind();
 		vb.Bind();
 		const auto& elements = layout.GetElements();
-		for (const auto& e : elements)
+
+		for (int i = 0; i < elements.size(); i++)
 		{
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, e.count, GL_FLOAT, GL_FALSE, layout.GetStride(), e.offset);
+			glEnableVertexAttribArray(i);
+			glVertexAttribPointer(i, elements[i].count, GL_FLOAT, GL_FALSE, layout.GetStride(), elements[i].offset);
 		}
 	}
 }

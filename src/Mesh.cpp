@@ -31,8 +31,7 @@ namespace Quack
 
 		VertexBufferLayout layout;
 		layout.AddElement(3); // Position
-		//layout.AddElement(3); // Normals
-		//layout.AddElement(2); // Texture coords
+		layout.AddElement(2); // Texture coords
 
 		vao->AddBuffer(*vbo, layout);
 	}
@@ -45,29 +44,14 @@ namespace Quack
 			return;
 		}
 
-		unsigned int diffuseNr = 1;
-		unsigned int specularNr = 1;
-		//for (int i = 0; i < textures.size(); i++)
-		//{
-		//	glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-		//	// retrieve texture number (the N in diffuse_textureN)
-		//	std::string number;
-		//	std::string name = textures[i].type;
-		//	if (name == "texture_diffuse")
-		//		number = std::to_string(diffuseNr++);
-		//	else if (name == "texture_specular")
-		//		number = std::to_string(specularNr++);
+		// @TODO: multiple textures for mesh
+		glActiveTexture(GL_TEXTURE0);
+		if(!textures.empty())
+			glBindTexture(GL_TEXTURE_2D, textures[0].id);
 
-		//	shader.SetUniformInt(("material." + name + number).c_str(), i);
-		//	glBindTexture(GL_TEXTURE_2D, textures[i].id);
-		//}
-		//glActiveTexture(GL_TEXTURE0);
-
-		// draw mesh. In future - the renderer class should make every draw call ?
+		// @TODO: think about who should make the draw call ?
 		vao->Bind();
-
 		glDrawElements(GL_TRIANGLES, ibo->GetCount(), GL_UNSIGNED_INT, nullptr);
-		//vao->Unbind();
 	}
 
 }

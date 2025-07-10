@@ -4,6 +4,7 @@
 #include <assimp/postprocess.h>
 
 #include "Log.h"
+#include "Texture.h"
 
 namespace Quack
 {
@@ -12,9 +13,7 @@ namespace Quack
 		loadModel(path);
 	}
 
-	Model::~Model()
-	{
-	}
+	Model::~Model() = default;
 
 	void Model::Draw(Shader& shader)
 	{
@@ -25,14 +24,14 @@ namespace Quack
 	void Model::loadModel(std::string path)
 	{
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
 			QUACK_ERROR("ERROR ASSIMP: {}", importer.GetErrorString());
 			return;
 		}
-		directory = path.substr(0, path.find_last_of('/'));
+		directory = path.substr(0, path.find_last_of('/')+1);
 		
 		processNode(scene->mRootNode, scene);
 	}
@@ -59,17 +58,22 @@ namespace Quack
 		std::vector<int> indices;
 		std::vector <Texture> textures;
 
-		// process vertex positions, normals and texture coordinates
+		// process vertex positions and texture coordinates
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
 			Vertex vertex;
-			vertex.position = { mesh->mVertices[i].x,  mesh->mVertices[i].y ,  mesh->mVertices[i].z };
-			//vertex.normal = { mesh->mNormals[i].x,  mesh->mNormals[i].y ,  mesh->mNormals[i].z };
-			
-			//if (mesh->mTextureCoords[0])
-			//	vertex.texCoords = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
-			//else
-			//	vertex.texCoords = { 0.f, 0.f };
+			vertex.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+
+			if (mesh->HasTextureCoords(0))
+			{
+				//QUACK_GOOD("Texture coord found! u: {}, v: {}", mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+				vertex.texCoords = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+			}
+			else
+			{
+				QUACK_WARN("No texture coord found");
+				vertex.texCoords = { 0.0f, 0.0f };
+			}
 
 			vertices.push_back(vertex);
 		}
@@ -86,14 +90,11 @@ namespace Quack
 		// process material
 		if (mesh->mMaterialIndex >= 0)
 		{
-			// for now only the first material
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
+			// @TODO: Other textures, normals etc.
 			std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-			std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 		}
 
 		return { vertices, indices, textures };
@@ -105,13 +106,14 @@ namespace Quack
 
 		for (unsigned int i = 0; i < material->GetTextureCount(type); i++)
 		{
-			aiString path;
-			material->GetTexture(type, i, &path);
+			aiString fileName;
+			material->GetTexture(type, i, &fileName);
 
 			Texture texture;
-			texture.id = i; // @TODO: load texture here form file. Concatenate the path and the directory
+			std::string path = directory + fileName.C_Str();
+			texture.id = Texture::LoadFromFile(path.c_str());
 			texture.type = typeName;
-			texture.path = path.C_Str();
+			texture.path = path;
 			textures.push_back(texture);
 		}
 

@@ -144,7 +144,7 @@ namespace Quack
 		int location = glGetUniformLocation(shaderId, name);
 
 		if (location == -1)
-			QUACK_WARN("Uniform {} not found. Unused uniforms are removed from shaders", name);
+			QUACK_ERROR("Uniform {} not found. Unused uniforms are removed from shaders", name);
 
 		return location;
 	}
