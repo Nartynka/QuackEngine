@@ -15,7 +15,7 @@ namespace Quack
 		Model(const char* path);
 		~Model();
 
-		void Draw(Shader& shader);
+		void Draw(Shader& shader) const;
 		std::vector<Mesh> meshes;
 	private:
 		std::string directory; // for loading texture

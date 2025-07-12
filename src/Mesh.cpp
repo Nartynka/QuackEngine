@@ -50,6 +50,7 @@ namespace Quack
 			glBindTexture(GL_TEXTURE_2D, textures[0].id);
 		else
 			shader.SetUniform4f("inColor", 0.5, 0.0, 0.5);
+
 		// @TODO: think about who should make the draw call ?
 		vao->Bind();
 		glDrawElements(GL_TRIANGLES, ibo->GetCount(), GL_UNSIGNED_INT, nullptr);

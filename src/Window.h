@@ -1,6 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <functional>
+
+#include "Event.h"
 
 struct GLFWwindow;
 
@@ -10,6 +13,7 @@ namespace Quack
 
 	class Window
 	{
+		using EventCallback = std::function<void(Event&)>;
 	public:
 		Window(unsigned int width, unsigned int height);
 		~Window();
@@ -20,8 +24,9 @@ namespace Quack
 
 		void Shutdown();
 		void Init(unsigned int width, unsigned int height);
+
+		void SetCallback(const EventCallback& callback) { data.callback = callback; }
 	private:
-		static void ProcessInput(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 		GLFWwindow* window;
 
@@ -29,5 +34,12 @@ namespace Quack
 		unsigned int height;
 
 		std::unique_ptr<UI> ui;
+
+		struct WindowData
+		{
+			EventCallback callback;
+		};
+
+		WindowData data;
 	};
 }

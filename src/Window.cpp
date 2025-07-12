@@ -1,17 +1,16 @@
 #include "Window.h"
 
-#include "UI.h"
-#include "Log.h"
-#include "Assert.h"
-
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 
+#include "UI.h"
+#include "Log.h"
+#include "Assert.h"
+#include "KeyEvent.h"
+#include "MouseEvent.h"
+
 namespace Quack
 {
-	void ResizeCallback(GLFWwindow* window, int width, int height);
-	void ErrorCallback(int error, const char* description);
-
 	Window::Window(unsigned int width, unsigned int height) 
 		: width(width), height(height)
 	{
@@ -23,6 +22,11 @@ namespace Quack
 	{
 		//ui->Shutdown();
 		Shutdown();
+	}
+
+	static void ErrorCallback(int error, const char* description)
+	{
+		QUACK_ERROR("glfw error ({}): {}", error, description);
 	}
 
 	void Window::Init(unsigned int width, unsigned int height)
@@ -40,8 +44,43 @@ namespace Quack
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 		glfwSetErrorCallback(ErrorCallback);
-		glfwSetFramebufferSizeCallback(window, ResizeCallback);
-		glfwSetKeyCallback(window, ProcessInput);
+
+		glfwSetWindowUserPointer(window, &data);
+
+		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
+		{
+			glViewport(0, 0, width, height);
+		});
+
+		glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+			
+			if(action == GLFW_PRESS)
+			{
+				KeyPressedEvent event(key);
+				data->callback(event);
+			}
+		});
+
+		glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+			
+			if (action == GLFW_PRESS) 
+			{
+				if (button == GLFW_MOUSE_BUTTON_LEFT)
+				{
+					MouseLeftButtonPressedEvent event;
+					data->callback(event);
+				}
+				else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+				{
+					MouseRightButtonPressedEvent event;
+					data->callback(event);
+				}
+			}
+		});
 		
 		// vsync
 		glfwSwapInterval(1);
@@ -55,27 +94,8 @@ namespace Quack
 	{	
 		ui->StartFrame();
 		ui->EndFrame();
-		glfwSwapBuffers(window);
 		glfwPollEvents();
-	}
-
-	// @TODO: Should this be here? Maybe it should be moved to separate input class
-	void Window::ProcessInput(GLFWwindow* window, int key, int scancode, int action, int mods)
-	{
-		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-		if (key == GLFW_KEY_F && action == GLFW_PRESS)
-			QUACK_GOOD("Paying respects")
-	}
-
-	void ResizeCallback(GLFWwindow* window, int width, int height)
-	{
-		glViewport(0, 0, width, height);
-	}
-
-	void ErrorCallback(int error, const char* description)
-	{
-		QUACK_ERROR("glfw error: {}", description);
+		glfwSwapBuffers(window);
 	}
 
 	void Window::Shutdown()

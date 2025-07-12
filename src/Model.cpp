@@ -15,7 +15,7 @@ namespace Quack
 
 	Model::~Model() = default;
 
-	void Model::Draw(Shader& shader)
+	void Model::Draw(Shader& shader) const
 	{
 		for (auto& mesh : meshes)
 			mesh.Draw(shader);
