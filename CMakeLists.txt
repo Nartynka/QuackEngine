@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_SUPPRESS_REGENERATION true)
 
 project(QuackEngine)
 
 find_package(OpenGL REQUIRED)
+
 
 set(GLFW_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/GLFW/include")
 set(GLFW_LIBRARY "${CMAKE_SOURCE_DIR}/lib/GLFW/lib-vc2022/glfw3.lib")
@@ -19,13 +20,15 @@ set(STB_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/stb_image")
 
 set(IMGUI_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/imgui")
 
+set(ENTT_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/entt")
+
 set(ASSIMP_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/assimp/include")
 set(ASSIMP_LIBRARY "${CMAKE_SOURCE_DIR}/lib/assimp/Debug/assimp-vc143-mtd.lib")
 set(ZLIB_LIBRARY "${CMAKE_SOURCE_DIR}/lib/assimp/Debug/zlibstaticd.lib")
 
-
 set(SPDLOG_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/spdlog/include")
 set(SPDLOG_LIBRARY "${CMAKE_SOURCE_DIR}/lib/spdlog/Debug/spdlogd.lib")
+
 
 file(GLOB_RECURSE IMGUI_FILES
 	"${CMAKE_SOURCE_DIR}/lib/imgui/*.h"
@@ -33,6 +36,8 @@ file(GLOB_RECURSE IMGUI_FILES
 )
 
 source_group("_imgui" FILES ${IMGUI_FILES})
+
+source_group("_entt" FILES "${CMAKE_SOURCE_DIR}/lib/entt/entt.hpp")
 
 file(GLOB_RECURSE SHADER_FILES
 	"${CMAKE_SOURCE_DIR}/res/shaders/*.shader"
@@ -56,6 +61,7 @@ include_directories(
 	${IMGUI_INCLUDE_PATH}
 	${ASSIMP_INCLUDE_PATH}
 	${SPDLOG_INCLUDE_PATH}
+	${ENTT_INCLUDE_PATH}
 )
 
 add_executable(${PROJECT_NAME}
@@ -63,6 +69,7 @@ add_executable(${PROJECT_NAME}
 	${SOURCE_FILES}
 	${IMGUI_FILES}
 	${SHADER_FILES}
+	"${CMAKE_SOURCE_DIR}/lib/entt/entt.hpp"
 )
 
 target_link_libraries(${PROJECT_NAME}

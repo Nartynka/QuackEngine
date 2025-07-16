@@ -6,6 +6,7 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+
 #include <functional>
 
 #include "Window.h"
@@ -45,21 +46,42 @@ namespace Quack
 		dispatcher.Dispatch<MouseRightButtonPressedEvent>([](const MouseRightButtonPressedEvent& e) {QUACK_GOOD("Right mouse button pressed!!"); });
 	}
 
-	static std::vector<Model*> models;
+	struct TransformComponent
+	{
+		glm::mat4 transform;
+
+		TransformComponent(glm::mat4 transform)
+			: transform(transform) {}
+
+		operator glm::mat4()& { return transform; }
+	};
+
+	struct PhysicsComponent
+	{
+		glm::vec3 velocity;
+		glm::vec3 acceleration = glm::vec3(0.0f);
+
+		float mass;
+
+		PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass)
+			: velocity(velocity), acceleration(acceleration), mass(mass) {}
+	};
 
 	void Engine::OnMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
 		QUACK_GOOD("Left mouse button pressed!!");
-		models.push_back(models[0]);
+
+		static glm::vec3 pos(-13.0f, 0.0f, -20.0f);
+		pos.x += 3.f;
+
+		entt::entity entity	= registry.create();
+		registry.emplace<TransformComponent>(entity, glm::translate(glm::mat4(1.0f), pos));
 	}
 
 	void Engine::Run()
 	{
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
-
-		//glm::vec3 pos(0.0f, 0.0f, -20.0f);
-		//glm::vec3 pos2(3.0f, 0.0f, -20.0f);
 
 		glm::mat4 model;
 		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -70,26 +92,21 @@ namespace Quack
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-		//Model* duck = new Model("./res/models/duck.fbx");
-		//Model* cube = new Model("./res/models/cube.fbx");
-
 		Model* duck = new Model("res/models/duck.fbx");
-		models.push_back(duck);
-
 
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glm::vec3 pos(-13.0f, 0.0f, -20.0f);
-
-			for (auto* m : models)
+			auto view = registry.view<TransformComponent>();
+			for (auto entity : view)
 			{
-				model = glm::translate(glm::mat4(1.0f), pos);
+				TransformComponent& transform = registry.get<TransformComponent>(entity);
+				model = transform;
 				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 				shader.SetUniform4fv("model", glm::value_ptr(model));
-				m->Draw(shader);
-				pos.x += 3;
+
+				duck->Draw(shader);
 			}
 			window->Update();
 		}

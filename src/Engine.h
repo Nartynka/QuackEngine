@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <entt.hpp>
 
 #include "Event.h"
 #include "MouseEvent.h"
@@ -24,6 +25,8 @@ namespace Quack
 	private:
 		std::unique_ptr<Window> window;
 		std::unique_ptr<Renderer> renderer;
+
+		entt::registry registry;
 		//bool bIsRunning = true;
 	};
 }
