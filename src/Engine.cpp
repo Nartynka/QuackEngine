@@ -20,15 +20,23 @@
 #include "KeyEvent.h"
 #include "MouseEvent.h"
 
+#include "Scene.h"
+#include "Entity.h"
+#include "Components.h"
+
 namespace Quack
 {
 	Engine::Engine()
 	{
 		Log::Init();
+
 		window = std::make_unique<Window>(1080, 720);
-		// bind or lambda that is the question :b
-		window->SetCallback(std::bind(&Engine::OnEvent, this, std::placeholders::_1));
+		window->SetCallback(std::bind(&Engine::OnEvent, this, std::placeholders::_1)); // bind or lambda that is the question :b
+
 		renderer = std::make_unique<Renderer>();
+
+		scene = new Scene();
+
 		QUACK_LOG("Hello Engine!");
 	}
 
@@ -46,27 +54,6 @@ namespace Quack
 		dispatcher.Dispatch<MouseRightButtonPressedEvent>([](const MouseRightButtonPressedEvent& e) {QUACK_GOOD("Right mouse button pressed!!"); });
 	}
 
-	struct TransformComponent
-	{
-		glm::mat4 transform;
-
-		TransformComponent(glm::mat4 transform)
-			: transform(transform) {}
-
-		operator glm::mat4()& { return transform; }
-	};
-
-	struct PhysicsComponent
-	{
-		glm::vec3 velocity;
-		glm::vec3 acceleration = glm::vec3(0.0f);
-
-		float mass;
-
-		PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass)
-			: velocity(velocity), acceleration(acceleration), mass(mass) {}
-	};
-
 	void Engine::OnMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
 		QUACK_GOOD("Left mouse button pressed!!");
@@ -74,8 +61,8 @@ namespace Quack
 		static glm::vec3 pos(-13.0f, 0.0f, -20.0f);
 		pos.x += 3.f;
 
-		entt::entity entity	= registry.create();
-		registry.emplace<TransformComponent>(entity, glm::translate(glm::mat4(1.0f), pos));
+		Entity entity = scene->CreateEntity();
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), pos));
 	}
 
 	void Engine::Run()
@@ -94,6 +81,7 @@ namespace Quack
 
 		Model* duck = new Model("res/models/duck.fbx");
 
+		auto& registry = scene->GetRegistry(); // @TODO: remove this
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

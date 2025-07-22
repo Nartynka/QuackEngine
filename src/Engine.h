@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <entt.hpp>
 
 #include "Event.h"
 #include "MouseEvent.h"
@@ -10,6 +9,7 @@ namespace Quack
 {
 	class Window;
 	class Renderer;
+	class Scene;
 
 	class Engine
 	{
@@ -25,8 +25,8 @@ namespace Quack
 	private:
 		std::unique_ptr<Window> window;
 		std::unique_ptr<Renderer> renderer;
+		Scene* scene; // @TODO: Maybe change to a smart ptr
 
-		entt::registry registry;
 		//bool bIsRunning = true;
 	};
 }
