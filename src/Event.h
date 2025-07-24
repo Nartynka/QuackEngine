@@ -41,7 +41,7 @@ namespace Quack
 		{
 			if (event.GetEventType() == T::GetStaticEventType())
 			{
-				QUACK_LOG("Event!!! {}", event.GetName());
+				//QUACK_LOG("Event!!! {}", event.GetName());
 				callback((const T&)event);
 			}
 		}

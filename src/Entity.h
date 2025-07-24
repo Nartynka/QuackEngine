@@ -17,7 +17,7 @@ namespace Quack
 		~Entity() = default;
 
 		template<typename T, typename U>
-		T& AddComponent(U& arg)
+		T& AddComponent(U arg)
 		{
 			QUACK_ASSERT(!HasComponent<T>(), "Entity already has this component!");
 			return scene->GetRegistry().emplace<T>(handle, arg);

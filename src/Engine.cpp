@@ -56,17 +56,23 @@ namespace Quack
 
 	void Engine::OnMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
-		QUACK_GOOD("Left mouse button pressed!!");
-
-		static glm::vec3 pos(-13.0f, 0.0f, -20.0f);
-		pos.x += 3.f;
-
+		//QUACK_GOOD("Left mouse button pressed!!");
+		double x, y;
+		glfwGetCursorPos(window->GetWindow(), &x, &y);
 		Entity entity = scene->CreateEntity();
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), pos));
+
+		// convert mouse position to NDC
+		x = (x / (1080 / 2)) - 1;
+		y = -(y / (720 / 2)) + 1;
+
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x*10, y*10, -20.f)));
+		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -9.8f, 0.f));
 	}
 
 	void Engine::Run()
 	{
+		const float DESIRED_DT = 1 / 60.f; // 60 FPS
+
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
 
@@ -81,17 +87,35 @@ namespace Quack
 
 		Model* duck = new Model("res/models/duck.fbx");
 
-		auto& registry = scene->GetRegistry(); // @TODO: remove this
+		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
+		float lastTime = 0.f;
+
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
+			float time = (float)glfwGetTime(); // time since glfw initialization in seconds
+			float dt = time - lastTime;
+			lastTime = (float)glfwGetTime();
+
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			auto view = registry.view<TransformComponent>();
-			for (auto entity : view)
+			// PhysicsComponent will not be modified so const here will resolve in const reference later
+			auto moveView = registry.view<const PhysicsComponent, TransformComponent>();
+
+			// "Move system?"
+			// entity is just a uint32_t so no need for a const reference
+			for (auto entity : moveView)
 			{
-				TransformComponent& transform = registry.get<TransformComponent>(entity);
-				model = transform;
-				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				auto& [physics, transform] = moveView.get(entity);
+				transform = glm::translate(transform.transform, physics.velocity * dt);
+			}
+
+
+			// "render system?"
+			auto view2 = registry.view<TransformComponent>();
+			for (auto entity : view2)
+			{
+				TransformComponent& transform = view2.get<TransformComponent>(entity);
+				model = glm::rotate(transform.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 				shader.SetUniform4fv("model", glm::value_ptr(model));
 
 				duck->Draw(shader);

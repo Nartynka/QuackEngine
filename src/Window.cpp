@@ -83,7 +83,7 @@ namespace Quack
 		});
 		
 		// vsync
-		glfwSwapInterval(1);
+		glfwSwapInterval(true);
 
 		// init glew
 		int glewResult = glewInit();

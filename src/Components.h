@@ -24,5 +24,7 @@ namespace Quack
 
 		PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass)
 			: velocity(velocity), acceleration(acceleration), mass(mass) {}
+		PhysicsComponent(glm::vec3 velocity)
+			: velocity(velocity), acceleration(0), mass(0) {}
 	};
 }
