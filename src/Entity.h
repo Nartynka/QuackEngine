@@ -16,11 +16,11 @@ namespace Quack
 			: handle(handle), scene(scene) {}
 		~Entity() = default;
 
-		template<typename T, typename U>
-		T& AddComponent(U arg)
+		template<typename T, typename... Args>
+		T& AddComponent(Args&&... args)
 		{
 			QUACK_ASSERT(!HasComponent<T>(), "Entity already has this component!");
-			return scene->GetRegistry().emplace<T>(handle, arg);
+			return scene->GetRegistry().emplace<T>(handle, std::forward<Args>(args)...);
 		}
 
 		template<typename T>

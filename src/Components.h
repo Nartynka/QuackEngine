@@ -2,6 +2,9 @@
 
 #include <glm.hpp>
 
+#include "Shapes.h"
+#include "Model.h"
+
 namespace Quack
 {
 	struct TransformComponent
@@ -11,8 +14,6 @@ namespace Quack
 		TransformComponent() = default;
 		TransformComponent(glm::mat4 transform)
 			: transform(transform) {}
-
-		operator glm::mat4()& { return transform; }
 	};
 
 	struct PhysicsComponent
@@ -22,9 +23,34 @@ namespace Quack
 
 		float mass;
 
-		PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass)
+		PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass = 0.f)
 			: velocity(velocity), acceleration(acceleration), mass(mass) {}
 		PhysicsComponent(glm::vec3 velocity)
 			: velocity(velocity), acceleration(0), mass(0) {}
+	};
+
+	struct ShapeComponent
+	{
+		Shape* shape;
+		ShapeComponent(Shape* shape)
+			: shape(shape) {}
+
+		~ShapeComponent()
+		{
+			delete shape;
+		}
+	};
+
+	struct ModelComponent
+	{
+		Model* model;
+		ModelComponent(Model* model)
+			: model(model) {}
+
+		~ModelComponent()
+		{
+			delete model;
+		}
+
 	};
 }

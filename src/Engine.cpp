@@ -23,6 +23,7 @@
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
+#include "Shapes.h"
 
 namespace Quack
 {
@@ -50,13 +51,13 @@ namespace Quack
 		EventDispatcher dispatcher(event);
 
 		dispatcher.Dispatch<KeyPressedEvent>([](const KeyPressedEvent& e) {QUACK_GOOD("Key Pressed!!! key code: {}", e.keyCode); });
-		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnMouseButton, this, std::placeholders::_1));
-		dispatcher.Dispatch<MouseRightButtonPressedEvent>([](const MouseRightButtonPressedEvent& e) {QUACK_GOOD("Right mouse button pressed!!"); });
+		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
+		dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
 	}
 
-	void Engine::OnMouseButton(const MouseLeftButtonPressedEvent& e)
+	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
-		//QUACK_GOOD("Left mouse button pressed!!");
+		QUACK_GOOD("Left mouse button pressed!!");
 		double x, y;
 		glfwGetCursorPos(window->GetWindow(), &x, &y);
 		Entity entity = scene->CreateEntity();
@@ -65,8 +66,27 @@ namespace Quack
 		x = (x / (1080 / 2)) - 1;
 		y = -(y / (720 / 2)) + 1;
 
+		static Model* duck = new Model("res/models/duck.fbx");
+
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x*10, y*10, -20.f)));
-		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -9.8f, 0.f));
+		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
+		entity.AddComponent<ModelComponent>(duck);
+	}
+
+	void Engine::OnRightMouseButton(const MouseRightButtonPressedEvent& e)
+	{
+		QUACK_GOOD("Right mouse button pressed!!");
+		double x, y;
+		glfwGetCursorPos(window->GetWindow(), &x, &y);
+		Entity entity = scene->CreateEntity();
+
+		// convert mouse position to NDC
+		x = (x / (1080 / 2)) - 1;
+		y = -(y / (720 / 2)) + 1;
+
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x * 10, y * 10, -20.f)));
+		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
+		entity.AddComponent<ShapeComponent>(new Cube());
 	}
 
 	void Engine::Run()
@@ -85,8 +105,6 @@ namespace Quack
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-		Model* duck = new Model("res/models/duck.fbx");
-
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
 
@@ -98,28 +116,45 @@ namespace Quack
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			// PhysicsComponent will not be modified so const here will resolve in const reference later
-			auto moveView = registry.view<const PhysicsComponent, TransformComponent>();
+			auto moveView = registry.view<PhysicsComponent, TransformComponent>();
 
 			// "Move system?"
 			// entity is just a uint32_t so no need for a const reference
 			for (auto entity : moveView)
 			{
 				auto& [physics, transform] = moveView.get(entity);
+				physics.velocity += physics.acceleration * dt;
 				transform = glm::translate(transform.transform, physics.velocity * dt);
 			}
 
 
 			// "render system?"
-			auto view2 = registry.view<TransformComponent>();
+			auto view2 = registry.view<ModelComponent, TransformComponent>();
 			for (auto entity : view2)
 			{
-				TransformComponent& transform = view2.get<TransformComponent>(entity);
+				TransformComponent& transformComp = view2.get<TransformComponent>(entity);
+				ModelComponent& modelComp = view2.get<ModelComponent>(entity);
+				
+				model = glm::rotate(transformComp.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				shader.SetUniform4fv("model", glm::value_ptr(model));
+				shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.f);
+				
+				modelComp.model->Draw(shader);
+			}
+
+			auto view3 = registry.view<ShapeComponent, TransformComponent>();
+			for (auto entity : view3)
+			{
+				TransformComponent& transform = view3.get<TransformComponent>(entity);
 				model = glm::rotate(transform.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 				shader.SetUniform4fv("model", glm::value_ptr(model));
 
-				duck->Draw(shader);
+				ShapeComponent& shape = view3.get<ShapeComponent>(entity);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
+				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
 			}
+
 			window->Update();
 		}
 	}
