@@ -62,11 +62,45 @@ namespace Quack
 				0.5f, -0.5f,  0.5f,  // 1: bottom-right-front
 				0.5f,  0.5f,  0.5f,  // 2: top-right-front
 			   -0.5f,  0.5f,  0.5f,  // 3: top-left-front
-			   // Back face
-			  -0.5f, -0.5f, -0.5f,  // 4: bottom-left-back
-			   0.5f, -0.5f, -0.5f,  // 5: bottom-right-back
-			   0.5f,  0.5f, -0.5f,  // 6: top-right-back
-			  -0.5f,  0.5f, -0.5f   // 7: top-left-back
+				// Back face
+			   -0.5f, -0.5f, -0.5f,  // 4: bottom-left-back
+				0.5f, -0.5f, -0.5f,  // 5: bottom-right-back
+				0.5f,  0.5f, -0.5f,  // 6: top-right-back
+			   -0.5f,  0.5f, -0.5f   // 7: top-left-back
+			};
+
+			indices = {
+				0, 1, 2,  2, 3, 0, // Front face
+				4, 6, 5,  6, 4, 7, // Back face
+				4, 0, 3,  3, 7, 4, // Left face
+				1, 5, 6,  6, 2, 1, // Right face
+				4, 5, 1,  1, 0, 4, // Bottom face
+				3, 2, 6,  6, 7, 3  // Top face
+			};
+		}
+	};
+
+	class Rectangle : public Shape
+	{
+	public:
+		Rectangle()
+		{
+			Initialize();
+		}
+
+		void GenerateGeometry() override
+		{
+			vertices = {
+				// Front face
+			   -3.5f, -0.2f,  4.5f,  // 0: bottom-left-front
+				3.5f, -0.2f,  4.5f,  // 1: bottom-right-front
+				3.5f,  0.2f,  4.5f,  // 2: top-right-front
+			   -3.5f,  0.2f,  4.5f,  // 3: top-left-front
+				// Back face
+			   -3.5f, -0.2f, -4.5f,  // 4: bottom-left-back
+				3.5f, -0.2f, -4.5f,  // 5: bottom-right-back
+				3.5f,  0.2f, -4.5f,  // 6: top-right-back
+			   -3.5f,  0.2f, -4.5f   // 7: top-left-back
 			};
 
 			indices = {

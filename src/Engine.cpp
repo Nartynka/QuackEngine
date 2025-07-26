@@ -68,7 +68,7 @@ namespace Quack
 
 		static Model* duck = new Model("res/models/duck.fbx");
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x*10, y*10, -20.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x*5, y*5, -10.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<ModelComponent>(duck);
 	}
@@ -84,7 +84,7 @@ namespace Quack
 		x = (x / (1080 / 2)) - 1;
 		y = -(y / (720 / 2)) + 1;
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x * 10, y * 10, -20.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x * 5, y * 5, -10.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<ShapeComponent>(new Cube());
 	}
@@ -107,6 +107,8 @@ namespace Quack
 
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
+
+		Rectangle floor;
 
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
@@ -136,6 +138,8 @@ namespace Quack
 				ModelComponent& modelComp = view2.get<ModelComponent>(entity);
 				
 				model = glm::rotate(transformComp.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				model = glm::scale(model, glm::vec3(0.5f));
+
 				shader.SetUniform4fv("model", glm::value_ptr(model));
 				shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.f);
 				
@@ -146,14 +150,22 @@ namespace Quack
 			for (auto entity : view3)
 			{
 				TransformComponent& transform = view3.get<TransformComponent>(entity);
-				model = glm::rotate(transform.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
-				shader.SetUniform4fv("model", glm::value_ptr(model));
-
 				ShapeComponent& shape = view3.get<ShapeComponent>(entity);
-				glBindTexture(GL_TEXTURE_2D, 0);
+
+				model = glm::rotate(transform.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				model = glm::scale(model, glm::vec3(0.5f));
+
+				shader.SetUniform4fv("model", glm::value_ptr(model));
 				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
+
 				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
 			}
+
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -1.5f, -11.f));
+			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+			shader.SetUniform4fv("model", glm::value_ptr(model));
+			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
+			renderer->Draw(*floor.vao, *floor.ibo, shader);
 
 			window->Update();
 		}
