@@ -54,6 +54,32 @@ namespace Quack
 		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
 		dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
 	}
+	
+	struct Camera
+	{
+		float speed = 5.f;
+
+		glm::vec3 position = glm::vec3(0.f, 0.f, 3.f);
+		glm::vec3 front = glm::vec3(0.f, 0.f, -1.f);
+		glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
+
+	};
+
+	static Camera camera;
+
+	void Engine::ProcessInput(float dt)
+	{
+		float cameraSpeed = camera.speed * dt;
+		if (glfwGetKey(window->GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
+			camera.position += camera.front * cameraSpeed;
+		if (glfwGetKey(window->GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
+			camera.position -= camera.front * cameraSpeed;
+		if (glfwGetKey(window->GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
+			camera.position -= glm::normalize(glm::cross(camera.front, camera.up)) * cameraSpeed;
+		if (glfwGetKey(window->GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
+			camera.position += glm::normalize(glm::cross(camera.front, camera.up)) * cameraSpeed;
+	}
+
 
 	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
@@ -68,7 +94,7 @@ namespace Quack
 
 		static Model* duck = new Model("res/models/duck.fbx");
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x*5, y*5, -10.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x * 5, y * 5, -10.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<ModelComponent>(duck);
 	}
@@ -97,11 +123,11 @@ namespace Quack
 		shader.Bind();
 
 		glm::mat4 model;
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		glm::mat4 view;
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
-		
-		shader.SetUniform4fv("view", glm::value_ptr(view));
+
 		shader.SetUniform4fv("projection", glm::value_ptr(projection));
+
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -110,34 +136,44 @@ namespace Quack
 
 		Rectangle floor;
 
+		Entity entity = scene->CreateEntity();
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.f, 0.f)));
+		entity.AddComponent<ShapeComponent>(new Cube());
+
+
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
-			float time = (float)glfwGetTime(); // time since glfw initialization in seconds
-			float dt = time - lastTime;
-			lastTime = (float)glfwGetTime();
+			float currentTime = (float)glfwGetTime(); // time since glfw initialization in seconds
+			float dt = currentTime - lastTime;
+			lastTime = currentTime;
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			auto moveView = registry.view<PhysicsComponent, TransformComponent>();
+			ProcessInput(dt);
+			// first vector moves the scene??? 
+			// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
+			// the second vector is the point that we look at 
+			view = glm::lookAt(camera.position, camera.position+camera.front, camera.up);
+			shader.SetUniform4fv("view", glm::value_ptr(view));	
 
-			// "Move system?"
+			auto physicsView = registry.view<PhysicsComponent, TransformComponent>();
+			// "physics system?"
 			// entity is just a uint32_t so no need for a const reference
-			for (auto entity : moveView)
+			for (auto entity : physicsView)
 			{
-				auto& [physics, transform] = moveView.get(entity);
+				auto& [physics, transform] = physicsView.get(entity);
 				physics.velocity += physics.acceleration * dt;
-				transform = glm::translate(transform.transform, physics.velocity * dt);
+				transform.transform = glm::translate(transform.transform, physics.velocity * dt);
 			}
 
-
 			// "render system?"
-			auto view2 = registry.view<ModelComponent, TransformComponent>();
-			for (auto entity : view2)
+			auto modelView = registry.view<ModelComponent, TransformComponent>();
+			for (auto entity : modelView)
 			{
-				TransformComponent& transformComp = view2.get<TransformComponent>(entity);
-				ModelComponent& modelComp = view2.get<ModelComponent>(entity);
-				
-				model = glm::rotate(transformComp.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				auto& [modelComp, transform] = modelView.get(entity);
+
+				model = transform.transform;
+				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 				model = glm::scale(model, glm::vec3(0.5f));
 
 				shader.SetUniform4fv("model", glm::value_ptr(model));
@@ -146,13 +182,13 @@ namespace Quack
 				modelComp.model->Draw(shader);
 			}
 
-			auto view3 = registry.view<ShapeComponent, TransformComponent>();
-			for (auto entity : view3)
+			auto shapeView = registry.view<ShapeComponent, TransformComponent>();
+			for (auto entity : shapeView)
 			{
-				TransformComponent& transform = view3.get<TransformComponent>(entity);
-				ShapeComponent& shape = view3.get<ShapeComponent>(entity);
+				auto& [shape, transform] = shapeView.get(entity);
 
-				model = glm::rotate(transform.transform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				model = transform.transform;
+				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 				model = glm::scale(model, glm::vec3(0.5f));
 
 				shader.SetUniform4fv("model", glm::value_ptr(model));
@@ -161,8 +197,7 @@ namespace Quack
 				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
 			}
 
-			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -1.5f, -11.f));
-			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, -5.f));
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
 			renderer->Draw(*floor.vao, *floor.ibo, shader);

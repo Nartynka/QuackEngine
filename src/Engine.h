@@ -4,6 +4,7 @@
 
 #include "Event.h"
 #include "MouseEvent.h"
+#include "KeyEvent.h"
 
 namespace Quack
 {
@@ -23,6 +24,7 @@ namespace Quack
 
 		void OnLeftMouseButton(const MouseLeftButtonPressedEvent& e);
 		void OnRightMouseButton(const MouseRightButtonPressedEvent& e);
+		void ProcessInput(float dt); // temporary, input pooling soon
 	private:
 		std::unique_ptr<Window> window;
 		std::unique_ptr<Renderer> renderer;
