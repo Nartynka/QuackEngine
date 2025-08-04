@@ -19,6 +19,7 @@
 #include "Model.h"
 #include "KeyEvent.h"
 #include "MouseEvent.h"
+#include "Input.h"
 
 #include "Scene.h"
 #include "Entity.h"
@@ -33,7 +34,9 @@ namespace Quack
 
 		window = std::make_unique<Window>(1080, 720);
 		window->SetCallback(std::bind(&Engine::OnEvent, this, std::placeholders::_1)); // bind or lambda that is the question :b
-
+		
+		Input::SetWindow(window->GetWindow());
+		
 		renderer = std::make_unique<Renderer>();
 
 		scene = new Scene();
@@ -70,14 +73,22 @@ namespace Quack
 	void Engine::ProcessInput(float dt)
 	{
 		float cameraSpeed = camera.speed * dt;
-		if (glfwGetKey(window->GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
+		
+		// Forward & Backward
+		if (Input::IsKeyPressed(GLFW_KEY_W))
 			camera.position += camera.front * cameraSpeed;
-		if (glfwGetKey(window->GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
-			camera.position -= camera.front * cameraSpeed;
-		if (glfwGetKey(window->GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
+		if (Input::IsKeyPressed(GLFW_KEY_S))
+			camera.position -= camera.front * cameraSpeed;	
+		// Left & Right
+		if (Input::IsKeyPressed(GLFW_KEY_A))
 			camera.position -= glm::normalize(glm::cross(camera.front, camera.up)) * cameraSpeed;
-		if (glfwGetKey(window->GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
+		if (Input::IsKeyPressed(GLFW_KEY_D))
 			camera.position += glm::normalize(glm::cross(camera.front, camera.up)) * cameraSpeed;
+		// Up & Down
+		if (Input::IsKeyPressed(GLFW_KEY_E))
+			camera.position += camera.up * cameraSpeed;
+		if (Input::IsKeyPressed(GLFW_KEY_Q))
+			camera.position -= camera.up * cameraSpeed;
 	}
 
 
