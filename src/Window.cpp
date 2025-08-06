@@ -81,7 +81,25 @@ namespace Quack
 				}
 			}
 		});
-		
+
+		glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) 
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			MouseMovedEvent event(xpos, ypos);
+			data->callback(event);
+		});
+
+		glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+		{
+			WindowData* data = (WindowData*)glfwGetWindowUserPointer(window);
+
+			MouseScrolledEvent event(xoffset, yoffset);
+			data->callback(event);
+		});
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 		// vsync
 		glfwSwapInterval(true);
 

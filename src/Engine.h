@@ -11,6 +11,7 @@ namespace Quack
 	class Window;
 	class Renderer;
 	class Scene;
+	class Camera;
 
 	class Engine
 	{
@@ -24,12 +25,11 @@ namespace Quack
 
 		void OnLeftMouseButton(const MouseLeftButtonPressedEvent& e);
 		void OnRightMouseButton(const MouseRightButtonPressedEvent& e);
-		void ProcessInput(float dt); // temporary, input pooling soon
 	private:
 		std::unique_ptr<Window> window;
 		std::unique_ptr<Renderer> renderer;
-		Scene* scene; // @TODO: Maybe change to a smart ptr
-
+		std::unique_ptr<Scene> scene;
+		std::unique_ptr<Camera> camera;
 		//bool bIsRunning = true;
 	};
 }

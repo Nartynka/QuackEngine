@@ -20,6 +20,7 @@
 #include "KeyEvent.h"
 #include "MouseEvent.h"
 #include "Input.h"
+#include "Camera.h"
 
 #include "Scene.h"
 #include "Entity.h"
@@ -39,7 +40,9 @@ namespace Quack
 		
 		renderer = std::make_unique<Renderer>();
 
-		scene = new Scene();
+		scene = std::make_unique<Scene>();
+
+		camera = std::make_unique<Camera>();
 
 		QUACK_LOG("Hello Engine!");
 	}
@@ -53,75 +56,33 @@ namespace Quack
 	{
 		EventDispatcher dispatcher(event);
 
-		dispatcher.Dispatch<KeyPressedEvent>([](const KeyPressedEvent& e) {QUACK_GOOD("Key Pressed!!! key code: {}", e.keyCode); });
+		dispatcher.Dispatch<KeyPressedEvent>([](const KeyPressedEvent& e) { QUACK_GOOD("Key Pressed!!! key code: {}", e.GetKeyCode()); });
 		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
 		dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
+		//dispatcher.Dispatch<MouseMovedEvent>([](const MouseMovedEvent& e) {QUACK_GOOD("Mouse Moved!!!"); });
+		dispatcher.Dispatch<MouseScrolledEvent>([](const MouseScrolledEvent& e) {QUACK_GOOD("Mouse Scrolled!!!"); });
 	}
-	
-	struct Camera
-	{
-		float speed = 5.f;
-
-		glm::vec3 position = glm::vec3(0.f, 0.f, 3.f);
-		glm::vec3 front = glm::vec3(0.f, 0.f, -1.f);
-		glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
-
-	};
-
-	static Camera camera;
-
-	void Engine::ProcessInput(float dt)
-	{
-		float cameraSpeed = camera.speed * dt;
-		
-		// Forward & Backward
-		if (Input::IsKeyPressed(GLFW_KEY_W))
-			camera.position += camera.front * cameraSpeed;
-		if (Input::IsKeyPressed(GLFW_KEY_S))
-			camera.position -= camera.front * cameraSpeed;	
-		// Left & Right
-		if (Input::IsKeyPressed(GLFW_KEY_A))
-			camera.position -= glm::normalize(glm::cross(camera.front, camera.up)) * cameraSpeed;
-		if (Input::IsKeyPressed(GLFW_KEY_D))
-			camera.position += glm::normalize(glm::cross(camera.front, camera.up)) * cameraSpeed;
-		// Up & Down
-		if (Input::IsKeyPressed(GLFW_KEY_E))
-			camera.position += camera.up * cameraSpeed;
-		if (Input::IsKeyPressed(GLFW_KEY_Q))
-			camera.position -= camera.up * cameraSpeed;
-	}
-
 
 	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
-		QUACK_GOOD("Left mouse button pressed!!");
-		double x, y;
-		glfwGetCursorPos(window->GetWindow(), &x, &y);
-		Entity entity = scene->CreateEntity();
+		QUACK_LOG("Left mouse button pressed!!");
 
-		// convert mouse position to NDC
-		x = (x / (1080 / 2)) - 1;
-		y = -(y / (720 / 2)) + 1;
+		Entity entity = scene->CreateEntity();
 
 		static Model* duck = new Model("res/models/duck.fbx");
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x * 5, y * 5, -10.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -10.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<ModelComponent>(duck);
 	}
 
 	void Engine::OnRightMouseButton(const MouseRightButtonPressedEvent& e)
 	{
-		QUACK_GOOD("Right mouse button pressed!!");
-		double x, y;
-		glfwGetCursorPos(window->GetWindow(), &x, &y);
+		QUACK_LOG("Right mouse button pressed!!");
+
 		Entity entity = scene->CreateEntity();
 
-		// convert mouse position to NDC
-		x = (x / (1080 / 2)) - 1;
-		y = -(y / (720 / 2)) + 1;
-
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(x * 5, y * 5, -10.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -10.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<ShapeComponent>(new Cube());
 	}
@@ -146,11 +107,11 @@ namespace Quack
 		float lastTime = 0.f;
 
 		Rectangle floor;
+		Rectangle floor2;
 
 		Entity entity = scene->CreateEntity();
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.f, 0.f)));
 		entity.AddComponent<ShapeComponent>(new Cube());
-
 
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
@@ -160,11 +121,13 @@ namespace Quack
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			ProcessInput(dt);
-			// first vector moves the scene??? 
+			camera->Update(dt);
+
+			// Maybe view & projection should be in camera class?
+			// first vector moves the scene???
 			// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
 			// the second vector is the point that we look at 
-			view = glm::lookAt(camera.position, camera.position+camera.front, camera.up);
+			view = glm::lookAt(camera->position, camera->position+camera->front, camera->up);
 			shader.SetUniform4fv("view", glm::value_ptr(view));	
 
 			auto physicsView = registry.view<PhysicsComponent, TransformComponent>();
@@ -211,6 +174,11 @@ namespace Quack
 			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, -5.f));
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
+			renderer->Draw(*floor.vao, *floor.ibo, shader);
+
+			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, 5.f));
+			shader.SetUniform4fv("model", glm::value_ptr(model));
+			shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.0f);
 			renderer->Draw(*floor.vao, *floor.ibo, shader);
 
 			window->Update();

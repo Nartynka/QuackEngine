@@ -17,6 +17,11 @@ namespace Quack
 			return "Key pressed event";
 		}
 
+		int GetKeyCode() const
+		{
+			return keyCode;
+		}
+
 		//const char* Print() const override
 		//{
 		//	return "Key pressed event, key: " + keyCode;
@@ -32,7 +37,7 @@ namespace Quack
 			return EventType::KeyPressed;
 		}
 		
-		int keyCode;
 	private:
+		int keyCode;
 	};
 }
