@@ -8,6 +8,7 @@
 
 namespace Quack
 {
+	// @TODO: Shapes probably should follow the same pattern as models
 	class Shape
 	{
 	public:

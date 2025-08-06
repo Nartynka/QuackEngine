@@ -26,6 +26,7 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Shapes.h"
+#include "ModelLibrary.h"
 
 namespace Quack
 {
@@ -43,6 +44,8 @@ namespace Quack
 		scene = std::make_unique<Scene>();
 
 		camera = std::make_unique<Camera>();
+
+		ModelLibrary::Init();
 
 		QUACK_LOG("Hello Engine!");
 	}
@@ -69,11 +72,9 @@ namespace Quack
 
 		Entity entity = scene->CreateEntity();
 
-		static Model* duck = new Model("res/models/duck.fbx");
-
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -10.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
-		entity.AddComponent<ModelComponent>(duck);
+		entity.AddComponent<ModelComponent>(ModelLibrary::duck.get());
 	}
 
 	void Engine::OnRightMouseButton(const MouseRightButtonPressedEvent& e)

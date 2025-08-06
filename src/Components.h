@@ -47,10 +47,7 @@ namespace Quack
 		ModelComponent(Model* model)
 			: model(model) {}
 
-		~ModelComponent()
-		{
-			delete model;
-		}
+		~ModelComponent() = default; // ModelLibrary owns the model and deletes it
 
 	};
 }
