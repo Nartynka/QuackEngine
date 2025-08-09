@@ -8,6 +8,7 @@
 #include <gtc/type_ptr.hpp>
 
 #include <functional>
+#include <random>
 
 #include "Window.h"
 #include "Renderer.h"
@@ -66,13 +67,34 @@ namespace Quack
 		dispatcher.Dispatch<MouseScrolledEvent>([&](const MouseScrolledEvent& e) {QUACK_GOOD("Mouse Scrolled!!!"); camera->speed += e.offsetY; camera->speed = camera->speed < 1.f ? 1.f : camera->speed; });
 	}
 
+
+	float randRange(float min, float max)
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> dis(min, max);
+		return dis(gen);
+	}
+
+	inline float randX()
+	{
+		return randRange(-3.5f, 3.5f);
+	}
+
+	inline float randZ()
+	{
+		return randRange(-9.5f, -0.5f);
+	}
+
 	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
 		QUACK_LOG("Left mouse button pressed!!");
 
 		Entity entity = scene->CreateEntity();
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -5.f)));
+		glm::vec3 floorCollisionHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
 		entity.AddComponent<ModelComponent>(ModelLibrary::duck.get());
@@ -84,7 +106,7 @@ namespace Quack
 
 		Entity entity = scene->CreateEntity();
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -5.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
 		entity.AddComponent<ShapeComponent>(new Cube(glm::vec3(0.25f)));
@@ -153,14 +175,19 @@ namespace Quack
 				transform.transform = glm::translate(transform.transform, physics.velocity * dt);
 			}
 			
-			// collision and physics should be one component / system
+			// should collision and physics be one component / system?
 			// "collision system?"
-			// For now only checks collision with floor
 			auto collisionView = registry.view<CollisionComponent, TransformComponent, PhysicsComponent>();
 			for (auto entity : collisionView)
 			{
 				auto& [collision, transform, physics] = collisionView.get(entity);
 
+				// Draw collision shapes
+				shader.SetUniform4fv("model", glm::value_ptr(transform.transform));
+				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
+				renderer->DrawOutline(*collision.shape->vao, shader);
+
+				// Check collision with floor
 				glm::vec3 minEntity;
 				minEntity.x = transform.transform[3][0] - collision.halfSize.x;
 				minEntity.y = transform.transform[3][1] - collision.halfSize.y;
@@ -175,18 +202,43 @@ namespace Quack
 					(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
 					(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
 				{
-					QUACK_LOG("Collllision!!!!!");
-
 					transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
 
 					physics.velocity = glm::vec3(0.f);
 					//physics.acceleration = glm::vec3(0.f); 'Oh gravity, thou art a heartless bitch' - Jim Parsons
 				}
+				else
+				{
+					// Check collision with everything else
+					for (auto entity2 : collisionView)
+					{
+						if(entity == entity2)
+							continue;
 
-				// Draw collision shapes
-				shader.SetUniform4fv("model", glm::value_ptr(transform.transform));
-				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
-				renderer->DrawOutline(*collision.shape->vao, shader);
+						auto& [collision2, transform2, physics2] = collisionView.get(entity2);
+
+						glm::vec3 minEntity2;
+						minEntity2.x = transform2.transform[3][0] - collision2.halfSize.x;
+						minEntity2.y = transform2.transform[3][1] - collision2.halfSize.y;
+						minEntity2.z = transform2.transform[3][2] - collision2.halfSize.z;
+
+						glm::vec3 maxEntity2;
+						maxEntity2.x = transform2.transform[3][0] + collision2.halfSize.x;
+						maxEntity2.y = transform2.transform[3][1] + collision2.halfSize.y;
+						maxEntity2.z = transform2.transform[3][2] + collision2.halfSize.z;
+						
+						if ((minEntity.x <= maxEntity2.x && maxEntity.x >= minEntity2.x) &&
+							(minEntity.y <= maxEntity2.y && maxEntity.y >= minEntity2.y) &&
+							(minEntity.z <= maxEntity2.z && maxEntity.z >= minEntity2.z))
+						{
+							transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
+
+							physics.velocity = glm::vec3(0.f);
+
+							break;
+						}
+					}
+				}
 			}
 
 
