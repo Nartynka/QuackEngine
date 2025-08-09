@@ -100,7 +100,7 @@ namespace Quack
 			return EventType::MouseScrolled;
 		}
 
-	private:
 		float offsetX, offsetY;
+	private:
 	};
 }

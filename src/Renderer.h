@@ -13,5 +13,6 @@ namespace Quack
 		~Renderer();
 
 		void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
+		void DrawOutline(const VertexArray& va, const Shader& shader) const;
 	};
 }

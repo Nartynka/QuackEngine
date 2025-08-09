@@ -29,6 +29,24 @@ namespace Quack
 			: velocity(velocity), acceleration(0), mass(0) {}
 	};
 
+	struct CollisionComponent
+	{
+		// width, height, depth
+		glm::vec3 halfSize;
+		Shape* shape; // Only for drawing / debug
+
+		CollisionComponent(glm::vec3 halfSize)
+			: halfSize(halfSize)
+		{
+			shape = new Cube(halfSize);
+		}
+
+		~CollisionComponent()
+		{
+			delete shape;
+		}
+	};
+
 	struct ShapeComponent
 	{
 		Shape* shape;

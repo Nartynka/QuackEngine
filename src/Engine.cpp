@@ -63,7 +63,7 @@ namespace Quack
 		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
 		dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
 		//dispatcher.Dispatch<MouseMovedEvent>([](const MouseMovedEvent& e) {QUACK_GOOD("Mouse Moved!!!"); });
-		dispatcher.Dispatch<MouseScrolledEvent>([](const MouseScrolledEvent& e) {QUACK_GOOD("Mouse Scrolled!!!"); });
+		dispatcher.Dispatch<MouseScrolledEvent>([&](const MouseScrolledEvent& e) {QUACK_GOOD("Mouse Scrolled!!!"); camera->speed += e.offsetY; camera->speed = camera->speed < 1.f ? 1.f : camera->speed; });
 	}
 
 	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
@@ -72,8 +72,9 @@ namespace Quack
 
 		Entity entity = scene->CreateEntity();
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -10.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -5.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
+		entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
 		entity.AddComponent<ModelComponent>(ModelLibrary::duck.get());
 	}
 
@@ -83,9 +84,10 @@ namespace Quack
 
 		Entity entity = scene->CreateEntity();
 
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -10.f)));
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 5.f, -5.f)));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
-		entity.AddComponent<ShapeComponent>(new Cube());
+		entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
+		entity.AddComponent<ShapeComponent>(new Cube(glm::vec3(0.25f)));
 	}
 
 	void Engine::Run()
@@ -101,18 +103,28 @@ namespace Quack
 
 		shader.SetUniform4fv("projection", glm::value_ptr(projection));
 
-
+		
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
 
-		Rectangle floor;
-		Rectangle floor2;
+		Rectangle floor(glm::vec3(3.5f, 0.1f, 4.5f));
+		Rectangle floor2(glm::vec3(3.5f, 0.2f, 4.5f));
 
-		Entity entity = scene->CreateEntity();
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.f, 0.f)));
-		entity.AddComponent<ShapeComponent>(new Cube());
+		glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
+		glm::vec3 floorCollisionHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+
+		glm::vec3 minFloor;
+		minFloor.x = floorPos.x - floorCollisionHalfSize.x;
+		minFloor.y = floorPos.y - floorCollisionHalfSize.y;
+		minFloor.z = floorPos.z - floorCollisionHalfSize.z;
+
+		glm::vec3 maxFloor;
+		maxFloor.x = floorPos.x + floorCollisionHalfSize.x;
+		maxFloor.y = floorPos.y + floorCollisionHalfSize.y;
+		maxFloor.z = floorPos.z + floorCollisionHalfSize.z;
+
 
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
@@ -140,6 +152,43 @@ namespace Quack
 				physics.velocity += physics.acceleration * dt;
 				transform.transform = glm::translate(transform.transform, physics.velocity * dt);
 			}
+			
+			// collision and physics should be one component / system
+			// "collision system?"
+			// For now only checks collision with floor
+			auto collisionView = registry.view<CollisionComponent, TransformComponent, PhysicsComponent>();
+			for (auto entity : collisionView)
+			{
+				auto& [collision, transform, physics] = collisionView.get(entity);
+
+				glm::vec3 minEntity;
+				minEntity.x = transform.transform[3][0] - collision.halfSize.x;
+				minEntity.y = transform.transform[3][1] - collision.halfSize.y;
+				minEntity.z = transform.transform[3][2] - collision.halfSize.z;
+
+				glm::vec3 maxEntity;
+				maxEntity.x = transform.transform[3][0] + collision.halfSize.x;
+				maxEntity.y = transform.transform[3][1] + collision.halfSize.y;
+				maxEntity.z = transform.transform[3][2] + collision.halfSize.z;
+
+				if ((minEntity.x <= maxFloor.x && maxEntity.x >= minFloor.x) &&
+					(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
+					(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
+				{
+					QUACK_LOG("Collllision!!!!!");
+
+					transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
+
+					physics.velocity = glm::vec3(0.f);
+					//physics.acceleration = glm::vec3(0.f); 'Oh gravity, thou art a heartless bitch' - Jim Parsons
+				}
+
+				// Draw collision shapes
+				shader.SetUniform4fv("model", glm::value_ptr(transform.transform));
+				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
+				renderer->DrawOutline(*collision.shape->vao, shader);
+			}
+
 
 			// "render system?"
 			auto modelView = registry.view<ModelComponent, TransformComponent>();
@@ -148,7 +197,7 @@ namespace Quack
 				auto& [modelComp, transform] = modelView.get(entity);
 
 				model = transform.transform;
-				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
+				//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 				model = glm::scale(model, glm::vec3(0.5f));
 
 				shader.SetUniform4fv("model", glm::value_ptr(model));
@@ -163,16 +212,17 @@ namespace Quack
 				auto& [shape, transform] = shapeView.get(entity);
 
 				model = transform.transform;
-				model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
-				model = glm::scale(model, glm::vec3(0.5f));
+				//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 
 				shader.SetUniform4fv("model", glm::value_ptr(model));
 				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
 
 				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
+				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
+				//renderer->DrawOutline(*shape.shape->vao, shader);
 			}
 
-			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, -5.f));
+			model = glm::translate(glm::mat4(1.0f), floorPos);
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
 			renderer->Draw(*floor.vao, *floor.ibo, shader);
