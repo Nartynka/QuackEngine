@@ -127,6 +127,16 @@ namespace Quack
 		glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
 	}
 
+	void Shader::SetUniform3f(const char* name, float v0, float v1, float v2)
+	{
+		glUniform3f(GetUniformLocation(name), v0, v1, v2);
+	}
+
+	void Shader::SetUniform3fv(const char* name, const float* value)
+	{
+		glUniform3fv(GetUniformLocation(name), 1, value);
+	}
+
 	void Shader::SetUniform4fv(const char* name, const float* value)
 	{
 		glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, value);

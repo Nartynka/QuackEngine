@@ -75,6 +75,17 @@ namespace Quack
 				vertex.texCoords = { 0.0f, 0.0f };
 			}
 
+			if (mesh->HasNormals())
+			{
+				vertex.normal = { mesh->mNormals->x, mesh->mNormals->y, mesh->mNormals->z };
+			}
+			else
+			{
+				QUACK_WARN("No normals found");
+				vertex.normal = { 1.0f, 0.0f, 0.0f };
+			}
+
+
 			vertices.push_back(vertex);
 		}
 

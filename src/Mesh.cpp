@@ -32,6 +32,7 @@ namespace Quack
 		VertexBufferLayout layout;
 		layout.AddElement(3); // Position
 		layout.AddElement(2); // Texture coords
+		layout.AddElement(3); // Normals
 
 		vao->AddBuffer(*vbo, layout);
 	}

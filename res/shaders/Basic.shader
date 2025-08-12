@@ -3,41 +3,55 @@
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 texCoord;
-
-uniform vec4 inColor;
+layout(location = 2) in vec3 vertexNormal;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 out vec2 ourTexCoord;
-out vec4 ourColor;
-out vec3 debugColor;
+
+out vec3 normal;
+out vec3 fragPos;
 
 void main()
 {
 	gl_Position = projection * view * model * vec4(position, 1.0);
-	ourColor = inColor;
 	ourTexCoord = texCoord;
-	debugColor = vec3(texCoord, 0.0);
+	normal = mat3(transpose(inverse(model))) * vertexNormal; // inverse is very costly operation
+	fragPos = vec3(model * vec4(position, 1.f));			 // vertex position to world space?
 };
+
 
 #shader fragment
 #version 460 core
 
-out vec4 color;
+in vec2 ourTexCoord;
+in vec3 normal;
+in vec3 fragPos;
 
 uniform sampler2D sampler;
+uniform vec4 inColor;
 
-in vec4 ourColor;
-in vec2 ourTexCoord;
-in vec3 debugColor;
+uniform vec3 lightColor;
+uniform vec3 lightPos;
 
+out vec4 color;
 
 void main()
 {
 	vec4 texColor = texture(sampler, ourTexCoord);
-	color = mix(texColor.rgba, ourColor, ourColor.a);
-	//color = texture(sampler, ourTexCoord) * ourColor;
-	//color = vec4(debugColor, 1.0);
+	vec4 fragColor = mix(texColor.rgba, inColor, inColor.a);
+
+	float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+
+	vec3 norm = normalize(normal);
+	vec3 lightDir = normalize(lightPos - fragPos);
+
+	float diff = max(dot(norm, lightDir), 0.0);
+	vec3 diffuse = diff * lightColor;
+
+    vec3 result = (ambient + diffuse) * fragColor.rgb;
+	color = vec4(result, 1.0);
 };

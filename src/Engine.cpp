@@ -28,6 +28,7 @@
 #include "Components.h"
 #include "Shapes.h"
 #include "ModelLibrary.h"
+#include "LightCube.h"
 
 namespace Quack
 {
@@ -115,7 +116,7 @@ namespace Quack
 	void Engine::Run()
 	{
 		const float DESIRED_DT = 1 / 60.f; // 60 FPS
-
+		
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
 
@@ -123,16 +124,12 @@ namespace Quack
 		glm::mat4 view;
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
 
-		shader.SetUniform4fv("projection", glm::value_ptr(projection));
-
-		
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
 
 		Rectangle floor(glm::vec3(3.5f, 0.1f, 4.5f));
-		Rectangle floor2(glm::vec3(3.5f, 0.2f, 4.5f));
 
 		glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
 		glm::vec3 floorCollisionHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
@@ -147,7 +144,13 @@ namespace Quack
 		maxFloor.y = floorPos.y + floorCollisionHalfSize.y;
 		maxFloor.z = floorPos.z + floorCollisionHalfSize.z;
 
+		LightCube lightCube;
 
+		lightCube.position = glm::vec3(0.f, 3.5f, 3.5f);
+		
+		NormalCube cube1;
+		glm::vec3 cube1pos = glm::vec3(0.f, 1.f, -2.f);
+		
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
 			float currentTime = (float)glfwGetTime(); // time since glfw initialization in seconds
@@ -155,6 +158,11 @@ namespace Quack
 			lastTime = currentTime;
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			shader.Bind();
+
+			shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
+			shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));
 
 			camera->Update(dt);
 
@@ -164,6 +172,7 @@ namespace Quack
 			// the second vector is the point that we look at 
 			view = glm::lookAt(camera->position, camera->position+camera->front, camera->up);
 			shader.SetUniform4fv("view", glm::value_ptr(view));	
+			shader.SetUniform4fv("projection", glm::value_ptr(projection));
 
 			auto physicsView = registry.view<PhysicsComponent, TransformComponent>();
 			// "physics system?"
@@ -271,7 +280,6 @@ namespace Quack
 
 				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
 				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
-				//renderer->DrawOutline(*shape.shape->vao, shader);
 			}
 
 			model = glm::translate(glm::mat4(1.0f), floorPos);
@@ -279,10 +287,17 @@ namespace Quack
 			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
 			renderer->Draw(*floor.vao, *floor.ibo, shader);
 
-			model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, 5.f));
+			model = glm::translate(glm::mat4(1.0f), cube1pos);
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.0f);
-			renderer->Draw(*floor.vao, *floor.ibo, shader);
+			renderer->Draw(*cube1.vao, *cube1.ibo, shader);
+
+
+			model = glm::translate(glm::mat4(1.0f), lightCube.position);
+			lightCube.shader->Bind();
+			lightCube.shader->SetUniform4fv("MVP", glm::value_ptr(projection * view * model));
+
+			renderer->Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
 
 			window->Update();
 		}
