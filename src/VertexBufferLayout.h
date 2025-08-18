@@ -7,7 +7,7 @@ namespace Quack
 	{
 		unsigned int id;
 		unsigned int count;
-		void* offset;
+		unsigned int offset;
 	};
 
 	class VertexBufferLayout
@@ -21,8 +21,8 @@ namespace Quack
 		// maybe in future this will change to accept different types
 		void AddElement(unsigned int count)
 		{
-			elements.push_back({ (unsigned int)elements.size(), count, 
-				elements.empty() ? nullptr : (void*)(elements.back().count * sizeof(float)) });
+			elements.push_back({ (unsigned int)elements.size(), count, stride });
+			//(void*)((unsigned int)(elements.back().offset) + elements.back().count);
 			stride += count * sizeof(float);
 		}
 

@@ -33,7 +33,7 @@ namespace Quack
 		for (int i = 0; i < elements.size(); i++)
 		{
 			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i, elements[i].count, GL_FLOAT, GL_FALSE, layout.GetStride(), elements[i].offset);
+			glVertexAttribPointer(i, elements[i].count, GL_FLOAT, GL_FALSE, layout.GetStride(), (const void*)elements[i].offset);
 		}
 	}
 }
