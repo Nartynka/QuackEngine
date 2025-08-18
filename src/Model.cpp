@@ -64,6 +64,17 @@ namespace Quack
 			Vertex vertex;
 			vertex.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 
+			if (mesh->HasNormals())
+			{
+				// flip normals for the duck, will revert when normal mapping is done
+				vertex.normal = { mesh->mNormals->x, -mesh->mNormals->y, -mesh->mNormals->z };
+			}
+			else
+			{
+				QUACK_WARN("No normals found");
+				vertex.normal = { 1.0f, 0.0f, 0.0f };
+			}
+
 			if (mesh->HasTextureCoords(0))
 			{
 				//QUACK_GOOD("Texture coord found! u: {}, v: {}", mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
@@ -74,17 +85,6 @@ namespace Quack
 				QUACK_WARN("No texture coord found");
 				vertex.texCoords = { 0.0f, 0.0f };
 			}
-
-			if (mesh->HasNormals())
-			{
-				vertex.normal = { mesh->mNormals->x, mesh->mNormals->y, mesh->mNormals->z };
-			}
-			else
-			{
-				QUACK_WARN("No normals found");
-				vertex.normal = { 1.0f, 0.0f, 0.0f };
-			}
-
 
 			vertices.push_back(vertex);
 		}

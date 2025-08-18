@@ -2,8 +2,8 @@
 #version 460 core
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 texCoord;
-layout(location = 2) in vec3 vertexNormal;
+layout(location = 1) in vec3 vertexNormal;
+layout(location = 2) in vec2 texCoord;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -19,7 +19,7 @@ void main()
 	gl_Position = projection * view * model * vec4(position, 1.0);
 	ourTexCoord = texCoord;
 	normal = mat3(transpose(inverse(model))) * vertexNormal; // inverse is very costly operation
-	fragPos = vec3(model * vec4(position, 1.f));			 // vertex position to world space?
+	fragPos = vec3(model * vec4(position, 1.0));			 // vertex position to world space?
 };
 
 
@@ -44,7 +44,7 @@ void main()
 	vec4 fragColor = mix(texColor.rgba, inColor, inColor.a);
 
 	float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * lightColor;
+	vec3 ambient = ambientStrength * lightColor;
 
 	vec3 norm = normalize(normal);
 	vec3 lightDir = normalize(lightPos - fragPos);

@@ -31,8 +31,8 @@ namespace Quack
 
 		VertexBufferLayout layout;
 		layout.AddElement(3); // Position
-		layout.AddElement(2); // Texture coords
 		layout.AddElement(3); // Normals
+		layout.AddElement(2); // Texture coords
 
 		vao->AddBuffer(*vbo, layout);
 	}
@@ -46,11 +46,10 @@ namespace Quack
 		}
 
 		// @TODO: multiple textures for mesh
-		glActiveTexture(GL_TEXTURE0);
 		if (!textures.empty())
+		{
 			glBindTexture(GL_TEXTURE_2D, textures[0].id);
-		else
-			shader.SetUniform4f("inColor", 0.5, 0.0, 0.5);
+		}
 
 		// @TODO: think about who should make the draw call ?
 		vao->Bind();

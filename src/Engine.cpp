@@ -61,7 +61,7 @@ namespace Quack
 	{
 		EventDispatcher dispatcher(event);
 
-		dispatcher.Dispatch<KeyPressedEvent>([](const KeyPressedEvent& e) { QUACK_GOOD("Key Pressed!!! key code: {}", e.GetKeyCode()); });
+		//dispatcher.Dispatch<KeyPressedEvent>([](const KeyPressedEvent& e) { QUACK_GOOD("Key Pressed!!! key code: {}", e.GetKeyCode()); });
 		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
 		dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
 		//dispatcher.Dispatch<MouseMovedEvent>([](const MouseMovedEvent& e) {QUACK_GOOD("Mouse Moved!!!"); });
@@ -146,10 +146,10 @@ namespace Quack
 
 		LightCube lightCube;
 
-		lightCube.position = glm::vec3(0.f, 3.5f, 3.5f);
+		lightCube.position = glm::vec3(0.f, 3.5f,  0.f);
 		
 		NormalCube cube1;
-		glm::vec3 cube1pos = glm::vec3(0.f, 1.f, -2.f);
+		glm::vec3 cube1pos = glm::vec3(0.f, 0.0f, 2.f);
 		
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
@@ -161,9 +161,6 @@ namespace Quack
 
 			shader.Bind();
 
-			shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
-			shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));
-
 			camera->Update(dt);
 
 			// Maybe view & projection should be in camera class?
@@ -173,6 +170,16 @@ namespace Quack
 			view = glm::lookAt(camera->position, camera->position+camera->front, camera->up);
 			shader.SetUniform4fv("view", glm::value_ptr(view));	
 			shader.SetUniform4fv("projection", glm::value_ptr(projection));
+
+
+
+			//lightCube.position = glm::vec3(0.f, sin(glfwGetTime()) * 3.5f, (cos(glfwGetTime()) * 5.5f) - 5.5f);
+			
+			shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
+			shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));	
+
+
+
 
 			auto physicsView = registry.view<PhysicsComponent, TransformComponent>();
 			// "physics system?"
@@ -184,6 +191,8 @@ namespace Quack
 				transform.transform = glm::translate(transform.transform, physics.velocity * dt);
 			}
 			
+
+
 			// should collision and physics be one component / system?
 			// "collision system?"
 			auto collisionView = registry.view<CollisionComponent, TransformComponent, PhysicsComponent>();
@@ -262,10 +271,12 @@ namespace Quack
 				model = glm::scale(model, glm::vec3(0.5f));
 
 				shader.SetUniform4fv("model", glm::value_ptr(model));
-				shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.f);
+				shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.0f);
 				
 				modelComp.model->Draw(shader);
+				
 			}
+
 
 			auto shapeView = registry.view<ShapeComponent, TransformComponent>();
 			for (auto entity : shapeView)
@@ -279,7 +290,6 @@ namespace Quack
 				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
 
 				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
-				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
 			}
 
 			model = glm::translate(glm::mat4(1.0f), floorPos);
@@ -288,8 +298,9 @@ namespace Quack
 			renderer->Draw(*floor.vao, *floor.ibo, shader);
 
 			model = glm::translate(glm::mat4(1.0f), cube1pos);
+			model = glm::scale(model, glm::vec3(4.5f, 0.1f, 3.5f));
 			shader.SetUniform4fv("model", glm::value_ptr(model));
-			shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.0f);
+			shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.5f);
 			renderer->Draw(*cube1.vao, *cube1.ibo, shader);
 
 

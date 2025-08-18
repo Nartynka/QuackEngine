@@ -47,15 +47,15 @@ namespace Quack
 		{
 			vertices = {
 			   // Front face position				  // Normals
-			   -halfSize.x, -halfSize.y,  halfSize.z, 0.0f, 0.0f, 1.0f,  // 0: bottom-left-front
-				halfSize.x, -halfSize.y,  halfSize.z, 0.0f, 0.0f, 1.0f,  // 1: bottom-right-front
-				halfSize.x,  halfSize.y,  halfSize.z, 0.0f, 0.0f, 1.0f,  // 2: top-right-front
-			   -halfSize.x,  halfSize.y,  halfSize.z, 0.0f, 0.0f, 1.0f,  // 3: top-left-front
+			   -halfSize.x, -halfSize.y,  halfSize.z, 0.5f, 0.5f, 1.0f, // 0: bottom-left-front
+				halfSize.x, -halfSize.y,  halfSize.z, 0.5f, 0.5f, 1.0f, // 1: bottom-right-front
+				halfSize.x,  halfSize.y,  halfSize.z, 0.5f, 0.5f, 1.0f, // 2: top-right-front
+			   -halfSize.x,  halfSize.y,  halfSize.z, 0.5f, 0.5f, 1.0f, // 3: top-left-front
 			   // Back face position
-			   -halfSize.x, -halfSize.y, -halfSize.z, 0.0f, 0.0f, -1.0f,  // 4: bottom-left-back
-				halfSize.x, -halfSize.y, -halfSize.z, 0.0f, 0.0f, -1.0f,  // 5: bottom-right-back
-				halfSize.x,  halfSize.y, -halfSize.z, 0.0f, 0.0f, -1.0f,  // 6: top-right-back
-			   -halfSize.x,  halfSize.y, -halfSize.z, 0.0f, 0.0f, -1.0f,   // 7: top-left-back
+			   -halfSize.x, -halfSize.y, -halfSize.z, 0.5f, 0.5f, 1.0f, // 4: bottom-left-back
+				halfSize.x, -halfSize.y, -halfSize.z, 0.5f, 0.5f, 1.0f, // 5: bottom-right-back
+				halfSize.x,  halfSize.y, -halfSize.z, 0.5f, 0.5f, 1.0f, // 6: top-right-back
+			   -halfSize.x,  halfSize.y, -halfSize.z, 0.5f, 0.5f, 1.0f, // 7: top-left-back
 			};
 
 
@@ -122,7 +122,7 @@ namespace Quack
 				 0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
 				 0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
 				-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
-				-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f
+				-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
 			};
 
 			indices = {
