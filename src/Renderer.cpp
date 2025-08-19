@@ -56,13 +56,18 @@ namespace Quack
 
 	void Renderer::DrawMesh(const VertexArray& vao, const IndexBuffer& ibo, const std::vector<Texture>& textures, Shader& shader)
 	{
+		shader.Bind();
+		vao.Bind();
+
 		for (int i = 0; i < textures.size(); i++)
 		{
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
 
-		vao.Bind();
+		if (textures.empty())
+			shader.SetUniform4f("inColor", 0.0f, 1.0f, 0.5f);
+
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 

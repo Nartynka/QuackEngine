@@ -10,6 +10,7 @@ namespace Quack
 	struct ModelLibrary
 	{
 		static std::unique_ptr<Model> duck;
+		static std::unique_ptr<Model> sphere;
 
 		static void Init();
 	};

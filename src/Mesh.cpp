@@ -47,7 +47,7 @@ namespace Quack
 		// @TODO: multiple textures for mesh
 		if (textures.empty())
 		{
-			QUACK_WARN("Mesh does not have any textures!!");
+			//QUACK_WARN("Mesh does not have any textures!!");
 		}
 
 		Renderer::DrawMesh(*vao, *ibo, textures, shader);

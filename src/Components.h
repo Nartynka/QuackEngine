@@ -4,6 +4,7 @@
 
 #include "Shapes.h"
 #include "Model.h"
+#include "Log.h"
 
 namespace Quack
 {
@@ -16,17 +17,28 @@ namespace Quack
 			: transform(transform) {}
 	};
 
-	struct PhysicsComponent
+	struct PhysicsComponent // rigid body component?
 	{
 		glm::vec3 velocity;
-		glm::vec3 acceleration = glm::vec3(0.0f);
 
-		float mass;
+		glm::vec3 position, oldPosition;
+		glm::vec3 forces;
 
-		PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass = 0.f)
-			: velocity(velocity), acceleration(acceleration), mass(mass) {}
-		PhysicsComponent(glm::vec3 velocity)
-			: velocity(velocity), acceleration(0), mass(0) {}
+		float mass = 1.0f;
+		float bounce = 0.7f; // coefficient of restitution, how much energy is kept when entity bounces off a surface
+
+		// Shared across entities
+		glm::vec3 gravity = glm::vec3(0.0f, -9.82f, 0.0f);
+		float friction = 0.98f;
+
+		//PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass = 0.f)
+		//	: velocity(velocity), acceleration(acceleration), mass(mass) {}
+		//PhysicsComponent(glm::vec3 velocity)
+		//	: velocity(velocity), mass(0) {}
+		
+		PhysicsComponent(glm::vec3 position, float mass = 1.0f)
+			: position(position), mass(mass) {}
+
 	};
 
 	struct CollisionComponent
