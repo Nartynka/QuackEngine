@@ -162,6 +162,7 @@ namespace Quack
 			shader.SetUniform4fv("view", glm::value_ptr(view));	
 			shader.SetUniform4fv("projection", glm::value_ptr(projection));
 
+			shader.SetUniform3fv("viewPos", glm::value_ptr(camera->position));
 
 			// Physics for entities
 			Move(scene, dt);
