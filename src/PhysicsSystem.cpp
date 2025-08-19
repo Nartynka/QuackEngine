@@ -31,11 +31,12 @@ namespace Quack
 			auto& [physics] = physicsView.get(entity);
 
 			physics.oldPosition = physics.position;
+			glm::vec3 oldVelocity = physics.velocity;
 
 			glm::vec3 acceleration = physics.forces * (1.0f / physics.mass); // forces * inverse of mass
 
 			physics.velocity = physics.velocity * physics.friction + acceleration * dt;
-			physics.position += physics.velocity * dt;
+			physics.position += (oldVelocity + physics.velocity) * 0.5f * dt;
 		}
 	}
 
