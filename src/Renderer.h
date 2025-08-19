@@ -8,11 +8,10 @@ namespace Quack
 
 	class Renderer
 	{
-	public:
-		Renderer();
-		~Renderer();
+	public:		
+		static void Init();
 
-		void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
-		void DrawOutline(const VertexArray& va, const Shader& shader) const;
+		static void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader);
+		static void DrawOutline(const VertexArray& va, const Shader& shader);
 	};
 }

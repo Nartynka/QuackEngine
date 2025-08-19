@@ -29,6 +29,7 @@
 #include "Shapes.h"
 #include "ModelLibrary.h"
 #include "LightCube.h"
+#include "Systems.h"
 
 namespace Quack
 {
@@ -41,9 +42,9 @@ namespace Quack
 		
 		Input::SetWindow(window->GetWindow());
 		
-		renderer = std::make_unique<Renderer>();
+		Renderer::Init();
 
-		scene = std::make_unique<Scene>();
+		scene = std::make_shared<Scene>();
 
 		camera = std::make_unique<Camera>();
 
@@ -93,8 +94,6 @@ namespace Quack
 
 		Entity entity = scene->CreateEntity();
 
-		glm::vec3 floorCollisionHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
-
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 		entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 		entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
@@ -129,27 +128,20 @@ namespace Quack
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
 
-		Rectangle floor(glm::vec3(3.5f, 0.1f, 4.5f));
-
 		glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
-		glm::vec3 floorCollisionHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+		Rectangle floor(floorHalfSize);
 
-		glm::vec3 minFloor;
-		minFloor.x = floorPos.x - floorCollisionHalfSize.x;
-		minFloor.y = floorPos.y - floorCollisionHalfSize.y;
-		minFloor.z = floorPos.z - floorCollisionHalfSize.z;
-
-		glm::vec3 maxFloor;
-		maxFloor.x = floorPos.x + floorCollisionHalfSize.x;
-		maxFloor.y = floorPos.y + floorCollisionHalfSize.y;
-		maxFloor.z = floorPos.z + floorCollisionHalfSize.z;
 
 		LightCube lightCube;
-
 		lightCube.position = glm::vec3(0.f, 3.5f,  0.f);
-		
-		NormalCube cube1;
-		glm::vec3 cube1pos = glm::vec3(0.f, 0.0f, 2.f);
+		//lightCube.position = glm::vec3(0.f, sin(glfwGetTime()) * 3.5f, (cos(glfwGetTime()) * 5.5f) - 5.5f);
+		shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
+		shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));
+
+
+		NormalCube normalCube;
+		glm::vec3 normalCubePos = glm::vec3(0.f, 0.0f, 2.f);
 		
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
@@ -159,8 +151,6 @@ namespace Quack
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			shader.Bind();
-
 			camera->Update(dt);
 
 			// Maybe view & projection should be in camera class?
@@ -168,147 +158,39 @@ namespace Quack
 			// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
 			// the second vector is the point that we look at 
 			view = glm::lookAt(camera->position, camera->position+camera->front, camera->up);
+			shader.Bind();
 			shader.SetUniform4fv("view", glm::value_ptr(view));	
 			shader.SetUniform4fv("projection", glm::value_ptr(projection));
 
 
+			// Physics for entities
+			Move(scene, dt);
+			CheckCollision(scene, dt, floorPos, floorHalfSize);
 
-			//lightCube.position = glm::vec3(0.f, sin(glfwGetTime()) * 3.5f, (cos(glfwGetTime()) * 5.5f) - 5.5f);
-			
-			shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
-			shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));	
-
-
-
-
-			auto physicsView = registry.view<PhysicsComponent, TransformComponent>();
-			// "physics system?"
-			// entity is just a uint32_t so no need for a const reference
-			for (auto entity : physicsView)
-			{
-				auto& [physics, transform] = physicsView.get(entity);
-				physics.velocity += physics.acceleration * dt;
-				transform.transform = glm::translate(transform.transform, physics.velocity * dt);
-			}
-			
+			// Render entities
+			RenderShapes(scene, shader);
+			RenderModels(scene, shader);
+			RenderCollisionShapes(scene, shader);
 
 
-			// should collision and physics be one component / system?
-			// "collision system?"
-			auto collisionView = registry.view<CollisionComponent, TransformComponent, PhysicsComponent>();
-			for (auto entity : collisionView)
-			{
-				auto& [collision, transform, physics] = collisionView.get(entity);
-
-				// Draw collision shapes
-				shader.SetUniform4fv("model", glm::value_ptr(transform.transform));
-				shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
-				renderer->DrawOutline(*collision.shape->vao, shader);
-
-				// Check collision with floor
-				glm::vec3 minEntity;
-				minEntity.x = transform.transform[3][0] - collision.halfSize.x;
-				minEntity.y = transform.transform[3][1] - collision.halfSize.y;
-				minEntity.z = transform.transform[3][2] - collision.halfSize.z;
-
-				glm::vec3 maxEntity;
-				maxEntity.x = transform.transform[3][0] + collision.halfSize.x;
-				maxEntity.y = transform.transform[3][1] + collision.halfSize.y;
-				maxEntity.z = transform.transform[3][2] + collision.halfSize.z;
-
-				if ((minEntity.x <= maxFloor.x && maxEntity.x >= minFloor.x) &&
-					(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
-					(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
-				{
-					transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
-
-					physics.velocity = glm::vec3(0.f);
-					//physics.acceleration = glm::vec3(0.f); 'Oh gravity, thou art a heartless bitch' - Jim Parsons
-				}
-				else
-				{
-					// Check collision with everything else
-					for (auto entity2 : collisionView)
-					{
-						if(entity == entity2)
-							continue;
-
-						auto& [collision2, transform2, physics2] = collisionView.get(entity2);
-
-						glm::vec3 minEntity2;
-						minEntity2.x = transform2.transform[3][0] - collision2.halfSize.x;
-						minEntity2.y = transform2.transform[3][1] - collision2.halfSize.y;
-						minEntity2.z = transform2.transform[3][2] - collision2.halfSize.z;
-
-						glm::vec3 maxEntity2;
-						maxEntity2.x = transform2.transform[3][0] + collision2.halfSize.x;
-						maxEntity2.y = transform2.transform[3][1] + collision2.halfSize.y;
-						maxEntity2.z = transform2.transform[3][2] + collision2.halfSize.z;
-						
-						if ((minEntity.x <= maxEntity2.x && maxEntity.x >= minEntity2.x) &&
-							(minEntity.y <= maxEntity2.y && maxEntity.y >= minEntity2.y) &&
-							(minEntity.z <= maxEntity2.z && maxEntity.z >= minEntity2.z))
-						{
-							transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
-
-							physics.velocity = glm::vec3(0.f);
-
-							break;
-						}
-					}
-				}
-			}
-
-
-			// "render system?"
-			auto modelView = registry.view<ModelComponent, TransformComponent>();
-			for (auto entity : modelView)
-			{
-				auto& [modelComp, transform] = modelView.get(entity);
-
-				model = transform.transform;
-				//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
-				model = glm::scale(model, glm::vec3(0.5f));
-
-				shader.SetUniform4fv("model", glm::value_ptr(model));
-				shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.0f);
-				
-				modelComp.model->Draw(shader);
-				
-			}
-
-
-			auto shapeView = registry.view<ShapeComponent, TransformComponent>();
-			for (auto entity : shapeView)
-			{
-				auto& [shape, transform] = shapeView.get(entity);
-
-				model = transform.transform;
-				//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
-
-				shader.SetUniform4fv("model", glm::value_ptr(model));
-				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
-
-				renderer->Draw(*shape.shape->vao, *shape.shape->ibo, shader);
-			}
-
+			// Render floor
 			model = glm::translate(glm::mat4(1.0f), floorPos);
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
-			renderer->Draw(*floor.vao, *floor.ibo, shader);
+			Renderer::Draw(*floor.vao, *floor.ibo, shader);
 
-			model = glm::translate(glm::mat4(1.0f), cube1pos);
+			// Render normal cube
+			model = glm::translate(glm::mat4(1.0f), normalCubePos);
 			model = glm::scale(model, glm::vec3(4.5f, 0.1f, 3.5f));
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.5f);
-			renderer->Draw(*cube1.vao, *cube1.ibo, shader);
+			Renderer::Draw(*normalCube.vao, *normalCube.ibo, shader);
 
-
+			// Render light cube
 			model = glm::translate(glm::mat4(1.0f), lightCube.position);
 			lightCube.shader->Bind();
 			lightCube.shader->SetUniform4fv("MVP", glm::value_ptr(projection * view * model));
-
-			renderer->Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
+			Renderer::Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
 
 			window->Update();
 		}

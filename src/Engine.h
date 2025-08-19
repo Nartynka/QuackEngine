@@ -9,7 +9,6 @@
 namespace Quack
 {
 	class Window;
-	class Renderer;
 	class Scene;
 	class Camera;
 
@@ -27,8 +26,7 @@ namespace Quack
 		void OnRightMouseButton(const MouseRightButtonPressedEvent& e);
 	private:
 		std::unique_ptr<Window> window;
-		std::unique_ptr<Renderer> renderer;
-		std::unique_ptr<Scene> scene;
+		std::shared_ptr<Scene> scene;
 		std::unique_ptr<Camera> camera;
 		//bool bIsRunning = true;
 	};

@@ -9,19 +9,14 @@
 
 namespace Quack
 {
-	Renderer::Renderer()
+	void Renderer::Init()
 	{
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	Renderer::~Renderer()
+	void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader)
 	{
-	}
-
-
-	void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
-	{
-		//shader.Bind();
+		shader.Bind();
 		va.Bind();
 		ib.Bind();
 
@@ -29,7 +24,7 @@ namespace Quack
 	}
 
 	// Draw outlines of a cube for debug purpose
-	void Renderer::DrawOutline(const VertexArray& va, const Shader& shader) const
+	void Renderer::DrawOutline(const VertexArray& va, const Shader& shader)
 	{
 		shader.Bind();
 		va.Bind();
