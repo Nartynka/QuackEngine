@@ -27,7 +27,8 @@ namespace Quack
 		~Mesh();
 
 		void Draw(Shader& shader) const;
-		
+		const std::vector<Texture>& GetTextures() const;
+
 		// Explicitly delete copy operations
 		Mesh(const Mesh&) = delete;
 		Mesh& operator=(const Mesh&) = delete;

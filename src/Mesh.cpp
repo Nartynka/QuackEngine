@@ -1,12 +1,11 @@
 #include "Mesh.h"
 
-#include <GL\glew.h>
-
 #include "VertexArray.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
 #include "Log.h"
+#include "Renderer.h"
 
 namespace Quack
 {
@@ -46,14 +45,17 @@ namespace Quack
 		}
 
 		// @TODO: multiple textures for mesh
-		if (!textures.empty())
+		if (textures.empty())
 		{
-			glBindTexture(GL_TEXTURE_2D, textures[0].id);
+			QUACK_WARN("Mesh does not have any textures!!");
 		}
 
-		// @TODO: think about who should make the draw call ?
-		vao->Bind();
-		glDrawElements(GL_TRIANGLES, ibo->GetCount(), GL_UNSIGNED_INT, nullptr);
+		Renderer::DrawMesh(*vao, *ibo, textures, shader);
+	}
+
+	const std::vector<Quack::Texture>& Mesh::GetTextures() const
+	{
+		return textures;
 	}
 
 }
