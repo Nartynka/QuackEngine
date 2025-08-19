@@ -24,6 +24,14 @@ namespace Quack
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
+	void Renderer::DrawNotIndexed(const VertexArray& vao, size_t count, const Shader& shader)
+	{
+		shader.Bind();
+		vao.Bind();
+
+		glDrawArrays(GL_TRIANGLES, 0, count);
+	}
+
 	// Draw outlines of a cube for debug purpose
 	void Renderer::DrawOutline(const VertexArray& vao, const Shader& shader)
 	{

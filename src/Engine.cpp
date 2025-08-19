@@ -130,7 +130,7 @@ namespace Quack
 
 		glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
-		Rectangle floor(floorHalfSize);
+		NormalCube floor(floorHalfSize);
 
 
 		LightCube lightCube;
@@ -178,14 +178,14 @@ namespace Quack
 			model = glm::translate(glm::mat4(1.0f), floorPos);
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
-			Renderer::Draw(*floor.vao, *floor.ibo, shader);
+			Renderer::DrawNotIndexed(*floor.vao, floor.GetVerticesCount(), shader);
 
 			// Render normal cube
 			model = glm::translate(glm::mat4(1.0f), normalCubePos);
 			model = glm::scale(model, glm::vec3(4.5f, 0.1f, 3.5f));
 			shader.SetUniform4fv("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.5f);
-			Renderer::Draw(*normalCube.vao, *normalCube.ibo, shader);
+			Renderer::DrawNotIndexed(*normalCube.vao, normalCube.GetVerticesCount(), shader);
 
 			// Render light cube
 			model = glm::translate(glm::mat4(1.0f), lightCube.position);

@@ -29,12 +29,16 @@ namespace Quack
 			vao->AddBuffer(*vbo, layout);
 		}
 
+		size_t GetVerticesCount()
+		{
+			return vertices.size();
+		}
+
 		std::unique_ptr<VertexArray> vao;
 		std::unique_ptr<VertexBuffer> vbo;
 		std::unique_ptr<IndexBuffer> ibo;
 
 	protected:
-
 		std::vector<float> vertices;
 		std::vector<int> indices;
 	};
@@ -78,63 +82,63 @@ namespace Quack
 	class NormalCube : public Shape
 	{
 	public:
-		NormalCube()
+		NormalCube(glm::vec3 halfSize = glm::vec3(0.5f))
 		{
 			vertices = {
-				// position			  // normals
-				-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, -1.0f,
-				 0.5f, -0.5f, -0.5f,  0.0f, 0.0f, -1.0f,
-				 0.5f,  0.5f, -0.5f,  0.0f, 0.0f, -1.0f,
-				 0.5f,  0.5f, -0.5f,  0.0f, 0.0f, -1.0f,
-				-0.5f,  0.5f, -0.5f,  0.0f, 0.0f, -1.0f,
-				-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, -1.0f,
+				// position						  // normals
+				-halfSize.x, -halfSize.y, -halfSize.z,  0.0f, 0.0f, -1.0f,
+				 halfSize.x, -halfSize.y, -halfSize.z,  0.0f, 0.0f, -1.0f,
+				 halfSize.x,  halfSize.y, -halfSize.z,  0.0f, 0.0f, -1.0f,
+				 halfSize.x,  halfSize.y, -halfSize.z,  0.0f, 0.0f, -1.0f,
+				-halfSize.x,  halfSize.y, -halfSize.z,  0.0f, 0.0f, -1.0f,
+				-halfSize.x, -halfSize.y, -halfSize.z,  0.0f, 0.0f, -1.0f,
 
-				-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-				 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-				 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-				 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-				-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-				-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
+				-halfSize.x, -halfSize.y,  halfSize.z,  0.0f, 0.0f, 1.0f,
+				 halfSize.x, -halfSize.y,  halfSize.z,  0.0f, 0.0f, 1.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 1.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 1.0f,
+				-halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 1.0f,
+				-halfSize.x, -halfSize.y,  halfSize.z,  0.0f, 0.0f, 1.0f,
 
-				-0.5f,  0.5f,  0.5f,  -1.0f, 0.0f, 0.0f,
-				-0.5f,  0.5f, -0.5f,  -1.0f, 0.0f, 0.0f,
-				-0.5f, -0.5f, -0.5f,  -1.0f, 0.0f, 0.0f,
-				-0.5f, -0.5f, -0.5f,  -1.0f, 0.0f, 0.0f,
-				-0.5f, -0.5f,  0.5f,  -1.0f, 0.0f, 0.0f,
-				-0.5f,  0.5f,  0.5f,  -1.0f, 0.0f, 0.0f,
+				-halfSize.x,  halfSize.y,  halfSize.z,  -1.0f, 0.0f, 0.0f,
+				-halfSize.x,  halfSize.y, -halfSize.z,  -1.0f, 0.0f, 0.0f,
+				-halfSize.x, -halfSize.y, -halfSize.z,  -1.0f, 0.0f, 0.0f,
+				-halfSize.x, -halfSize.y, -halfSize.z,  -1.0f, 0.0f, 0.0f,
+				-halfSize.x, -halfSize.y,  halfSize.z,  -1.0f, 0.0f, 0.0f,
+				-halfSize.x,  halfSize.y,  halfSize.z,  -1.0f, 0.0f, 0.0f,
 
-				 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
-				 0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f,
-				 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,
-				 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,
-				 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,
-				 0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 0.0f,
+				 halfSize.x,  halfSize.y, -halfSize.z,  1.0f, 0.0f, 0.0f,
+				 halfSize.x, -halfSize.y, -halfSize.z,  1.0f, 0.0f, 0.0f,
+				 halfSize.x, -halfSize.y, -halfSize.z,  1.0f, 0.0f, 0.0f,
+				 halfSize.x, -halfSize.y,  halfSize.z,  1.0f, 0.0f, 0.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 0.0f,
 
-				-0.5f, -0.5f, -0.5f,  0.0f, -1.0f, 0.0f,
-				 0.5f, -0.5f, -0.5f,  0.0f, -1.0f, 0.0f,
-				 0.5f, -0.5f,  0.5f,  0.0f, -1.0f, 0.0f,
-				 0.5f, -0.5f,  0.5f,  0.0f, -1.0f, 0.0f,
-				-0.5f, -0.5f,  0.5f,  0.0f, -1.0f, 0.0f,
-				-0.5f, -0.5f, -0.5f,  0.0f, -1.0f, 0.0f,
+				-halfSize.x, -halfSize.y, -halfSize.z,  0.0f, -1.0f, 0.0f,
+				 halfSize.x, -halfSize.y, -halfSize.z,  0.0f, -1.0f, 0.0f,
+				 halfSize.x, -halfSize.y,  halfSize.z,  0.0f, -1.0f, 0.0f,
+				 halfSize.x, -halfSize.y,  halfSize.z,  0.0f, -1.0f, 0.0f,
+				-halfSize.x, -halfSize.y,  halfSize.z,  0.0f, -1.0f, 0.0f,
+				-halfSize.x, -halfSize.y, -halfSize.z,  0.0f, -1.0f, 0.0f,
 
-				-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-				 0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
-				 0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
-				 0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
-				-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,
-				-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,
+				-halfSize.x,  halfSize.y, -halfSize.z,  0.0f, 1.0f, 0.0f,
+				 halfSize.x,  halfSize.y, -halfSize.z,  0.0f, 1.0f, 0.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 1.0f, 0.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 1.0f, 0.0f,
+				-halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 1.0f, 0.0f,
+				-halfSize.x,  halfSize.y, -halfSize.z,  0.0f, 1.0f, 0.0f,
 			};
 
-			indices = {
-				0, 1, 2, 3, 4, 5,       // back face
-				6, 7, 8, 9, 10, 11,     // front face
-				12, 13, 14, 15, 16, 17, // left face
-				18, 19, 20, 21, 22, 23, // right face
-				24, 25, 26, 27, 28, 29, // bottom face
-				30, 31, 32, 33, 34, 35  // top face
-			};
+			// Create OpenGL objects
+			vao = std::make_unique<VertexArray>();
+			vao->Bind();
+			vbo = std::make_unique<VertexBuffer>(vertices.data(), (unsigned int)(vertices.size() * sizeof(float)));
 
-			SetupBuffers();
+			VertexBufferLayout layout;
+			layout.AddElement(3); // Position
+			layout.AddElement(3); // Normals
+
+			vao->AddBuffer(*vbo, layout);
 		}
 	};
 }
