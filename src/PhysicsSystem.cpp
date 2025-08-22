@@ -2,6 +2,8 @@
 
 #include "Scene.h"
 
+#include "Renderer.h" // for debug only
+
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
@@ -53,7 +55,7 @@ namespace Quack
 	}
 
 
-	void SolveConstraint(const std::shared_ptr<Scene> scene, glm::vec3 floorPos, glm::vec3 floorHalfSize)
+	void SolveConstraint(const std::shared_ptr<Scene> scene, glm::vec3 floorPos, glm::vec3 floorHalfSize, const Shader& shader)
 	{
 		auto& registry = scene->GetRegistry();
 		auto collisionView = registry.view<CollisionComponent, PhysicsComponent>();
@@ -91,9 +93,21 @@ namespace Quack
 			{
 				// for every action, there is an equal and opposite reaction
 
-				// probably not physically accurate, will change later
-				physics.velocity = glm::vec3(0.f);
-				physics.position = physics.oldPosition;
+				float penetration = maxFloor.y - minEntity.y;
+				if (penetration > 0.0f)
+				{
+					physics.position.y += penetration;
+				}
+
+				// fake normal, will update when raycasting is done
+				glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+				glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+				glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+
+
+				physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+				physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 			}
 		}
 	}

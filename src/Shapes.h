@@ -29,9 +29,9 @@ namespace Quack
 			vao->AddBuffer(*vbo, layout);
 		}
 
-		size_t GetVerticesCount()
+		unsigned int GetVerticesCount()
 		{
-			return vertices.size();
+			return (unsigned int)vertices.size();
 		}
 
 		std::unique_ptr<VertexArray> vao;

@@ -121,7 +121,7 @@ namespace Quack
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
 		entity.AddComponent<PhysicsComponent>(position, 100.f);
 		entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
-		entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+		entity.AddComponent<ShapeComponent>(new Cube());
 	}
 
 	void Engine::Run()
@@ -185,7 +185,7 @@ namespace Quack
 
 				ApplyForces(scene);
 				Update(scene, dt);
-				SolveConstraint(scene, floorPos, floorHalfSize);
+				SolveConstraint(scene, floorPos, floorHalfSize, shader);
 				Move(scene); // Update transform component with position from physics component
 
 

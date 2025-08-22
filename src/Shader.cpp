@@ -122,32 +122,32 @@ namespace Quack
 		return program;
 	}
 
-	void Shader::SetUniform4f(const char* name, float v0, float v1, float v2, float v3)
+	void Shader::SetUniform4f(const char* name, float v0, float v1, float v2, float v3) const
 	{
 		glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
 	}
 
-	void Shader::SetUniform3f(const char* name, float v0, float v1, float v2)
+	void Shader::SetUniform3f(const char* name, float v0, float v1, float v2) const
 	{
 		glUniform3f(GetUniformLocation(name), v0, v1, v2);
 	}
 
-	void Shader::SetUniform3fv(const char* name, const float* value)
+	void Shader::SetUniform3fv(const char* name, const float* value) const
 	{
 		glUniform3fv(GetUniformLocation(name), 1, value);
 	}
 
-	void Shader::SetUniform4fv(const char* name, const float* value)
+	void Shader::SetUniform4fv(const char* name, const float* value) const
 	{
 		glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, value);
 	}
 
-	void Shader::SetUniformInt(const char* name, int value)
+	void Shader::SetUniformInt(const char* name, int value) const
 	{
 		glUniform1i(GetUniformLocation(name), value);
 	}
 
-	int Shader::GetUniformLocation(const char* name)
+	int Shader::GetUniformLocation(const char* name) const
 	{
 		// Cashing uniforms? Right now if the uniform is not found then every time we try to set it the warning gets printed.
 		// If we set that uniform in our main loop then our console is spammed with the warning

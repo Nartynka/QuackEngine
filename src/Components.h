@@ -28,7 +28,7 @@ namespace Quack
 		float bounce = 0.7f; // coefficient of restitution, how much energy is kept when entity bounces off a surface
 
 		// Shared across entities
-		glm::vec3 gravity = glm::vec3(0.0f, -9.82f, 0.0f);
+		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
 		float friction = 0.98f;
 
 		//PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass = 0.f)

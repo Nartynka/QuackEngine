@@ -25,5 +25,5 @@ namespace Quack
 
 	void Move(const std::shared_ptr<Scene> scene); // idk if this should be a separate function
 
-	void SolveConstraint(const std::shared_ptr<Scene> scene, glm::vec3 floorPos, glm::vec3 floorHalfSize); // For now we only have one constraint - floor
+	void SolveConstraint(const std::shared_ptr<Scene> scene, glm::vec3 floorPos, glm::vec3 floorHalfSize, const Shader& shader); // For now we only have one constraint - floor
 }
