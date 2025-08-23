@@ -140,10 +140,14 @@ namespace Quack
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
 
-		glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
-		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
-		NormalCube floor(floorHalfSize);
-
+		Entity floor = scene->CreateEntity();
+		{
+			glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
+			glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize);
+		}
 
 		LightCube lightCube;
 		lightCube.position = glm::vec3(0.f, 3.5f,  0.f);
@@ -180,26 +184,17 @@ namespace Quack
 				shader.SetUniform3fv("viewPos", glm::value_ptr(camera->position));
 
 				// Physics for entities
-				//Move(scene, dt);
-				//CheckCollision(scene, dt, floorPos, floorHalfSize);
 
 				ApplyForces(scene);
-				Update(scene, dt);
-				SolveConstraint(scene, floorPos, floorHalfSize, shader);
-				Move(scene); // Update transform component with position from physics component
+				Update(scene, dt); // Update physics
+				SolveConstraint(scene, &floor.GetComponent<ConstraintComponent>(), shader);
+				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
 
 
 				// Render entities
 				RenderShapes(scene, shader);
 				RenderModels(scene, shader);
 				RenderCollisionShapes(scene, shader);
-
-
-				// Render floor
-				model = glm::translate(glm::mat4(1.0f), floorPos);
-				shader.SetUniform4fv("model", glm::value_ptr(model));
-				shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
-				Renderer::DrawNotIndexed(*floor.vao, floor.GetVerticesCount(), shader);
 
 				// Render normal cube
 				model = glm::translate(glm::mat4(1.0f), normalCubePos);

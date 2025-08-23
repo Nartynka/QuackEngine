@@ -1,11 +1,13 @@
 #include "Systems.h"
 
 #include "Scene.h"
+#include "Components.h"
 
 #include "Renderer.h" // for debug only
 
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#include <gtx/quaternion.hpp>
 
 namespace Quack
 {
@@ -42,7 +44,7 @@ namespace Quack
 		}
 	}
 
-	void Move(const std::shared_ptr<Scene> scene)
+	void UpdateTransform(const std::shared_ptr<Scene> scene)
 	{
 		auto& registry = scene->GetRegistry();
 		auto moveView = registry.view<PhysicsComponent, TransformComponent>();
@@ -51,24 +53,28 @@ namespace Quack
 		{
 			auto& [physics, transform] = moveView.get(entity);
 			transform.transform = glm::translate(glm::mat4(1.0f), physics.position);
+			transform.transform *= glm::toMat4(physics.orientation);	
 		}
 	}
 
-
-	void SolveConstraint(const std::shared_ptr<Scene> scene, glm::vec3 floorPos, glm::vec3 floorHalfSize, const Shader& shader)
+	// @TODO: do not pass constraintComponent, loop over every constraintComponent
+	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor, const Shader& shader)
 	{
 		auto& registry = scene->GetRegistry();
 		auto collisionView = registry.view<CollisionComponent, PhysicsComponent>();
 
+		// AABB Collision
+		// Change to OBB Collision
+
 		static glm::vec3 minFloor;
-		minFloor.x = floorPos.x - floorHalfSize.x;
-		minFloor.y = floorPos.y - floorHalfSize.y;
-		minFloor.z = floorPos.z - floorHalfSize.z;
+		minFloor.x = floor->position.x - floor->halfSize.x;
+		minFloor.y = floor->position.y - floor->halfSize.y;
+		minFloor.z = floor->position.z - floor->halfSize.z;
 
 		static glm::vec3 maxFloor;
-		maxFloor.x = floorPos.x + floorHalfSize.x;
-		maxFloor.y = floorPos.y + floorHalfSize.y;
-		maxFloor.z = floorPos.z + floorHalfSize.z;
+		maxFloor.x = floor->position.x + floor->halfSize.x;
+		maxFloor.y = floor->position.y + floor->halfSize.y;
+		maxFloor.z = floor->position.z + floor->halfSize.z;
 
 
 		for (auto entity : collisionView)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm.hpp>
+#include <gtc/type_ptr.hpp>
 
 #include "Shapes.h"
 #include "Model.h"
@@ -8,20 +9,15 @@
 
 namespace Quack
 {
-	struct TransformComponent
-	{
-		glm::mat4 transform = glm::mat4{ 1.0f };
-
-		TransformComponent() = default;
-		TransformComponent(glm::mat4 transform)
-			: transform(transform) {}
-	};
+	/// Physics component
 
 	struct PhysicsComponent // rigid body component?
 	{
 		glm::vec3 velocity;
 
 		glm::vec3 position, oldPosition;
+		glm::quat orientation; // rotation
+
 		glm::vec3 forces;
 
 		float mass = 1.0f;
@@ -30,15 +26,36 @@ namespace Quack
 		// Shared across entities
 		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
 		float friction = 0.98f;
-
-		//PhysicsComponent(glm::vec3 velocity, glm::vec3 acceleration, float mass = 0.f)
-		//	: velocity(velocity), acceleration(acceleration), mass(mass) {}
-		//PhysicsComponent(glm::vec3 velocity)
-		//	: velocity(velocity), mass(0) {}
 		
-		PhysicsComponent(glm::vec3 position, float mass = 1.0f)
-			: position(position), mass(mass) {}
+		PhysicsComponent(glm::vec3 position, float mass = 1.0f, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f))
+			: position(position), mass(mass) 
+		{
+			float angle = glm::radians(rotationAngle) / 2;
+			orientation.x = rotationAxis.x * sin(angle);
+			orientation.y = rotationAxis.y * sin(angle);
+			orientation.z = rotationAxis.z * sin(angle);
+			orientation.w = cos(angle);
+		}
 
+	};
+
+	struct ConstraintComponent // Immovable physics & collision component?
+	{
+		// Maybe will refactor later
+		// width, height, depth
+		glm::vec3 halfSize;
+		glm::vec3 position;
+		glm::quat orientation;  // rotation
+
+		ConstraintComponent(glm::vec3 position, glm::vec3 halfSize, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f))
+			: position(position), halfSize(halfSize)
+		{
+			float angle = glm::radians(rotationAngle) / 2;
+			orientation.x = rotationAxis.x * sin(angle);
+			orientation.y = rotationAxis.y * sin(angle);
+			orientation.z = rotationAxis.z * sin(angle);
+			orientation.w = cos(angle);
+		}
 	};
 
 	struct CollisionComponent
@@ -56,6 +73,19 @@ namespace Quack
 		~CollisionComponent()
 		{
 			delete shape;
+		}
+	};
+
+
+	/// Rendering components
+
+	struct TransformComponent
+	{
+		glm::mat4 transform = glm::mat4{ 1.0f };
+
+		TransformComponent() = default;
+		TransformComponent(glm::mat4 transform)
+			: transform(transform) {
 		}
 	};
 

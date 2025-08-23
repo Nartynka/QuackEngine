@@ -7,6 +7,7 @@ namespace Quack
 {
 	class Scene;
 	class Shader;
+	struct ConstraintComponent;
 
 	void RenderShapes(const std::shared_ptr<Scene> scene, Shader& shader);
 
@@ -23,7 +24,7 @@ namespace Quack
 
 	void Update(const std::shared_ptr<Scene> scene, float dt);
 
-	void Move(const std::shared_ptr<Scene> scene); // idk if this should be a separate function
+	void UpdateTransform(const std::shared_ptr<Scene> scene);
 
-	void SolveConstraint(const std::shared_ptr<Scene> scene, glm::vec3 floorPos, glm::vec3 floorHalfSize, const Shader& shader); // For now we only have one constraint - floor
+	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor, const Shader& shader); // For now we only have one constraint - floor
 }

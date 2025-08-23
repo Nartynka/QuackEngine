@@ -22,9 +22,17 @@ namespace Quack
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 
 			shader.SetUniform4fv("model", glm::value_ptr(model));
-			shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
 
-			Renderer::Draw(*shape.shape->vao, *shape.shape->ibo, shader);
+			if (shape.shape->ibo)
+			{
+				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
+				Renderer::Draw(*shape.shape->vao, *shape.shape->ibo, shader);
+			}
+			else
+			{
+				shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
+				Renderer::DrawNotIndexed(*shape.shape->vao, shape.shape->GetVerticesCount(), shader);
+			}
 		}
 	}
 
