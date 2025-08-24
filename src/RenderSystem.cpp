@@ -67,8 +67,8 @@ namespace Quack
 			auto& [collision, transform] = collisionView.get(entity);
 
 			shader.SetUniform4fv("model", glm::value_ptr(transform.transform));
-			shader.SetUniform4f("inColor", 0.0f, 1.f, 0.5f);
-			Renderer::DrawOutline(*collision.shape->vao, shader);
+			shader.SetUniform4f("inColor", 0.f, 0.5f, 1.f);
+			Renderer::DrawOutline(*collision.shape->vao, *collision.shape->ibo, shader);
 		}
 	}
 

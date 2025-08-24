@@ -39,24 +39,15 @@ namespace Quack
 		glDrawArrays(GL_TRIANGLES, 0, count);
 	}
 
-	// Draw outlines of a cube for debug purpose
-	void Renderer::DrawOutline(const VertexArray& vao, const Shader& shader)
+	// Draw outlines for debug
+	void Renderer::DrawOutline(const VertexArray& vao, const IndexBuffer& ibo, const Shader& shader)
 	{
 		shader.Bind();
 		vao.Bind();
 
-		static int indices[] = {
-			0, 1,  1, 2,  2, 3,  3, 0, // Front Face
-			4, 5,  5, 6,  6, 7,  7, 4, // Back Face
-			0, 4,  1, 5,  2, 6,  3, 7  // Side connecting lines
-		};
-
-		static IndexBuffer ibo = {indices, 24};
-		ibo.Bind();
-
 		glLineWidth(2.5f);
 
-		glDrawElements(GL_LINES, 24,GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_LINES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 
 		glLineWidth(1.0f);
 	}

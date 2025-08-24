@@ -6,6 +6,8 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 
+#define M_PI 3.14159265358979323846f
+
 namespace Quack
 {
 	// @TODO: Shapes probably should follow the same pattern as models
@@ -75,9 +77,8 @@ namespace Quack
 			SetupBuffers();
 		}
 	};
-
 	using Rectangle = Cube;
-	using Cuboid = Cube;
+
 
 	class NormalCube : public Shape
 	{
@@ -141,4 +142,98 @@ namespace Quack
 			vao->AddBuffer(*vbo, layout);
 		}
 	};
+
+
+	// Debug Shapes
+
+	class DebugCube : public Shape
+	{
+	public:
+		DebugCube(glm::vec3 halfSize = glm::vec3(0.5f))
+		{
+			vertices = {
+				// Front face position				  // fake normals, will delete when debug shader without normals is done
+				-halfSize.x, -halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 0: bottom-left-front
+				 halfSize.x, -halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 1: bottom-right-front
+				 halfSize.x,  halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 2: top-right-front
+				-halfSize.x,  halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 3: top-left-front
+				// Back face position
+				-halfSize.x, -halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 4: bottom-left-back
+				 halfSize.x, -halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 5: bottom-right-back
+				 halfSize.x,  halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 6: top-right-back
+				-halfSize.x,  halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 7: top-left-back
+			};
+
+			indices = {
+				0, 1,  1, 2,  2, 3,  3, 0, // Front Face
+				4, 5,  5, 6,  6, 7,  7, 4, // Back Face
+				0, 4,  1, 5,  2, 6,  3, 7  // Side connecting lines
+			};
+
+			SetupBuffers();
+		}
+	};
+
+
+	class DebugSphere : public Shape
+	{
+	public:
+		DebugSphere(float radius, int segments = 32)
+		{
+			// @TODO: This could be a function that is called three times here
+			// XY circle
+			for (int i = 0; i <= segments; i++)
+			{
+				float theta = (float)i / segments * 2.0f * M_PI;
+				float x = radius * cos(theta);
+				float y = radius * sin(theta);
+				float z = 0.0f;
+
+				vertices.insert(vertices.end(), { x, y, z });
+				vertices.insert(vertices.end(), { 1.f, 1.f, 1.f }); // fake normals, will delete when debug shader without normals is done
+			}
+
+			// XZ circle
+			for (int i = 0; i <= segments; i++)
+			{
+				float theta = (float)i / segments * 2.0f * M_PI;
+				float x = radius * cos(theta);
+				float y = 0.0f;
+				float z = radius * sin(theta);
+
+				vertices.insert(vertices.end(), { x, y, z });
+				vertices.insert(vertices.end(), { 1.f, 1.f, 1.f }); // fake normals, will delete when debug shader without normals is done
+			}
+
+			// YZ circle
+			for (int i = 0; i <= segments; i++)
+			{
+				float theta = (float)i / segments * 2.0f * M_PI;
+				float x = 0.0f;
+				float y = radius * cos(theta);
+				float z = radius * sin(theta);
+
+				vertices.insert(vertices.end(), { x, y, z });
+				vertices.insert(vertices.end(), { 1.f, 1.f, 1.f }); // fake normals, will delete when debug shader without normals is done
+			}
+
+			// Generate indices
+			int circleVertexCount = segments + 1; // how many vertices per circle
+			int circleCount = 3;
+
+			for (int circle = 0; circle < circleCount; circle++)
+			{
+				int startIndex = circle * circleVertexCount;
+
+				for (int i = 0; i < segments; i++)
+				{
+					indices.push_back(startIndex + i);
+					indices.push_back(startIndex + i + 1);
+				}
+			}
+
+			SetupBuffers();
+		}
+	};
+
 }

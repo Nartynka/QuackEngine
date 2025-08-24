@@ -62,12 +62,19 @@ namespace Quack
 	{
 		// width, height, depth
 		glm::vec3 halfSize;
+		float radius;
 		Shape* shape; // Only for drawing / debug
 
 		CollisionComponent(glm::vec3 halfSize)
 			: halfSize(halfSize)
 		{
-			shape = new Cube(halfSize);
+			shape = new DebugCube(halfSize);
+		}
+
+		CollisionComponent(float radius)
+			: radius(radius)
+		{
+			shape = new DebugSphere(radius);
 		}
 
 		~CollisionComponent()
