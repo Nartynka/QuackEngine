@@ -102,7 +102,7 @@ namespace Quack
 		glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
 		entity.AddComponent<PhysicsComponent>(position);
-		entity.AddComponent<CollisionComponent>(0.51f);
+		entity.AddComponent<CollisionComponent>(0.5f);
 		entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
 	}
 
@@ -146,7 +146,7 @@ namespace Quack
 			glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
 			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize);
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 30.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 
 		LightCube lightCube;
@@ -189,7 +189,6 @@ namespace Quack
 				Update(scene, dt); // Update physics
 				SolveConstraint(scene, &floor.GetComponent<ConstraintComponent>(), shader);
 				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
-
 
 				// Render entities
 				RenderShapes(scene, shader);

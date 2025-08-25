@@ -47,14 +47,24 @@ namespace Quack
 	void UpdateTransform(const std::shared_ptr<Scene> scene)
 	{
 		auto& registry = scene->GetRegistry();
-		auto moveView = registry.view<PhysicsComponent, TransformComponent>();
+		auto movableView = registry.view<PhysicsComponent, TransformComponent>();
 
-		for (auto entity : moveView)
+		for (auto entity : movableView)
 		{
-			auto& [physics, transform] = moveView.get(entity);
+			auto& [physics, transform] = movableView.get(entity);
 			transform.transform = glm::translate(glm::mat4(1.0f), physics.position);
 			transform.transform *= glm::toMat4(physics.orientation);	
 		}
+
+		auto constraintView = registry.view<ConstraintComponent, TransformComponent>();
+
+		for (auto entity : constraintView)
+		{
+			auto& [constraint, transform] = constraintView.get(entity);
+			transform.transform = glm::translate(glm::mat4(1.0f), constraint.position);
+			transform.transform *= glm::toMat4(constraint.orientation);
+		}
+
 	}
 
 	// @TODO: do not pass constraintComponent, loop over every constraintComponent
@@ -63,57 +73,103 @@ namespace Quack
 		auto& registry = scene->GetRegistry();
 		auto collisionView = registry.view<CollisionComponent, PhysicsComponent>();
 
-		// AABB Collision
-		// Change to OBB Collision
-
-		static glm::vec3 minFloor;
-		minFloor.x = floor->position.x - floor->halfSize.x;
-		minFloor.y = floor->position.y - floor->halfSize.y;
-		minFloor.z = floor->position.z - floor->halfSize.z;
-
-		static glm::vec3 maxFloor;
-		maxFloor.x = floor->position.x + floor->halfSize.x;
-		maxFloor.y = floor->position.y + floor->halfSize.y;
-		maxFloor.z = floor->position.z + floor->halfSize.z;
-
-
 		for (auto entity : collisionView)
 		{
 			auto& [collision, physics] = collisionView.get(entity);
 
-			// Check collision with floor
-			glm::vec3 minEntity;
-			minEntity.x = physics.position.x - collision.halfSize.x;
-			minEntity.y = physics.position.y - collision.halfSize.y;
-			minEntity.z = physics.position.z - collision.halfSize.z;
-
-			glm::vec3 maxEntity;
-			maxEntity.x = physics.position.x + collision.halfSize.x;
-			maxEntity.y = physics.position.y + collision.halfSize.y;
-			maxEntity.z = physics.position.z + collision.halfSize.z;
-
-
-			if ((minEntity.x <= maxFloor.x && maxEntity.x >= minFloor.x) &&
-				(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
-				(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
+			// @TODO: find better way to distinct if collision shape is sphere or cube
+			if (collision.radius > 0.f)
 			{
-				// for every action, there is an equal and opposite reaction
+				// Sphere - OBB collision check
 
-				float penetration = maxFloor.y - minEntity.y;
-				if (penetration > 0.0f)
+				// This is the same as the line bellow
+				//glm::vec3 axisX = floor->orientation * glm::vec3(1.f, 0.f, 0.f);
+				//glm::vec3 axisY = floor->orientation * glm::vec3(0.f, 1.f, 0.f);
+				//glm::vec3 axisZ = floor->orientation * glm::vec3(0.f, 0.f, 1.f);
+
+				glm::mat3 axes = glm::toMat3(floor->orientation) * glm::mat3(1.f);
+				
+				// vector from sphere to floor
+				glm::vec3 d = physics.position - floor->position;
+				
+				// Find the closest point on OBB to the sphere center
+				float distX = dot(d, axes[0]);
+				float distY = dot(d, axes[1]);
+				float distZ = dot(d, axes[2]);
+
+				// Without clamping the point would the sphere center
+				distX = glm::clamp(distX, -floor->halfSize.x, floor->halfSize.x);
+				distY = glm::clamp(distY, -floor->halfSize.y, floor->halfSize.y);
+				distZ = glm::clamp(distZ, -floor->halfSize.z, floor->halfSize.z);
+
+				// dist- are in floor local space, in that local space they are not rotated so we have to rotate them
+				// axes are our "portal"/"bridge" between floor local space and world space, they represent the floor rotated axes
+				// - that's why we multiply dist- by corresponding axes
+				glm::vec3 closestPoint = floor->position + distX * axes[0] + distY * axes[1] + distZ * axes[2];
+
+				//Renderer::DrawPoint(closestPoint, shader);
+				
+				glm::vec3 diff = physics.position - closestPoint;
+				float distanceSquared = dot(diff, diff);
+
+				if (distanceSquared <= collision.radius * collision.radius)
 				{
-					physics.position.y += penetration;
+					glm::vec3 normal = floor->orientation * glm::vec3(0.0f, 1.0f, 0.0f);
+					
+					physics.position = closestPoint + normal; // obviously this is wrong, will change in next commit to collision contact point
+					
+					glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+					glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+					
+					physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+					physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 				}
+			}
+			else
+			{
+				// AABB - AABB collision check
+				static glm::vec3 minFloor;
+				minFloor.x = floor->position.x - floor->halfSize.x;
+				minFloor.y = floor->position.y - floor->halfSize.y;
+				minFloor.z = floor->position.z - floor->halfSize.z;
 
-				// fake normal, will update when raycasting is done
-				glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+				static glm::vec3 maxFloor;
+				maxFloor.x = floor->position.x + floor->halfSize.x;
+				maxFloor.y = floor->position.y + floor->halfSize.y;
+				maxFloor.z = floor->position.z + floor->halfSize.z;
 
-				glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
-				glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+
+				glm::vec3 minEntity;
+				minEntity.x = physics.position.x - collision.halfSize.x;
+				minEntity.y = physics.position.y - collision.halfSize.y;
+				minEntity.z = physics.position.z - collision.halfSize.z;
+
+				glm::vec3 maxEntity;
+				maxEntity.x = physics.position.x + collision.halfSize.x;
+				maxEntity.y = physics.position.y + collision.halfSize.y;
+				maxEntity.z = physics.position.z + collision.halfSize.z;
 
 
-				physics.velocity = velocityTangental - velocityNormal * physics.bounce;
-				physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
+				if ((minEntity.x <= maxFloor.x && maxEntity.x >= minFloor.x) &&
+					(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
+					(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
+				{
+					// for every action, there is an equal and opposite reaction
+
+					float penetration = maxFloor.y - minEntity.y;
+					if (penetration > 0.0f)
+					{
+						physics.position.y += penetration;
+					}
+
+					glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+					glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+					glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+
+					physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+					physics.velocity = physics.velocity.y < 0.22f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
+				}
 			}
 		}
 	}

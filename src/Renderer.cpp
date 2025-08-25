@@ -69,7 +69,7 @@ namespace Quack
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
-	void Renderer::DrawLine(glm::vec3 point1, glm::vec3 point2, const Shader& shader)
+	void Renderer::DrawLine(glm::vec3 start, glm::vec3 end, const Shader& shader)
 	{
 		shader.Bind();
 		
@@ -78,7 +78,7 @@ namespace Quack
 		shader.SetUniform4f("inColor", 1.f, 0.f, 0.f);
 		shader.SetUniform4fv("model", glm::value_ptr(model));
 
-		glm::vec3 data[] = {point1, point2};
+		glm::vec3 data[] = {start, end};
 		
 		glBindVertexArray(0);
 
@@ -91,7 +91,7 @@ namespace Quack
 		glLineWidth(5.f);
 		glDrawArrays(GL_LINES, 0, 2);
 
-		shader.SetUniform4f("inColor", 0.f, 1.f, 1.f);
+		shader.SetUniform4f("inColor", 1.f, 1.f, 1.f);
 		glDrawArrays(GL_POINTS, 0, 1);
 
 		shader.SetUniform4f("inColor", 0.f, 1.f, 0.f);
