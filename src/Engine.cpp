@@ -177,6 +177,11 @@ namespace Quack
 				// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
 				// the second vector is the point that we look at 
 				view = glm::lookAt(camera->position, camera->position + camera->front, camera->up);
+				
+				Renderer::linesShader->Bind();
+				Renderer::linesShader->SetUniform4fv("view", glm::value_ptr(view));
+				Renderer::linesShader->SetUniform4fv("projection", glm::value_ptr(projection));
+				
 				shader.Bind();
 				shader.SetUniform4fv("view", glm::value_ptr(view));
 				shader.SetUniform4fv("projection", glm::value_ptr(projection));
@@ -184,18 +189,19 @@ namespace Quack
 				shader.SetUniform3fv("viewPos", glm::value_ptr(camera->position));
 
 				// Physics for entities
-
 				ApplyForces(scene);
 				Update(scene, dt); // Update physics
-				SolveConstraint(scene, &floor.GetComponent<ConstraintComponent>(), shader);
+				SolveConstraint(scene, &floor.GetComponent<ConstraintComponent>());
 				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
+
 
 				// Render entities
 				RenderShapes(scene, shader);
 				RenderModels(scene, shader);
-				RenderCollisionShapes(scene, shader);
+				RenderCollisionShapes(scene);
 
 				// Render normal cube
+				shader.Bind();
 				model = glm::translate(glm::mat4(1.0f), normalCubePos);
 				model = glm::scale(model, glm::vec3(4.5f, 0.1f, 3.5f));
 				shader.SetUniform4fv("model", glm::value_ptr(model));

@@ -13,6 +13,7 @@
 namespace Quack
 {
 	unsigned int Renderer::lineBufferId = -1; // why I can set uint to a negative number xD
+	Shader* Renderer::linesShader = nullptr;
 
 	void Renderer::Init()
 	{
@@ -20,6 +21,9 @@ namespace Quack
 		glPointSize(10.f);
 		// this buffer should be deleted in some Terminate/Shutdown method or smth
 		glGenBuffers(1, &lineBufferId);
+
+		// this also should be deleted in some destructor function
+		linesShader = new Shader("res/shaders/Lines.shader");
 	}
 
 	void Renderer::Draw(const VertexArray& vao, const IndexBuffer& ibo, const Shader& shader)
@@ -39,19 +43,6 @@ namespace Quack
 		glDrawArrays(GL_TRIANGLES, 0, count);
 	}
 
-	// Draw outlines for debug
-	void Renderer::DrawOutline(const VertexArray& vao, const IndexBuffer& ibo, const Shader& shader)
-	{
-		shader.Bind();
-		vao.Bind();
-
-		glLineWidth(2.5f);
-
-		glDrawElements(GL_LINES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
-
-		glLineWidth(1.0f);
-	}
-
 	void Renderer::DrawMesh(const VertexArray& vao, const IndexBuffer& ibo, const std::vector<Texture>& textures, Shader& shader)
 	{
 		shader.Bind();
@@ -69,14 +60,29 @@ namespace Quack
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
-	void Renderer::DrawLine(glm::vec3 start, glm::vec3 end, const Shader& shader)
+	// For debug
+
+	void Renderer::DrawOutline(const VertexArray& vao, const IndexBuffer& ibo, glm::mat4 model, glm::vec3 color /*= glm::vec3(0.f, 0.5f, 1.f)*/)
 	{
-		shader.Bind();
+		linesShader->Bind();
+		vao.Bind();
+
+		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
+		linesShader->SetUniform4fv("model", glm::value_ptr(model));
+
+		glLineWidth(2.5f);
+
+		glDrawElements(GL_LINES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
+
+		glLineWidth(1.0f);
+	}
+
+	void Renderer::DrawLine(glm::vec3 start, glm::vec3 end, glm::vec3 color /*= glm::vec3(0.f, 1.f, 0.f)*/)
+	{
+		linesShader->Bind();
 		
-		glm::mat4 model = glm::mat4(1.0f);
-		
-		shader.SetUniform4f("inColor", 1.f, 0.f, 0.f);
-		shader.SetUniform4fv("model", glm::value_ptr(model));
+		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
+		linesShader->SetUniform4fv("model", glm::value_ptr(glm::mat4(1.0f)));
 
 		glm::vec3 data[] = {start, end};
 		
@@ -88,26 +94,24 @@ namespace Quack
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
 		
-		glLineWidth(5.f);
+		glLineWidth(4.f);
 		glDrawArrays(GL_LINES, 0, 2);
 
-		shader.SetUniform4f("inColor", 1.f, 1.f, 1.f);
+		linesShader->SetUniform3f("inColor", 1.f, 1.f, 1.f);
 		glDrawArrays(GL_POINTS, 0, 1);
 
-		shader.SetUniform4f("inColor", 0.f, 1.f, 0.f);
+		linesShader->SetUniform3f("inColor", 0.f, 1.f, 0.f);
 		glDrawArrays(GL_POINTS, 1, 1);
 
 		glLineWidth(1.0f);
 	}
 
-	void Renderer::DrawPoint(glm::vec3 point, const Shader& shader)
+	void Renderer::DrawPoint(glm::vec3 point, glm::vec3 color /*= glm::vec3(0.f, 1.f, 1.f)*/)
 	{
-		shader.Bind();
+		linesShader->Bind();
 
-		glm::mat4 model = glm::mat4(1.0f);
-
-		shader.SetUniform4f("inColor", 0.f, 1.f, 1.f);
-		shader.SetUniform4fv("model", glm::value_ptr(model));
+		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
+		linesShader->SetUniform4fv("model", glm::value_ptr(glm::mat4(1.0f)));
 
 		glBindVertexArray(0);
 

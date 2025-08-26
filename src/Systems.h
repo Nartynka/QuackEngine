@@ -13,7 +13,7 @@ namespace Quack
 
 	void RenderModels(const std::shared_ptr<Scene> scene, Shader& shader);
 
-	void RenderCollisionShapes(const std::shared_ptr<Scene> scene, Shader& shader);
+	void RenderCollisionShapes(const std::shared_ptr<Scene> scene);
 
 
 	//void Move(const std::shared_ptr<Scene> scene, float dt);
@@ -26,5 +26,5 @@ namespace Quack
 
 	void UpdateTransform(const std::shared_ptr<Scene> scene);
 
-	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor, const Shader& shader); // For now we only have one constraint - floor
+	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor); // For now we only have one constraint - floor
 }

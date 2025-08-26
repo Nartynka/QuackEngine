@@ -68,7 +68,7 @@ namespace Quack
 	}
 
 	// @TODO: do not pass constraintComponent, loop over every constraintComponent
-	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor, const Shader& shader)
+	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor)
 	{
 		auto& registry = scene->GetRegistry();
 		auto collisionView = registry.view<CollisionComponent, PhysicsComponent>();
@@ -107,7 +107,7 @@ namespace Quack
 				// - that's why we multiply dist- by corresponding axes
 				glm::vec3 closestPoint = floor->position + distX * axes[0] + distY * axes[1] + distZ * axes[2];
 
-				//Renderer::DrawPoint(closestPoint, shader);
+				//Renderer::DrawPoint(closestPoint);
 				
 				glm::vec3 diff = physics.position - closestPoint;
 				float distanceSquared = dot(diff, diff);
