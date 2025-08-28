@@ -110,19 +110,22 @@ namespace Quack
 				//Renderer::DrawPoint(closestPoint);
 				
 				glm::vec3 diff = physics.position - closestPoint;
-				float distanceSquared = dot(diff, diff);
+				float distanceSquared = dot(diff, diff); // distance from closes point to the sphere. length of diff without expensive sqrt
 
 				if (distanceSquared <= collision.radius * collision.radius)
 				{
-					glm::vec3 normal = floor->orientation * glm::vec3(0.0f, 1.0f, 0.0f);
+					glm::vec3 collisionNormal = normalize(diff); // direction from OBB to sphere
 					
-					physics.position = closestPoint + normal; // obviously this is wrong, will change in next commit to collision contact point
+					float penetration = collision.radius - sqrt(distanceSquared); // @TODO: can I omit the sqrt here? 
+
+					physics.position += collisionNormal * penetration;
 					
-					glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+					glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
 					glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
-					
+						
 					physics.velocity = velocityTangental - velocityNormal * physics.bounce;
-					physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
+					// This line prevents jittering when sphere bounces forever (on not oriented surface) but prevents the sphere from rolling down sloped/oriented surface
+					//physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 				}
 			}
 			else
