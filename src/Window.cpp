@@ -15,7 +15,7 @@ namespace Quack
 		: width(width), height(height)
 	{
 		Init(width, height);
-		ui = std::make_unique<UI>(window);
+		ui = std::make_unique<UI>(this);
 	}
 
 	Window::~Window()

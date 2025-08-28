@@ -1,18 +1,22 @@
 #pragma once
 
-struct GLFWwindow;
-
 namespace Quack
 {
+	class Window;
+
 	class UI
 	{
 	public:
-		UI(GLFWwindow* window);
+		UI(Window* window);
 		~UI();
 		
 		void StartFrame();
 		void EndFrame();
 
 		void Shutdown();
+		int entityCount = 0;
+	private:
+		void OnEvent();
+
 	};
 }

@@ -21,6 +21,7 @@ namespace Quack
 		void Update();
 
 		inline GLFWwindow* GetWindow() const { return window; }
+		inline UI* GetUI() const { return &(*ui); } // @TODO: delete this xD
 
 		void Shutdown();
 		void Init(unsigned int width, unsigned int height);
