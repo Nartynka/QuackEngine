@@ -26,5 +26,5 @@ namespace Quack
 
 	void UpdateTransform(const std::shared_ptr<Scene> scene);
 
-	void SolveConstraint(const std::shared_ptr<Scene> scene, const ConstraintComponent* floor); // For now we only have one constraint - floor
+	void SolveConstraints(const std::shared_ptr<Scene> scene);
 }

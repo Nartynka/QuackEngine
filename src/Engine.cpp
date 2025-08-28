@@ -145,23 +145,35 @@ namespace Quack
 		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
 		float lastTime = 0.f;
 
-		Entity floor = scene->CreateEntity();
+		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		{
-			glm::vec3 floorPos = glm::vec3(1.f, -0.5f, -5.f);
-			glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
 			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 60.f, glm::vec3(0.f, 0.f, 1.f));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
 		}
-
-		//Entity floor2 = scene->CreateEntity();
-		//{
-		//	glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
-		//	glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
-		//	floor2.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-		//	floor2.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-		//	floor2.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
-		//}
+		{
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+		}
+		{
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
+		}
+		{
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+		}
 
 		LightCube lightCube;
 		lightCube.position = glm::vec3(0.f, 3.5f,  0.f);
@@ -169,9 +181,6 @@ namespace Quack
 		shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
 		shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));
 
-
-		//NormalCube normalCube;
-		//glm::vec3 normalCubePos = glm::vec3(0.f, 0.0f, 2.f);
 		
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
@@ -205,7 +214,7 @@ namespace Quack
 				// Physics for entities
 				ApplyForces(scene);
 				Update(scene, dt); // Update physics
-				SolveConstraint(scene, &floor.GetComponent<ConstraintComponent>());
+				SolveConstraints(scene);
 				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
 
 
@@ -214,13 +223,6 @@ namespace Quack
 				RenderModels(scene, shader);
 				RenderCollisionShapes(scene);
 
-				// Render normal cube
-				//shader.Bind();
-				//model = glm::translate(glm::mat4(1.0f), normalCubePos);
-				//model = glm::scale(model, glm::vec3(4.5f, 0.1f, 3.5f));
-				//shader.SetUniform4fv("model", glm::value_ptr(model));
-				//shader.SetUniform4f("inColor", 0.5f, 0.5f, 0.5f);
-				//Renderer::DrawNotIndexed(*normalCube.vao, normalCube.GetVerticesCount(), shader);
 
 				// Render light cube
 				model = glm::translate(glm::mat4(1.0f), lightCube.position);
