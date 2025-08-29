@@ -67,7 +67,14 @@ namespace Quack
 		{
 			auto& [collision, transform] = collisionView.get(entity);
 
-			Renderer::DrawOutline(*collision.shape->vao, *collision.shape->ibo, transform.transform, glm::vec3(0.f, 0.5f, 1.f));
+			// @TODO: think about better way to do it
+			// remove scale from transformation matrix
+			glm::mat4 trans = transform.transform;
+			trans[0] = normalize(transform.transform[0]);
+			trans[1] = normalize(transform.transform[1]);
+			trans[2] = normalize(transform.transform[2]);
+
+			Renderer::DrawOutline(*collision.shape->vao, *collision.shape->ibo, trans, glm::vec3(0.f, 0.5f, 1.f));
 		}
 	}
 

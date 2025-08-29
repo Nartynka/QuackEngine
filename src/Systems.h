@@ -27,4 +27,6 @@ namespace Quack
 	void UpdateTransform(const std::shared_ptr<Scene> scene);
 
 	void SolveConstraints(const std::shared_ptr<Scene> scene);
+
+	void SolveCollision(const std::shared_ptr<Scene> scene); // collision between spheres
 }

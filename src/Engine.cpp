@@ -91,7 +91,7 @@ namespace Quack
 
 	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
 	{
-		QUACK_LOG("Left mouse button pressed!!");
+		//QUACK_LOG("Left mouse button pressed!!");
 
 		Entity entity = scene->CreateEntity();
 
@@ -111,7 +111,7 @@ namespace Quack
 
 	void Engine::OnRightMouseButton(const MouseRightButtonPressedEvent& e)
 	{
-		QUACK_LOG("Right mouse button pressed!!");
+		//QUACK_LOG("Right mouse button pressed!!");
 
 		Entity entity = scene->CreateEntity();
 
@@ -122,11 +122,22 @@ namespace Quack
 		//entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
 		//entity.AddComponent<ShapeComponent>(new Cube(glm::vec3(0.25f)));
 
-		glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-		entity.AddComponent<PhysicsComponent>(position, 100.f);
-		entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
-		entity.AddComponent<ShapeComponent>(new Cube());
+		//glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
+		//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+		//entity.AddComponent<PhysicsComponent>(position, 100.f);
+		//entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+		//entity.AddComponent<ShapeComponent>(new Cube());
+
+		glm::vec3 position = glm::vec3(0.f, 2.f, 10.f);
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+		transform = glm::scale(transform, glm::vec3(2.f));
+		entity.AddComponent<TransformComponent>(transform);
+
+		auto& physicsComponent = entity.AddComponent<PhysicsComponent>(position);
+		physicsComponent.velocity = glm::vec3(0.f, 0.f, -50.f);
+
+		entity.AddComponent<CollisionComponent>(1.f);
+		entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
 	}
 
 	void Engine::Run()
@@ -142,46 +153,71 @@ namespace Quack
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-		auto& registry = scene->GetRegistry(); // @TODO: remove this and make systems for ECS
-		float lastTime = 0.f;
-
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		{
 			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
+			glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
 			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 0.f, glm::vec3(0.f, 0.f, 1.f));
 		}
+		//{
+		//	Entity floor = scene->CreateEntity();
+		//	glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
+		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+		//}
+		//{
+		//	Entity floor = scene->CreateEntity();
+		//	glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
+		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
+		//}
+		//{
+		//	Entity floor = scene->CreateEntity();
+		//	glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
+		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+		//}
+
+		// Stack of spheres
+		float z = -4.f;
+		glm::mat4 transform;
+		for (int i = 0; i < 5; i++)
 		{
-			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
-			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
-		}
-		{
-			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
-			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
-		}
-		{
-			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
-			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+			float y = 2.f;
+			for (int j = 0; j < 5; j++)
+			{
+				float x = -1.f;
+				for (int k = 0; k < 5; k++)
+				{
+					Entity entity = scene->CreateEntity();
+					glm::vec3 position = glm::vec3(x, y, z);
+					transform = glm::translate(glm::mat4(1.0f), position);
+					transform = glm::scale(transform, glm::vec3(0.5f));
+					entity.AddComponent<TransformComponent>(transform);
+					entity.AddComponent<PhysicsComponent>(position);
+					entity.AddComponent<CollisionComponent>(0.25f);
+					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+					x += 0.5f;
+				}
+				y +=0.5f;
+			}
+			z -= 0.5f;
 		}
 
+
 		LightCube lightCube;
-		lightCube.position = glm::vec3(0.f, 3.5f,  0.f);
+		lightCube.position = glm::vec3(0.f, 3.5f, 0.f);
 		//lightCube.position = glm::vec3(0.f, sin(glfwGetTime()) * 3.5f, (cos(glfwGetTime()) * 5.5f) - 5.5f);
 		shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
 		shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));
 
-		
+		float lastTime = 0.f;
+
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
 			float currentTime = (float)glfwGetTime(); // time since glfw initialization in seconds
@@ -215,6 +251,7 @@ namespace Quack
 				ApplyForces(scene);
 				Update(scene, dt); // Update physics
 				SolveConstraints(scene);
+				SolveCollision(scene);
 				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
 
 

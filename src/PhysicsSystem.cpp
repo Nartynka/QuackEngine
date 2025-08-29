@@ -52,8 +52,16 @@ namespace Quack
 		for (auto entity : movableView)
 		{
 			auto& [physics, transform] = movableView.get(entity);
+
+			// @TODO: think about better way to do it
+			glm::vec3 scale;
+			scale.x = glm::length(transform.transform[0]);
+			scale.y = glm::length(transform.transform[1]);
+			scale.z = glm::length(transform.transform[2]);
+
 			transform.transform = glm::translate(glm::mat4(1.0f), physics.position);
-			transform.transform *= glm::toMat4(physics.orientation);	
+			transform.transform *= glm::toMat4(physics.orientation);
+			transform.transform = glm::scale(transform.transform, scale);
 		}
 
 		auto constraintView = registry.view<ConstraintComponent, TransformComponent>();
@@ -86,13 +94,6 @@ namespace Quack
 				// @TODO: find better way to distinct if collision shape is sphere or cube
 				if (collision.radius > 0.f)
 				{
-					// Sphere - OBB collision check
-
-					// This is the same as the line bellow
-					//glm::vec3 axisX = floor.orientation * glm::vec3(1.f, 0.f, 0.f);
-					//glm::vec3 axisY = floor.orientation * glm::vec3(0.f, 1.f, 0.f);
-					//glm::vec3 axisZ = floor.orientation * glm::vec3(0.f, 0.f, 1.f);
-
 					glm::mat3 axes = glm::toMat3(floor.orientation) * glm::mat3(1.f);
 
 					// vector from sphere to floor
@@ -184,93 +185,53 @@ namespace Quack
 		}
 	}
 
+	void SolveCollision(const std::shared_ptr<Scene> scene)
+	{
+		auto& registry = scene->GetRegistry();
+		auto collisionView = registry.view<CollisionComponent, PhysicsComponent>();
 
-	//void Move(const std::shared_ptr<Scene> scene, float dt)
-	//{
-	//	auto& registry = scene->GetRegistry();
-	//	auto physicsView = registry.view<PhysicsComponent, TransformComponent>();
-	//
-	//	// entity is just a uint32_t so no need for a const reference
-	//	for (auto entity : physicsView)
-	//	{
-	//		auto& [physics, transform] = physicsView.get(entity);
-	//		physics.velocity += physics.acceleration * dt;
-	//		transform.transform = glm::translate(transform.transform, physics.velocity * dt);
-	//	}
-	//}
+		for (auto entity : collisionView)
+		{
+			auto& [collision, physics] = collisionView.get(entity);
 
-	//void CheckCollision(const std::shared_ptr<Scene> scene, float dt, glm::vec3 floorPos, glm::vec3 floorHalfSize)
-	//{
-	//	auto& registry = scene->GetRegistry();
-	//	auto collisionView = registry.view<CollisionComponent, TransformComponent, PhysicsComponent>();
+			// @TODO: find better way to distinct if collision shape is sphere or cube
+			// @TODO: make proper sphere - sphere collision
+			if (collision.radius > 0.f)
+			{
+				for (auto entity2 : collisionView)
+				{
+					if (entity == entity2)
+						continue;
 
-	//	static glm::vec3 minFloor;
-	//	minFloor.x = floorPos.x - floorHalfSize.x;
-	//	minFloor.y = floorPos.y - floorHalfSize.y;
-	//	minFloor.z = floorPos.z - floorHalfSize.z;
+					auto& [collision2, physics2] = collisionView.get(entity2);
 
-	//	static glm::vec3 maxFloor;
-	//	maxFloor.x = floorPos.x + floorHalfSize.x;
-	//	maxFloor.y = floorPos.y + floorHalfSize.y;
-	//	maxFloor.z = floorPos.z + floorHalfSize.z;
+					glm::vec3 diff = physics.position - physics2.position;
+					float distanceSquared = dot(diff, diff);
+					float radii = collision.radius + collision2.radius; // radiuses
 
-	//	 
-	//	for (auto entity : collisionView)
-	//	{
-	//		auto& [collision, transform, physics] = collisionView.get(entity);
+					if (distanceSquared < radii * radii)
+					{
+						glm::vec3 collisionNormal = normalize(diff); // direction from sphere to sphere
+						
+						float penetration = (radii - sqrt(distanceSquared)) / 2.f; // @TODO: can I omit the sqrt here? 
+						physics.position += collisionNormal * penetration;
+						physics2.position += -collisionNormal * penetration;
+						
+						{
+							glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+							glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
 
-	//		// Check collision with floor
-	//		glm::vec3 minEntity;
-	//		minEntity.x = transform.transform[3][0] - collision.halfSize.x;
-	//		minEntity.y = transform.transform[3][1] - collision.halfSize.y;
-	//		minEntity.z = transform.transform[3][2] - collision.halfSize.z;
+							physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+						}
+						{
+							glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics2.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+							glm::vec3 velocityTangental = physics2.velocity - velocityNormal;		// parallel to the floor
 
-	//		glm::vec3 maxEntity;
-	//		maxEntity.x = transform.transform[3][0] + collision.halfSize.x;
-	//		maxEntity.y = transform.transform[3][1] + collision.halfSize.y;
-	//		maxEntity.z = transform.transform[3][2] + collision.halfSize.z;
-
-	//		if ((minEntity.x <= maxFloor.x && maxEntity.x >= minFloor.x) &&
-	//			(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
-	//			(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
-	//		{
-	//			transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
-
-	//			physics.velocity = glm::vec3(0.f);
-	//			//physics.acceleration = glm::vec3(0.f); 'Oh gravity, thou art a heartless bitch' - Jim Parsons
-	//		}
-	//		else
-	//		{
-	//			// Check collision with everything else
-	//			for (auto entity2 : collisionView)
-	//			{
-	//				if (entity == entity2)
-	//					continue;
-
-	//				auto& [collision2, transform2, physics2] = collisionView.get(entity2);
-
-	//				glm::vec3 minEntity2;
-	//				minEntity2.x = transform2.transform[3][0] - collision2.halfSize.x;
-	//				minEntity2.y = transform2.transform[3][1] - collision2.halfSize.y;
-	//				minEntity2.z = transform2.transform[3][2] - collision2.halfSize.z;
-
-	//				glm::vec3 maxEntity2;
-	//				maxEntity2.x = transform2.transform[3][0] + collision2.halfSize.x;
-	//				maxEntity2.y = transform2.transform[3][1] + collision2.halfSize.y;
-	//				maxEntity2.z = transform2.transform[3][2] + collision2.halfSize.z;
-
-	//				if ((minEntity.x <= maxEntity2.x && maxEntity.x >= minEntity2.x) &&
-	//					(minEntity.y <= maxEntity2.y && maxEntity.y >= minEntity2.y) &&
-	//					(minEntity.z <= maxEntity2.z && maxEntity.z >= minEntity2.z))
-	//				{
-	//					transform.transform = glm::translate(transform.transform, -(physics.velocity * dt));
-
-	//					physics.velocity = glm::vec3(0.f);
-
-	//					break;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
+							physics2.velocity = velocityTangental - velocityNormal * physics2.bounce;
+						}
+					}
+				}
+			}
+		}
+	}
 }
