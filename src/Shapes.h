@@ -16,7 +16,7 @@ namespace Quack
 	public:
 		Shape() = default;
 
-		void SetupBuffers()
+		void SetupBuffers(bool hasNormals = true)
 		{
 			// Create OpenGL objects
 			vao = std::make_unique<VertexArray>();
@@ -26,7 +26,9 @@ namespace Quack
 
 			VertexBufferLayout layout;
 			layout.AddElement(3); // Position
-			layout.AddElement(3); // Normals
+
+			if(hasNormals)
+				layout.AddElement(3); // Normals
 
 			vao->AddBuffer(*vbo, layout);
 		}
@@ -152,16 +154,16 @@ namespace Quack
 		DebugCube(glm::vec3 halfSize = glm::vec3(0.5f))
 		{
 			vertices = {
-				// Front face position				  // fake normals, will delete when debug shader without normals is done
-				-halfSize.x, -halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 0: bottom-left-front
-				 halfSize.x, -halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 1: bottom-right-front
-				 halfSize.x,  halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 2: top-right-front
-				-halfSize.x,  halfSize.y,  halfSize.z, 1.0f, 1.0f, 1.0f, // 3: top-left-front
+				// Front face position
+				-halfSize.x, -halfSize.y,  halfSize.z, // 0: bottom-left-front
+				 halfSize.x, -halfSize.y,  halfSize.z, // 1: bottom-right-front
+				 halfSize.x,  halfSize.y,  halfSize.z, // 2: top-right-front
+				-halfSize.x,  halfSize.y,  halfSize.z, // 3: top-left-front
 				// Back face position
-				-halfSize.x, -halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 4: bottom-left-back
-				 halfSize.x, -halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 5: bottom-right-back
-				 halfSize.x,  halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 6: top-right-back
-				-halfSize.x,  halfSize.y, -halfSize.z, 1.0f, 1.0f, 1.0f, // 7: top-left-back
+				-halfSize.x, -halfSize.y, -halfSize.z, // 4: bottom-left-back
+				 halfSize.x, -halfSize.y, -halfSize.z, // 5: bottom-right-back
+				 halfSize.x,  halfSize.y, -halfSize.z, // 6: top-right-back
+				-halfSize.x,  halfSize.y, -halfSize.z, // 7: top-left-back
 			};
 
 			indices = {
@@ -170,7 +172,7 @@ namespace Quack
 				0, 4,  1, 5,  2, 6,  3, 7  // Side connecting lines
 			};
 
-			SetupBuffers();
+			SetupBuffers(false);
 		}
 	};
 
@@ -190,7 +192,6 @@ namespace Quack
 				float z = 0.0f;
 
 				vertices.insert(vertices.end(), { x, y, z });
-				vertices.insert(vertices.end(), { 1.f, 1.f, 1.f }); // fake normals, will delete when debug shader without normals is done
 			}
 
 			// XZ circle
@@ -202,7 +203,6 @@ namespace Quack
 				float z = radius * sin(theta);
 
 				vertices.insert(vertices.end(), { x, y, z });
-				vertices.insert(vertices.end(), { 1.f, 1.f, 1.f }); // fake normals, will delete when debug shader without normals is done
 			}
 
 			// YZ circle
@@ -214,7 +214,6 @@ namespace Quack
 				float z = radius * sin(theta);
 
 				vertices.insert(vertices.end(), { x, y, z });
-				vertices.insert(vertices.end(), { 1.f, 1.f, 1.f }); // fake normals, will delete when debug shader without normals is done
 			}
 
 			// Generate indices
@@ -232,7 +231,7 @@ namespace Quack
 				}
 			}
 
-			SetupBuffers();
+			SetupBuffers(false);
 		}
 	};
 

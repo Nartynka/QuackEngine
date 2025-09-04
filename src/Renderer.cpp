@@ -30,7 +30,7 @@ namespace Quack
 	{
 		shader.Bind();
 		vao.Bind();
-		ibo.Bind();
+		//ibo.Bind();
 
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
@@ -60,12 +60,14 @@ namespace Quack
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
+	// @TODO: remove passing ibo and just pass ibo.GetCount() because we don't have to bind ibo everytime
 	// For debug
 
 	void Renderer::DrawOutline(const VertexArray& vao, const IndexBuffer& ibo, glm::mat4 model, glm::vec3 color /*= glm::vec3(0.f, 0.5f, 1.f)*/)
 	{
 		linesShader->Bind();
 		vao.Bind();
+		//ibo.Bind();
 
 		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
 		linesShader->SetUniform4fv("model", glm::value_ptr(model));
