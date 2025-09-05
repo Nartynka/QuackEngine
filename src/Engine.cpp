@@ -122,22 +122,22 @@ namespace Quack
 		//entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
 		//entity.AddComponent<ShapeComponent>(new Cube(glm::vec3(0.25f)));
 
-		//glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
-		//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-		//entity.AddComponent<PhysicsComponent>(position, 100.f);
-		//entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
-		//entity.AddComponent<ShapeComponent>(new Cube());
+		glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
+		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+		entity.AddComponent<PhysicsComponent>(position, 1.f, 30.f, glm::vec3(0.f, 0.f, 1.f));
+		entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+		entity.AddComponent<ShapeComponent>(new Cube());
 
-		glm::vec3 position = glm::vec3(0.f, 2.f, 10.f);
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
-		transform = glm::scale(transform, glm::vec3(2.f));
-		entity.AddComponent<TransformComponent>(transform);
+		//glm::vec3 position = glm::vec3(0.f, 2.f, 10.f);
+		//glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+		//transform = glm::scale(transform, glm::vec3(2.f));
+		//entity.AddComponent<TransformComponent>(transform);
 
-		auto& physicsComponent = entity.AddComponent<PhysicsComponent>(position);
-		physicsComponent.velocity = glm::vec3(0.f, 0.f, -50.f);
+		//auto& physicsComponent = entity.AddComponent<PhysicsComponent>(position);
+		//physicsComponent.velocity = glm::vec3(0.f, 0.f, -50.f);
 
-		entity.AddComponent<CollisionComponent>(1.f);
-		entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+		//entity.AddComponent<CollisionComponent>(1.f);
+		//entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
 	}
 
 	void Engine::Run()

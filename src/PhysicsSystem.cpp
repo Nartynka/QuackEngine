@@ -90,19 +90,18 @@ namespace Quack
 			{
 				// each constraint component is a floor
 				const auto& floor = constraints.get<ConstraintComponent>(constraint);
+				glm::mat3 floorAxes = glm::toMat3(floor.orientation) * glm::mat3(1.f);
 
 				// @TODO: find better way to distinct if collision shape is sphere or cube
 				if (collision.radius > 0.f)
 				{
-					glm::mat3 axes = glm::toMat3(floor.orientation) * glm::mat3(1.f);
-
 					// vector from sphere to floor
 					glm::vec3 d = physics.position - floor.position;
 
 					// Find the closest point on OBB to the sphere center
-					float distX = dot(d, axes[0]);
-					float distY = dot(d, axes[1]);
-					float distZ = dot(d, axes[2]);
+					float distX = dot(d, floorAxes[0]);
+					float distY = dot(d, floorAxes[1]);
+					float distZ = dot(d, floorAxes[2]);
 
 					// Without clamping the point would the sphere center
 					distX = glm::clamp(distX, -floor.halfSize.x, floor.halfSize.x);
@@ -112,7 +111,7 @@ namespace Quack
 					// dist- are in floor local space, in that local space they are not rotated so we have to rotate them
 					// axes are our "portal"/"bridge" between floor local space and world space, they represent the floor rotated axes
 					// - that's why we multiply dist- by corresponding axes
-					glm::vec3 closestPoint = floor.position + distX * axes[0] + distY * axes[1] + distZ * axes[2];
+					glm::vec3 closestPoint = floor.position + distX * floorAxes[0] + distY * floorAxes[1] + distZ * floorAxes[2];
 
 					//Renderer::DrawPoint(closestPoint);
 
@@ -123,7 +122,7 @@ namespace Quack
 					{
 						glm::vec3 collisionNormal = normalize(diff); // direction from OBB to sphere
 
-						float penetration = collision.radius - sqrt(distanceSquared); // @TODO: can I omit the sqrt here? 
+						float penetration = collision.radius - sqrt(distanceSquared); // @TODO: can I omit the sqrt here?
 
 						physics.position += collisionNormal * penetration;
 
@@ -131,55 +130,180 @@ namespace Quack
 						glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
 
 						physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+
 						// This line prevents jittering when sphere bounces forever (on not oriented surface) but prevents the sphere from rolling down sloped/oriented surface
 						//physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 					}
 				}
 				else
 				{
-					// AABB - AABB collision check
-					static glm::vec3 minFloor;
-					minFloor.x = floor.position.x - floor.halfSize.x;
-					minFloor.y = floor.position.y - floor.halfSize.y;
-					minFloor.z = floor.position.z - floor.halfSize.z;
+					// OBB - OBB collision (SAT)
+					// !!!! Right now edge - edge will be detected as collision even when there isn't any
 
-					static glm::vec3 maxFloor;
-					maxFloor.x = floor.position.x + floor.halfSize.x;
-					maxFloor.y = floor.position.y + floor.halfSize.y;
-					maxFloor.z = floor.position.z + floor.halfSize.z;
+					// @TODO: Change manual defined corners to a nice short loop!
 
+					glm::mat3 entityAxes = glm::toMat3(physics.orientation) * glm::mat3(1.f);
 
-					glm::vec3 minEntity;
-					minEntity.x = physics.position.x - collision.halfSize.x;
-					minEntity.y = physics.position.y - collision.halfSize.y;
-					minEntity.z = physics.position.z - collision.halfSize.z;
+					std::vector<glm::vec3> axes = { entityAxes[0], entityAxes[1], entityAxes[2], floorAxes[0], floorAxes[1], floorAxes[2] };
 
-					glm::vec3 maxEntity;
-					maxEntity.x = physics.position.x + collision.halfSize.x;
-					maxEntity.y = physics.position.y + collision.halfSize.y;
-					maxEntity.z = physics.position.z + collision.halfSize.z;
+					// Visualize axes from entity
+					//Renderer::DrawLine(glm::vec3(0.f), entityAxes[0] * 5.f, glm::vec3(1.f, 0.f, 0.f));
+					//Renderer::DrawLine(glm::vec3(0.f), entityAxes[1] * 5.f, glm::vec3(0.f, 1.f, 0.f));
+					//Renderer::DrawLine(glm::vec3(0.f), entityAxes[2] * 5.f, glm::vec3(0.f, 0.f, 1.f));
+					// Visualize axes from floor
+					//Renderer::DrawLine(glm::vec3(0.f), floorAxes[0] * 5.f, glm::vec3(1.f, 0.f, 0.f));
+					//Renderer::DrawLine(glm::vec3(0.f), floorAxes[1] * 5.f, glm::vec3(0.f, 1.f, 0.f));
+					//Renderer::DrawLine(glm::vec3(0.f), floorAxes[2] * 5.f, glm::vec3(0.f, 0.f, 1.f));
 
 
-					if ((minEntity.x <= maxFloor.x && maxEntity.x >= minFloor.x) &&
-						(minEntity.y <= maxFloor.y && maxEntity.y >= minFloor.y) &&
-						(minEntity.z <= maxFloor.z && maxEntity.z >= minFloor.z))
+					// Entity corners in local space
+					glm::vec3 topRightFrontCorner = collision.halfSize;
+					glm::vec3 topRightBackCorner = glm::vec3(collision.halfSize.x, collision.halfSize.y, -collision.halfSize.z);
+
+					glm::vec3 bottomRightFrontCorner = glm::vec3(collision.halfSize.x, -collision.halfSize.y, collision.halfSize.z);
+					glm::vec3 bottomRightBackCorner = glm::vec3(collision.halfSize.x, -collision.halfSize.y, -collision.halfSize.z);
+
+					glm::vec3 topLeftFrontCorner = glm::vec3(-collision.halfSize.x, collision.halfSize.y, collision.halfSize.z);
+					glm::vec3 topLeftBackCorner = glm::vec3(-collision.halfSize.x, collision.halfSize.y, -collision.halfSize.z);
+
+					glm::vec3 bottomLeftFrontCorner = glm::vec3(-collision.halfSize.x, -collision.halfSize.y, collision.halfSize.z);
+					glm::vec3 bottomLeftBackCorner = -collision.halfSize;
+
+					// Entity corners in world space (rotated and translated)
+					// THE ORDER MATTERS!!! vec3 * quat is not the same as quat * vec3!!!!!!!!!!!!!!
+					glm::vec3 wTopRightFrontCorner = (physics.orientation * topRightFrontCorner) + physics.position;
+					glm::vec3 wTopRightBackCorner = (physics.orientation * topRightBackCorner) + physics.position;
+
+					glm::vec3 wBottomRightFrontCorner = (physics.orientation * bottomRightFrontCorner) + physics.position;
+					glm::vec3 wBottomRightBackCorner = (physics.orientation * bottomRightBackCorner) + physics.position;
+
+					glm::vec3 wTopLeftFrontCorner = (physics.orientation * topLeftFrontCorner) + physics.position;
+					glm::vec3 wTopLeftBackCorner = (physics.orientation * topLeftBackCorner) + physics.position;
+
+					glm::vec3 wBottomLeftFrontCorner = (physics.orientation * bottomLeftFrontCorner) + physics.position;
+					glm::vec3 wBottomLeftBackCorner = (physics.orientation * bottomLeftBackCorner) + physics.position;
+
+					std::vector<glm::vec3> entityPoints = { wTopRightFrontCorner, wTopRightBackCorner,
+															wBottomRightFrontCorner, wBottomRightBackCorner,
+															wTopLeftFrontCorner, wTopLeftBackCorner,
+															wBottomLeftFrontCorner, wBottomLeftBackCorner };
+
+					// Visualize points on the cube
+					//Renderer::DrawPoint(wTopRightFrontCorner);
+					//Renderer::DrawPoint(wBottomRightFrontCorner);
+					//Renderer::DrawPoint(wTopLeftFrontCorner);
+					//Renderer::DrawPoint(wBottomLeftFrontCorner);
+					//Renderer::DrawPoint(wTopRightBackCorner);
+					//Renderer::DrawPoint(wBottomRightBackCorner);
+					//Renderer::DrawPoint(wTopLeftBackCorner);
+					//Renderer::DrawPoint(wBottomLeftBackCorner);
+
+					// Floor corners in local space
+					glm::vec3 floorTopRightFrontCorner = floor.halfSize;
+					glm::vec3 floorTopRightBackCorner = glm::vec3(floor.halfSize.x, floor.halfSize.y, -floor.halfSize.z);
+
+					glm::vec3 floorBottomRightFrontCorner = glm::vec3(floor.halfSize.x, -floor.halfSize.y, floor.halfSize.z);
+					glm::vec3 floorBottomRightBackCorner = glm::vec3(floor.halfSize.x, -floor.halfSize.y, -floor.halfSize.z);
+
+					glm::vec3 floorTopLeftFrontCorner = glm::vec3(-floor.halfSize.x, floor.halfSize.y, floor.halfSize.z);
+					glm::vec3 floorTopLeftBackCorner = glm::vec3(-floor.halfSize.x, floor.halfSize.y, -floor.halfSize.z);
+
+					glm::vec3 floorBottomLeftFrontCorner = glm::vec3(-floor.halfSize.x, -floor.halfSize.y, floor.halfSize.z);
+					glm::vec3 floorBottomLeftBackCorner = -floor.halfSize;
+
+					// Floor corners in world space (rotated and translated)
+					glm::vec3 wFloorTopRightFrontCorner = (floor.orientation * floorTopRightFrontCorner) + floor.position;
+					glm::vec3 wFloorTopRightBackCorner = (floor.orientation * floorTopRightBackCorner) + floor.position;
+
+					glm::vec3 wFloorBottomRightFrontCorner = (floor.orientation * floorBottomRightFrontCorner) + floor.position;
+					glm::vec3 wFloorBottomRightBackCorner = (floor.orientation * floorBottomRightBackCorner) + floor.position;
+
+					glm::vec3 wFloorTopLeftFrontCorner = (floor.orientation * floorTopLeftFrontCorner) + floor.position;
+					glm::vec3 wFloorTopLeftBackCorner = (floor.orientation * floorTopLeftBackCorner) + floor.position;
+
+					glm::vec3 wFloorBottomLeftFrontCorner = (floor.orientation * floorBottomLeftFrontCorner) + floor.position;
+					glm::vec3 wFloorBottomLeftBackCorner = (floor.orientation * floorBottomLeftBackCorner) + floor.position;
+
+					std::vector<glm::vec3> floorPoints = { wFloorTopRightFrontCorner, wFloorTopRightBackCorner,
+															wFloorBottomRightFrontCorner, wFloorBottomRightBackCorner,
+															wFloorTopLeftFrontCorner, wFloorTopLeftBackCorner,
+															wFloorBottomLeftFrontCorner, wFloorBottomLeftBackCorner };
+
+					// Project the points onto axes and find the "shadows"
+					std::vector<glm::vec3> entityMins;
+					std::vector<glm::vec3> entityMaxs;
+
+					std::vector<glm::vec3> floorMins;
+					std::vector<glm::vec3> floorMaxs;
+
+					bool bCollision = true;
+					for (const auto& axis : axes)
 					{
-						// for every action, there is an equal and opposite reaction
+						float eMin = dot(entityPoints[0], axis);
+						float eMax = eMin;
 
-						float penetration = maxFloor.y - minEntity.y;
-						if (penetration > 0.0f)
+						for (const auto& point : entityPoints)
 						{
-							physics.position.y += penetration;
+							float p = dot(point, axis);
+
+							eMin = glm::min(eMin, p);
+							eMax = glm::max(eMax, p);
 						}
 
-						glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+						entityMins.push_back(eMin * axis);
+						entityMaxs.push_back(eMax * axis);
 
-						glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
-						glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+						// floor
+						float fMin = dot(floorPoints[0], axis);
+						float fMax = fMin;
 
-						physics.velocity = velocityTangental - velocityNormal * physics.bounce;
-						physics.velocity = physics.velocity.y < 0.22f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
+						for (const auto& point : floorPoints)
+						{
+							float p = dot(point, axis);
+
+							fMin = glm::min(fMin, p);
+							fMax = glm::max(fMax, p);
+						}
+
+						floorMins.push_back(fMin * axis);
+						floorMaxs.push_back(fMax * axis);
+
+						if (eMax < fMin || fMax < eMin)
+							bCollision = false;
 					}
+
+					if (bCollision)
+						QUACK_LOG("Collllllllisssion!");
+
+					// Visualize the projected intervals for a box
+					//for (int i = 0; i < entityMins.size(); i++)
+					//{
+					//	Renderer::DrawLine(entityMins[i], entityMaxs[i], bCollision ? glm::vec3(1.f, 0.f, 0.f) : glm::vec3(1.f, 1.f, 0.f));
+					//}
+					// Visualize the projected intervals for the floor
+					//for (int i = 0; i < floorMins.size(); i++)
+					//{
+					//	Renderer::DrawLine(floorMins[i], floorMaxs[i], bCollision ? glm::vec3(1.f, 0.f, 0.f) : glm::vec3(0.f, 1.f, 1.f));
+					//}
+
+
+
+
+					// for every action, there is an equal and opposite reaction
+
+					//float penetration = maxFloor.y - minEntity.y;
+					//if (penetration > 0.0f)
+					//{
+					//	physics.position.y += penetration;
+					//}
+
+					//glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+					//glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+					//glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+
+					//physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+					//physics.velocity = physics.velocity.y < 0.22f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 				}
 			}
 		}
@@ -205,29 +329,32 @@ namespace Quack
 
 					auto& [collision2, physics2] = collisionView.get(entity2);
 
-					glm::vec3 diff = physics.position - physics2.position;
-					float distanceSquared = dot(diff, diff);
-					float radii = collision.radius + collision2.radius; // radiuses
-
-					if (distanceSquared < radii * radii)
+					if (collision2.radius > 0.f)
 					{
-						glm::vec3 collisionNormal = normalize(diff); // direction from sphere to sphere
-						
-						float penetration = (radii - sqrt(distanceSquared)) / 2.f; // @TODO: can I omit the sqrt here? 
-						physics.position += collisionNormal * penetration;
-						physics2.position += -collisionNormal * penetration;
-						
-						{
-							glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
-							glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+						glm::vec3 diff = physics.position - physics2.position;
+						float distanceSquared = dot(diff, diff);
+						float radii = collision.radius + collision2.radius; // radiuses
 
-							physics.velocity = velocityTangental - velocityNormal * physics.bounce;
-						}
+						if (distanceSquared < radii * radii)
 						{
-							glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics2.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
-							glm::vec3 velocityTangental = physics2.velocity - velocityNormal;		// parallel to the floor
+							glm::vec3 collisionNormal = normalize(diff); // direction from sphere to sphere
 
-							physics2.velocity = velocityTangental - velocityNormal * physics2.bounce;
+							float penetration = (radii - sqrt(distanceSquared)) / 2.f; // @TODO: can I omit the sqrt here?
+							physics.position += collisionNormal * penetration;
+							physics2.position += -collisionNormal * penetration;
+
+							{
+								glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+								glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+
+								physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+							}
+							{
+								glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics2.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+								glm::vec3 velocityTangental = physics2.velocity - velocityNormal;		// parallel to the floor
+
+								physics2.velocity = velocityTangental - velocityNormal * physics2.bounce;
+							}
 						}
 					}
 				}
