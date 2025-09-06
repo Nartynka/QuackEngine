@@ -124,7 +124,7 @@ namespace Quack
 
 		glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
 		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-		entity.AddComponent<PhysicsComponent>(position, 1.f, 30.f, glm::vec3(0.f, 0.f, 1.f));
+		entity.AddComponent<PhysicsComponent>(position, 1.f, 21.37f, glm::vec3(0.f, 0.f, 1.f));
 		entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
 		entity.AddComponent<ShapeComponent>(new Cube());
 
@@ -156,32 +156,33 @@ namespace Quack
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		{
 			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
+			//glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
+			glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
 			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 0.f, glm::vec3(0.f, 0.f, 1.f));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
 		}
-		//{
-		//	Entity floor = scene->CreateEntity();
-		//	glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
-		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
-		//}
-		//{
-		//	Entity floor = scene->CreateEntity();
-		//	glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
-		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
-		//}
-		//{
-		//	Entity floor = scene->CreateEntity();
-		//	glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
-		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
-		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
-		//}
+		{
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+		}
+		{
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
+		}
+		{
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
+			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
+		}
 
 		// Stack of spheres
 		float z = -4.f;

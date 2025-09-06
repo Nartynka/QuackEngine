@@ -237,6 +237,10 @@ namespace Quack
 					std::vector<glm::vec3> floorMaxs;
 
 					bool bCollision = true;
+
+					float shortestOverlap = 100000.f;
+					glm::vec3 shortestAxis;
+
 					for (const auto& axis : axes)
 					{
 						float eMin = dot(entityPoints[0], axis);
@@ -268,12 +272,36 @@ namespace Quack
 						floorMins.push_back(fMin * axis);
 						floorMaxs.push_back(fMax * axis);
 
+
 						if (eMax < fMin || fMax < eMin)
 							bCollision = false;
+						else // There is no gap on current axis. We have an overlap on current axis
+						{
+							// Amount of overlap
+							float amount = glm::min(eMax, fMax) - glm::max(eMin, fMin);
+
+							if (amount < shortestOverlap)
+							{
+								shortestOverlap = amount;
+								shortestAxis = axis;
+							}
+						}
 					}
 
 					if (bCollision)
-						QUACK_LOG("Collllllllisssion!");
+					{
+						// for every action, there is an equal and opposite reaction
+
+						glm::vec3 normal = normalize(shortestAxis);
+						physics.position += normal * shortestOverlap;
+
+
+						glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+						glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
+
+						physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+						//physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
+					}
 
 					// Visualize the projected intervals for a box
 					//for (int i = 0; i < entityMins.size(); i++)
@@ -285,25 +313,6 @@ namespace Quack
 					//{
 					//	Renderer::DrawLine(floorMins[i], floorMaxs[i], bCollision ? glm::vec3(1.f, 0.f, 0.f) : glm::vec3(0.f, 1.f, 1.f));
 					//}
-
-
-
-
-					// for every action, there is an equal and opposite reaction
-
-					//float penetration = maxFloor.y - minEntity.y;
-					//if (penetration > 0.0f)
-					//{
-					//	physics.position.y += penetration;
-					//}
-
-					//glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f);
-
-					//glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
-					//glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
-
-					//physics.velocity = velocityTangental - velocityNormal * physics.bounce;
-					//physics.velocity = physics.velocity.y < 0.22f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 				}
 			}
 		}
