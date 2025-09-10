@@ -98,8 +98,6 @@ namespace Quack
 			data->callback(event);
 		});
 
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 		// vsync
 		glfwSwapInterval(true);
 

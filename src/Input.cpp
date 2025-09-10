@@ -29,4 +29,18 @@ namespace Quack
 		glfwGetCursorPos(window, &x, &y);
 		return { (float)x, (float)y };
 	}
+
+	float Input::GetMousePosX()
+	{
+		double x;
+		glfwGetCursorPos(window, &x, nullptr);
+		return (float)x;
+	}
+
+	float Input::GetMousePosY()
+	{
+		double y;
+		glfwGetCursorPos(window, nullptr, &y);
+		return (float)y;
+	}
 }

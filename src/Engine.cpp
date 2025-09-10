@@ -31,6 +31,7 @@
 #include "ModelLibrary.h"
 #include "LightCube.h"
 #include "Systems.h"
+#include "imgui_internal.h"
 
 namespace Quack
 {
@@ -61,13 +62,17 @@ namespace Quack
 
 	void Engine::OnEvent(Event& event)
 	{
-		EventDispatcher dispatcher(event);
+		const auto& io = ImGui::GetIO();
 
-		//dispatcher.Dispatch<KeyPressedEvent>([](const KeyPressedEvent& e) { QUACK_GOOD("Key Pressed!!! key code: {}", e.GetKeyCode()); });
-		dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
-		dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
-		//dispatcher.Dispatch<MouseMovedEvent>([](const MouseMovedEvent& e) {QUACK_GOOD("Mouse Moved!!!"); });
-		dispatcher.Dispatch<MouseScrolledEvent>([&](const MouseScrolledEvent& e) {QUACK_GOOD("Mouse Scrolled!!!"); camera->speed += e.offsetY; camera->speed = camera->speed < 1.f ? 1.f : camera->speed; });
+		// Mouse & Keyboard capturing should be handled separately but for now will do
+		if (!io.WantCaptureMouse && !io.WantCaptureKeyboard)
+		{
+			EventDispatcher dispatcher(event);
+			camera->OnEvent(event);
+
+			dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
+			dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
+		}
 	}
 
 
@@ -149,7 +154,7 @@ namespace Quack
 
 		glm::mat4 model;
 		glm::mat4 view;
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
+		glm::mat4 projection;
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -237,7 +242,8 @@ namespace Quack
 				// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
 				// the second vector is the point that we look at 
 				view = glm::lookAt(camera->position, camera->position + camera->front, camera->up);
-				
+				projection = glm::perspective(glm::radians(camera->fov), 800.0f / 600.0f, 0.1f, 1000.0f);
+
 				Renderer::linesShader->Bind();
 				Renderer::linesShader->SetUniform4fv("view", glm::value_ptr(view));
 				Renderer::linesShader->SetUniform4fv("projection", glm::value_ptr(projection));

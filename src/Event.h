@@ -16,13 +16,10 @@ namespace Quack
 	class Event
 	{
 	public:
-		//~Event() = default;
-		//Event() = default;
+		bool handled = false;
 
  		virtual const char* GetName() const = 0; // For debugging/logging
 		virtual EventType GetEventType() const = 0;
-	protected:
-		bool handled = false;
 	};
 
 
@@ -39,10 +36,11 @@ namespace Quack
 		template<typename T>
 		void Dispatch(EventCallback<T> callback)
 		{
-			if (event.GetEventType() == T::GetStaticEventType())
+			if (event.GetEventType() == T::GetStaticEventType() && !event.handled)
 			{
 				//QUACK_LOG("Event!!! {}", event.GetName());
 				callback((const T&)event);
+				event.handled = true;
 			}
 		}
 

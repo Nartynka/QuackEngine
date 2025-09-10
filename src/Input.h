@@ -14,6 +14,8 @@ namespace Quack
 		static bool IsKeyPressed(int keyCode);
 		static bool IsMouseButtonPressed(int button);
 		static std::pair<float, float> GetMousePos();
+		static float GetMousePosX();
+		static float GetMousePosY();
 	private:
 		static GLFWwindow* window;
 	};
