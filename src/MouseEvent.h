@@ -4,56 +4,41 @@
 
 namespace Quack
 {
-	class MouseLeftButtonPressedEvent : public Event
+	class MouseButtonPressedEvent : public Event
 	{
 	public:
-		MouseLeftButtonPressedEvent() : Event()
+		MouseButtonPressedEvent(int button) : Event(), button(button)
 		{
 		}
 
 		const char* GetName() const override
 		{
-			return "Mouse left button pressed event";
+			return "Mouse button pressed event";
+		}
+
+		int GetButton() const
+		{
+			return button;
 		}
 
 		EventType GetEventType() const override
 		{
-			return EventType::MouseLeftButtonPressed;
+			return EventType::MouseButtonPressed;
 		}
 
 		static EventType GetStaticEventType()
 		{
-			return EventType::MouseLeftButtonPressed;
-		}
-	};
-
-	class MouseRightButtonPressedEvent : public Event
-	{
-	public:
-		MouseRightButtonPressedEvent() : Event()
-		{
+			return EventType::MouseButtonPressed;
 		}
 
-		const char* GetName() const override
-		{
-			return "Mouse right button pressed event";
-		}
-
-		EventType GetEventType() const override
-		{
-			return EventType::MouseRightButtonPressed;
-		}
-
-		static EventType GetStaticEventType()
-		{
-			return EventType::MouseRightButtonPressed;
-		}
+	private:
+		int button;
 	};
 
 	class MouseMovedEvent : public Event
 	{
 	public:
-		MouseMovedEvent(float posX, float posY) 
+		MouseMovedEvent(float posX, float posY)
 			: Event(), posX(posX), posY(posY)
 		{
 		}
@@ -80,7 +65,7 @@ namespace Quack
 	class MouseScrolledEvent : public Event
 	{
 	public:
-		MouseScrolledEvent(float offsetX, float offsetY) 
+		MouseScrolledEvent(float offsetX, float offsetY)
 			: Event(), offsetX(offsetX), offsetY(offsetY)
 		{
 		}

@@ -10,7 +10,7 @@ namespace Quack
 		None = 0,
 		//WindowResize, WindowClose,
 		KeyPressed, //KeyReleased,
-		MouseLeftButtonPressed, MouseRightButtonPressed, MouseMoved, MouseScrolled //MouseButtonReleased, 
+		MouseButtonPressed, MouseMoved, MouseScrolled //MouseButtonReleased,
 	};
 
 	class Event

@@ -70,8 +70,7 @@ namespace Quack
 			EventDispatcher dispatcher(event);
 			camera->OnEvent(event);
 
-			dispatcher.Dispatch<MouseLeftButtonPressedEvent>(std::bind(&Engine::OnLeftMouseButton, this, std::placeholders::_1));
-			dispatcher.Dispatch<MouseRightButtonPressedEvent>(std::bind(&Engine::OnRightMouseButton, this, std::placeholders::_1));
+			dispatcher.Dispatch<MouseButtonPressedEvent>(std::bind(&Engine::OnMouseButtonPressed, this, std::placeholders::_1));
 		}
 	}
 
@@ -94,55 +93,57 @@ namespace Quack
 		return randRange(-9.5f, -0.5f);
 	}
 
-	void Engine::OnLeftMouseButton(const MouseLeftButtonPressedEvent& e)
+	void Engine::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 	{
-		//QUACK_LOG("Left mouse button pressed!!");
+		if (e.GetButton() == GLFW_MOUSE_BUTTON_LEFT)
+		{
+			//QUACK_LOG("Left mouse button pressed!!");
 
-		Entity entity = scene->CreateEntity();
+			Entity entity = scene->CreateEntity();
 
-		window->GetUI()->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
+			window->GetUI()->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
 
-		//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
-		//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
-		//entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
-		//entity.AddComponent<ModelComponent>(ModelLibrary::duck.get());
+			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
+			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
+			//entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
+			//entity.AddComponent<ModelComponent>(ModelLibrary::duck.get());
 
-		glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-		entity.AddComponent<PhysicsComponent>(position);
-		entity.AddComponent<CollisionComponent>(0.5f);
-		entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
-	}
+			glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
+			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			entity.AddComponent<PhysicsComponent>(position);
+			entity.AddComponent<CollisionComponent>(0.5f);
+			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+		}
+		else if(e.GetButton() == GLFW_MOUSE_BUTTON_RIGHT)
+		{
+			//QUACK_LOG("Right mouse button pressed!!");
 
-	void Engine::OnRightMouseButton(const MouseRightButtonPressedEvent& e)
-	{
-		//QUACK_LOG("Right mouse button pressed!!");
+			Entity entity = scene->CreateEntity();
 
-		Entity entity = scene->CreateEntity();
+			window->GetUI()->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
 
-		window->GetUI()->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
+			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
+			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
+			//entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
+			//entity.AddComponent<ShapeComponent>(new Cube(glm::vec3(0.25f)));
 
-		//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
-		//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
-		//entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
-		//entity.AddComponent<ShapeComponent>(new Cube(glm::vec3(0.25f)));
+			glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
+			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			entity.AddComponent<PhysicsComponent>(position, 1.f, 21.37f, glm::vec3(0.f, 0.f, 1.f));
+			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+			entity.AddComponent<ShapeComponent>(new Cube());
 
-		glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
-		entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-		entity.AddComponent<PhysicsComponent>(position, 1.f, 21.37f, glm::vec3(0.f, 0.f, 1.f));
-		entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
-		entity.AddComponent<ShapeComponent>(new Cube());
+			//glm::vec3 position = glm::vec3(0.f, 2.f, 10.f);
+			//glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+			//transform = glm::scale(transform, glm::vec3(2.f));
+			//entity.AddComponent<TransformComponent>(transform);
 
-		//glm::vec3 position = glm::vec3(0.f, 2.f, 10.f);
-		//glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
-		//transform = glm::scale(transform, glm::vec3(2.f));
-		//entity.AddComponent<TransformComponent>(transform);
+			//auto& physicsComponent = entity.AddComponent<PhysicsComponent>(position);
+			//physicsComponent.velocity = glm::vec3(0.f, 0.f, -50.f);
 
-		//auto& physicsComponent = entity.AddComponent<PhysicsComponent>(position);
-		//physicsComponent.velocity = glm::vec3(0.f, 0.f, -50.f);
-
-		//entity.AddComponent<CollisionComponent>(1.f);
-		//entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+			//entity.AddComponent<CollisionComponent>(1.f);
+			//entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+		}
 	}
 
 	void Engine::Run()

@@ -69,16 +69,8 @@ namespace Quack
 			
 			if (action == GLFW_PRESS) 
 			{
-				if (button == GLFW_MOUSE_BUTTON_LEFT)
-				{
-					MouseLeftButtonPressedEvent event;
-					data->callback(event);
-				}
-				else if (button == GLFW_MOUSE_BUTTON_RIGHT)
-				{
-					MouseRightButtonPressedEvent event;
-					data->callback(event);
-				}
+				MouseButtonPressedEvent event(button);
+				data->callback(event);
 			}
 		});
 

@@ -22,8 +22,7 @@ namespace Quack
 
 		void Run();
 
-		void OnLeftMouseButton(const MouseLeftButtonPressedEvent& e);
-		void OnRightMouseButton(const MouseRightButtonPressedEvent& e);
+		void OnMouseButtonPressed(const MouseButtonPressedEvent& e);
 	private:
 		std::unique_ptr<Window> window;
 		std::shared_ptr<Scene> scene;
