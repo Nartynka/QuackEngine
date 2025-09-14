@@ -9,8 +9,6 @@ struct GLFWwindow;
 
 namespace Quack
 {
-	class UI;
-
 	class Window
 	{
 		using EventCallback = std::function<void(Event&)>;
@@ -21,7 +19,6 @@ namespace Quack
 		void Update();
 
 		inline GLFWwindow* GetWindow() const { return window; }
-		inline UI* GetUI() const { return &(*ui); } // @TODO: delete this xD
 
 		void Shutdown();
 		void Init(unsigned int width, unsigned int height);
@@ -33,8 +30,6 @@ namespace Quack
 
 		unsigned int width;
 		unsigned int height;
-
-		std::unique_ptr<UI> ui;
 
 		struct WindowData
 		{

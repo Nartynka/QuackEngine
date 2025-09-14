@@ -25,7 +25,7 @@ namespace Quack
 
 		// Shared across entities
 		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
-		float friction = 0.98f;
+		float friction = 0.98f; // linear damping?
 		
 		PhysicsComponent(glm::vec3 position, float mass = 1.0f, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f))
 			: position(position), mass(mass) 
@@ -37,6 +37,15 @@ namespace Quack
 			orientation.w = cos(angle);
 		}
 
+		PhysicsComponent(glm::vec3 position, float mass, float bounce, float friction, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f))
+			: position(position), mass(mass), bounce(bounce), friction(friction)
+		{
+			float angle = glm::radians(rotationAngle) / 2;
+			orientation.x = rotationAxis.x * sin(angle);
+			orientation.y = rotationAxis.y * sin(angle);
+			orientation.z = rotationAxis.z * sin(angle);
+			orientation.w = cos(angle);
+		}
 	};
 
 	struct ConstraintComponent // Immovable physics & collision component?

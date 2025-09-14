@@ -3,7 +3,6 @@
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
 
-#include "UI.h"
 #include "Log.h"
 #include "Assert.h"
 #include "KeyEvent.h"
@@ -15,7 +14,6 @@ namespace Quack
 		: width(width), height(height)
 	{
 		Init(width, height);
-		ui = std::make_unique<UI>(this);
 	}
 
 	Window::~Window()
@@ -99,9 +97,7 @@ namespace Quack
 	}
 
 	void Window::Update()
-	{	
-		ui->StartFrame();
-		ui->EndFrame();
+	{
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}

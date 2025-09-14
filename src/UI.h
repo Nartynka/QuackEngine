@@ -3,20 +3,29 @@
 namespace Quack
 {
 	class Window;
+	class Scene;
 
 	class UI
 	{
 	public:
-		UI(Window* window);
+		UI(Window* window, Scene* scene);
 		~UI();
 		
+		void SetContext(Scene* scene);
+
 		void StartFrame();
 		void EndFrame();
 
 		void Shutdown();
+
 		int entityCount = 0;
 	private:
-		void OnEvent();
 
+		void RenderStats();
+		void RenderMenu();
+
+		void RenderCombo(const char* label, const char* elements[], int count, int& currentIdx);
+
+		Scene* context;
 	};
 }

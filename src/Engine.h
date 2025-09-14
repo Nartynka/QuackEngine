@@ -11,6 +11,7 @@ namespace Quack
 	class Window;
 	class Scene;
 	class Camera;
+	class UI;
 
 	class Engine
 	{
@@ -27,6 +28,7 @@ namespace Quack
 		std::unique_ptr<Window> window;
 		std::shared_ptr<Scene> scene;
 		std::unique_ptr<Camera> camera;
+		std::unique_ptr<UI> ui;
 		//bool bIsRunning = true;
 	};
 }

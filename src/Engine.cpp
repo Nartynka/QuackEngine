@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <random>
+#include "imgui_internal.h"
 
 #include "Window.h"
 #include "Renderer.h"
@@ -31,7 +32,6 @@
 #include "ModelLibrary.h"
 #include "LightCube.h"
 #include "Systems.h"
-#include "imgui_internal.h"
 
 namespace Quack
 {
@@ -47,6 +47,8 @@ namespace Quack
 		Renderer::Init();
 
 		scene = std::make_shared<Scene>();
+
+		ui = std::make_unique<UI>(&*window, &*scene);
 
 		camera = std::make_unique<Camera>();
 
@@ -101,7 +103,7 @@ namespace Quack
 
 			Entity entity = scene->CreateEntity();
 
-			window->GetUI()->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
+			ui->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
 
 			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
@@ -120,7 +122,7 @@ namespace Quack
 
 			Entity entity = scene->CreateEntity();
 
-			window->GetUI()->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
+			ui->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
 
 			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
@@ -237,7 +239,7 @@ namespace Quack
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 				camera->Update(dt);
-
+				ui->StartFrame();
 				// Maybe view & projection should be in camera class?
 				// first vector moves the scene???
 				// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
@@ -275,6 +277,7 @@ namespace Quack
 				lightCube.shader->SetUniform4fv("MVP", glm::value_ptr(projection * view * model));
 				Renderer::Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
 
+				ui->EndFrame();
 				window->Update();
 			}
 		}
