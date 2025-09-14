@@ -17,8 +17,6 @@ namespace Quack
 		void EndFrame();
 
 		void Shutdown();
-
-		int entityCount = 0;
 	private:
 
 		void RenderStats();

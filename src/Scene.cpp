@@ -22,9 +22,9 @@ namespace Quack
 		return registry;
 	}
 
-	int Scene::GetEntitiesCount()
+	int Scene::GetEntityCount()
 	{
-		return registry.storage<entt::entity>().size();
+		return (int)registry.storage<entt::entity>().size();
 	}
 
 	//void Scene::DestroyEntity(const Entity& entity)

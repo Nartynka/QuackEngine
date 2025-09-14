@@ -61,7 +61,7 @@ namespace Quack
 		ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 		ImGui::SeparatorText("Stats:");
 
-		ImGui::Text("Entity count: %i", entityCount);
+		ImGui::Text("Entity count: %i", context->GetEntityCount());
 
 		ImGui::End();
 	}

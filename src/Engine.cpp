@@ -103,8 +103,6 @@ namespace Quack
 
 			Entity entity = scene->CreateEntity();
 
-			ui->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
-
 			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 			//entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
@@ -121,8 +119,6 @@ namespace Quack
 			//QUACK_LOG("Right mouse button pressed!!");
 
 			Entity entity = scene->CreateEntity();
-
-			ui->entityCount = scene->GetEntitiesCount(); // @TODO: just for now, will remove it later
 
 			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
