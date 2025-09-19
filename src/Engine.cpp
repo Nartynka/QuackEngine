@@ -226,7 +226,7 @@ namespace Quack
 		while (!glfwWindowShouldClose(window->GetWindow()))
 		{
 			float currentTime = (float)glfwGetTime(); // time since glfw initialization in seconds
-			float dt = currentTime - lastTime;
+			float dt = glm::min(currentTime - lastTime, 0.1f);
 			
 			if (dt >= DESIRED_DT)
 			{
