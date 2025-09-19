@@ -98,8 +98,8 @@ namespace Quack
 
 	void Window::Update()
 	{
-		glfwPollEvents();
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 
 	void Window::Shutdown()
