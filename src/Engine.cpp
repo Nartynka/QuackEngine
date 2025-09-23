@@ -112,7 +112,7 @@ namespace Quack
 			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
 			entity.AddComponent<PhysicsComponent>(position);
 			entity.AddComponent<CollisionComponent>(0.5f);
-			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), glm::vec4(0.0f, 1.0f, 0.5f, 1.f));
 		}
 		else if(e.GetButton() == GLFW_MOUSE_BUTTON_RIGHT)
 		{
@@ -176,6 +176,7 @@ namespace Quack
 		// Stack of spheres
 		float z = -4.f;
 		glm::mat4 transform;
+		glm::vec4 sphereColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
 		for (int i = 0; i < 5; i++)
 		{
 			float y = 2.f;
@@ -191,7 +192,7 @@ namespace Quack
 					entity.AddComponent<TransformComponent>(transform);
 					entity.AddComponent<PhysicsComponent>(position);
 					entity.AddComponent<CollisionComponent>(0.25f);
-					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), sphereColor);
 					x += 0.5f;
 				}
 				y +=0.5f;

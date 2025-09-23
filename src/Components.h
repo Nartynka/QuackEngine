@@ -122,8 +122,10 @@ namespace Quack
 	struct ModelComponent
 	{
 		Model* model;
-		ModelComponent(Model* model)
-			: model(model) {}
+		glm::vec4 color;
+
+		ModelComponent(Model* model, glm::vec4 color = glm::vec4(0.f))
+			: model(model), color(color) {}
 
 		~ModelComponent() = default; // ModelLibrary owns the model and deletes it
 

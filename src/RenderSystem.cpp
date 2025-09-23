@@ -49,7 +49,7 @@ namespace Quack
 			model = glm::scale(model, glm::vec3(0.5f));
 
 			shader.SetUniform4fm("model", glm::value_ptr(model));
-			shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.0f);
+			shader.SetUniform4fv("inColor", glm::value_ptr(modelComp.color));
 
 			modelComp.model->Draw(shader);
 

@@ -54,9 +54,6 @@ namespace Quack
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
 
-		if (textures.empty())
-			shader.SetUniform4f("inColor", 0.0f, 1.0f, 0.5f);
-
 		glDrawElements(GL_TRIANGLES, ibo.GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 

@@ -116,9 +116,9 @@ namespace Quack
 		ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 1.0f, "%.2f");
 		ImGui::DragFloat3("Rotation axis", axis, 0.1f, 0.f, 0.f, "%.2f");
 		// @TODO: pass color to entities
-		static float outlineColor[3];
+		static float color[3];
 		ImGui::Text("Color:"); ImGui::SameLine();
-		ImGui::ColorEdit3("Color", outlineColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+		ImGui::ColorEdit3("Color", color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
 		if (ImGui::Button("Create", { -FLT_MIN, 30.0f }))
 		{
@@ -126,6 +126,7 @@ namespace Quack
 
 			glm::vec3 position_v = glm::vec3(position[0], position[1], position[2]);
 			glm::vec3 axis_v = glm::vec3(axis[0], axis[1], axis[2]);
+			glm::vec4 color_v = glm::vec4(color[0], color[1], color[2], 1.f);
 
 			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position_v));
 
@@ -137,19 +138,19 @@ namespace Quack
 				{
 					// @TODO: ModelLibrary::sphere should take radius, and then pass radius to collision component
 					entity.AddComponent<CollisionComponent>(0.5f);
-					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get());
+					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), color_v);
 				}
 				else if (shapeIdx == 1) // Cube
 				{
 					glm::vec3 halfSize_v = glm::vec3(halfSize[0], halfSize[1], halfSize[2]);
 					entity.AddComponent<CollisionComponent>(halfSize_v);
-					entity.AddComponent<ShapeComponent>(new Cube(halfSize_v));
+					entity.AddComponent<ShapeComponent>(new NormalCube(halfSize_v), color_v);
 				}
 			}
 			else if (entityTypeIdx == 1) // Constraint
 			{
 				glm::vec3 halfSize_v = glm::vec3(halfSize[0], halfSize[1], halfSize[2]);
-				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize_v));
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize_v), color_v);
 				entity.AddComponent<ConstraintComponent>(position_v, halfSize_v, angle, axis_v);
 			}
 		}
