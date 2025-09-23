@@ -20,17 +20,15 @@ namespace Quack
 		{
 			auto& [shape, transform] = shapeView.get(entity);
 			glm::mat4 model = transform.transform;
-			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
-			shader.SetUniform4fv("model", glm::value_ptr(model));
+			shader.SetUniform4fm("model", glm::value_ptr(model));
 
+			shader.SetUniform4fv("inColor", glm::value_ptr(shape.color));
 			if (shape.shape->ibo)
 			{
-				shader.SetUniform4f("inColor", 0.5f, 0.0f, 0.5f);
 				Renderer::Draw(*shape.shape->vao, *shape.shape->ibo, shader);
 			}
 			else
 			{
-				shader.SetUniform4f("inColor", 0.0f, 0.5f, 0.5f);
 				Renderer::DrawNotIndexed(*shape.shape->vao, shape.shape->GetVerticesCount(), shader);
 			}
 		}
@@ -50,7 +48,7 @@ namespace Quack
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
 			model = glm::scale(model, glm::vec3(0.5f));
 
-			shader.SetUniform4fv("model", glm::value_ptr(model));
+			shader.SetUniform4fm("model", glm::value_ptr(model));
 			shader.SetUniform4f("inColor", 0.0f, 0.0f, 0.0f, 0.0f);
 
 			modelComp.model->Draw(shader);

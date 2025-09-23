@@ -25,6 +25,7 @@ namespace Quack
 		void SetUniform3f(const char* name, float v0, float v1, float v2) const;
 		void SetUniform3fv(const char* name, const float* value) const;
 		void SetUniform4fv(const char* name, const float* value) const;
+		void SetUniform4fm(const char* name, const float* value) const;
 		void SetUniformInt(const char* name, int value) const;
 
 	private:

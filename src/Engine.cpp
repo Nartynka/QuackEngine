@@ -129,7 +129,7 @@ namespace Quack
 			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
 			entity.AddComponent<PhysicsComponent>(position, 1.f, 21.37f, glm::vec3(0.f, 0.f, 1.f));
 			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
-			entity.AddComponent<ShapeComponent>(new Cube());
+			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
 
 			//glm::vec3 position = glm::vec3(0.f, 2.f, 10.f);
 			//glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
@@ -155,36 +155,37 @@ namespace Quack
 		glm::mat4 view;
 		glm::mat4 projection;
 
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
 		{
 			Entity floor = scene->CreateEntity();
 			//glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
 			glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
 			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 		{
 			Entity floor = scene->CreateEntity();
 			glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
 			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 		{
 			Entity floor = scene->CreateEntity();
 			glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
 			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 		{
 			Entity floor = scene->CreateEntity();
 			glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize));
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
 			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 
@@ -216,8 +217,7 @@ namespace Quack
 
 
 		LightCube lightCube;
-		lightCube.position = glm::vec3(0.f, 3.5f, 0.f);
-		//lightCube.position = glm::vec3(0.f, sin(glfwGetTime()) * 3.5f, (cos(glfwGetTime()) * 5.5f) - 5.5f);
+		lightCube.position = glm::vec3(-1.f, 4.5f, 2.f);
 		shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
 		shader.SetUniform3fv("lightPos", glm::value_ptr(lightCube.position));
 
@@ -244,12 +244,12 @@ namespace Quack
 				projection = glm::perspective(glm::radians(camera->fov), 800.0f / 600.0f, 0.1f, 1000.0f);
 
 				Renderer::linesShader->Bind();
-				Renderer::linesShader->SetUniform4fv("view", glm::value_ptr(view));
-				Renderer::linesShader->SetUniform4fv("projection", glm::value_ptr(projection));
+				Renderer::linesShader->SetUniform4fm("view", glm::value_ptr(view));
+				Renderer::linesShader->SetUniform4fm("projection", glm::value_ptr(projection));
 				
 				shader.Bind();
-				shader.SetUniform4fv("view", glm::value_ptr(view));
-				shader.SetUniform4fv("projection", glm::value_ptr(projection));
+				shader.SetUniform4fm("view", glm::value_ptr(view));
+				shader.SetUniform4fm("projection", glm::value_ptr(projection));
 
 				shader.SetUniform3fv("viewPos", glm::value_ptr(camera->position));
 
@@ -270,7 +270,7 @@ namespace Quack
 				// Render light cube
 				model = glm::translate(glm::mat4(1.0f), lightCube.position);
 				lightCube.shader->Bind();
-				lightCube.shader->SetUniform4fv("MVP", glm::value_ptr(projection * view * model));
+				lightCube.shader->SetUniform4fm("MVP", glm::value_ptr(projection * view * model));
 				Renderer::Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
 
 				ui->EndFrame();

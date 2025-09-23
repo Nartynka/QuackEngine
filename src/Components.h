@@ -108,8 +108,10 @@ namespace Quack
 	struct ShapeComponent
 	{
 		Shape* shape;
-		ShapeComponent(Shape* shape)
-			: shape(shape) {}
+		glm::vec4 color;
+
+		ShapeComponent(Shape* shape, glm::vec4 color = glm::vec4(1.f))
+			: shape(shape), color(color) {}
 
 		~ShapeComponent()
 		{

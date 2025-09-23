@@ -70,7 +70,7 @@ namespace Quack
 		//ibo.Bind();
 
 		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
-		linesShader->SetUniform4fv("model", glm::value_ptr(model));
+		linesShader->SetUniform4fm("model", glm::value_ptr(model));
 
 		glLineWidth(2.5f);
 
@@ -84,7 +84,7 @@ namespace Quack
 		linesShader->Bind();
 		
 		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
-		linesShader->SetUniform4fv("model", glm::value_ptr(glm::mat4(1.0f)));
+		linesShader->SetUniform4fm("model", glm::value_ptr(glm::mat4(1.0f)));
 
 		glm::vec3 data[] = {start, end};
 		
@@ -113,7 +113,7 @@ namespace Quack
 		linesShader->Bind();
 
 		linesShader->SetUniform3fv("inColor", glm::value_ptr(color));
-		linesShader->SetUniform4fv("model", glm::value_ptr(glm::mat4(1.0f)));
+		linesShader->SetUniform4fm("model", glm::value_ptr(glm::mat4(1.0f)));
 
 		glBindVertexArray(0);
 
