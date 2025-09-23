@@ -66,8 +66,7 @@ namespace Quack
 
 			if (mesh->HasNormals())
 			{
-				// flip normals for the duck, will revert when normal mapping is done
-				vertex.normal = { mesh->mNormals->x, -mesh->mNormals->y, -mesh->mNormals->z };
+				vertex.normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
 			}
 			else
 			{

@@ -47,7 +47,7 @@ void main()
 	vec3 norm = normalize(normal);
 	vec3 lightDir = normalize(lightPos - fragPos);
 
-	float ambientStrength = 0.1;
+	float ambientStrength = 0.2;
 	vec3 ambient = ambientStrength * lightColor;
 
 	float diff = max(dot(norm, lightDir), 0.0);
@@ -62,4 +62,7 @@ void main()
 
 	vec3 result = (ambient + diffuse + specular) * fragColor.rgb;
 	color = vec4(result, 1.0);
+
+	// normal debug
+	//color = vec4(norm * 0.5 + 0.5, 1.0); // map [-1,1] to [0,1]
 };
