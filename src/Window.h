@@ -24,12 +24,11 @@ namespace Quack
 		void Init(unsigned int width, unsigned int height);
 
 		void SetCallback(const EventCallback& callback) { data.callback = callback; }
+
+		std::pair<int, int> GetWindowSize() const;
 	private:
 
 		GLFWwindow* window;
-
-		unsigned int width;
-		unsigned int height;
 
 		struct WindowData
 		{

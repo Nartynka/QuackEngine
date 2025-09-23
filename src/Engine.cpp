@@ -39,7 +39,7 @@ namespace Quack
 	{
 		Log::Init();
 
-		window = std::make_unique<Window>(1080, 720);
+		window = std::make_unique<Window>(1280, 720);
 		window->SetCallback(std::bind(&Engine::OnEvent, this, std::placeholders::_1)); // bind or lambda that is the question :b
 		
 		Input::SetWindow(window->GetWindow());
@@ -241,7 +241,8 @@ namespace Quack
 				// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
 				// the second vector is the point that we look at 
 				view = glm::lookAt(camera->position, camera->position + camera->front, camera->up);
-				projection = glm::perspective(glm::radians(camera->fov), 800.0f / 600.0f, 0.1f, 1000.0f);
+				auto [width, height] = window->GetWindowSize();
+				projection = glm::perspective(glm::radians(camera->fov), (float)width / (float)height, 0.1f, 100.0f);
 
 				Renderer::linesShader->Bind();
 				Renderer::linesShader->SetUniform4fm("view", glm::value_ptr(view));

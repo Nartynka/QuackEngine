@@ -10,8 +10,7 @@
 
 namespace Quack
 {
-	Window::Window(unsigned int width, unsigned int height) 
-		: width(width), height(height)
+	Window::Window(unsigned int width, unsigned int height)
 	{
 		Init(width, height);
 	}
@@ -94,6 +93,13 @@ namespace Quack
 		// init glew
 		int glewResult = glewInit();
 		QUACK_ASSERT(!glewResult, "Could not initialize GLEW!");
+	}
+
+	std::pair<int, int> Window::GetWindowSize() const
+	{
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		return { width, height };
 	}
 
 	void Window::Update()
