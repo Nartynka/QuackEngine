@@ -53,7 +53,6 @@ namespace Quack
 		{
 			auto& [physics, transform] = movableView.get(entity);
 
-			// @TODO: think about better way to do it
 			glm::vec3 scale;
 			scale.x = glm::length(transform.transform[0]);
 			scale.y = glm::length(transform.transform[1]);
@@ -61,7 +60,7 @@ namespace Quack
 
 			transform.transform = glm::translate(glm::mat4(1.0f), physics.position);
 			transform.transform *= glm::toMat4(physics.orientation);
-			transform.transform = glm::scale(transform.transform, scale);
+			transform.transform *= glm::scale(glm::mat4(1.f), scale);
 		}
 
 		auto constraintView = registry.view<ConstraintComponent, TransformComponent>();
