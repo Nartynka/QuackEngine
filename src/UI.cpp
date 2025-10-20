@@ -132,17 +132,17 @@ namespace Quack
 
 			if (entityTypeIdx == 0) // Particle
 			{
-				entity.AddComponent<PhysicsComponent>(position_v, mass, bounce, friction, angle, axis_v);
-
 				if (shapeIdx == 0) // Sphere
 				{
 					// @TODO: ModelLibrary::sphere should take radius, and then pass radius to collision component
+					entity.AddComponent<PhysicsComponent>(position_v, mass, radius, angle, axis_v, bounce, friction);
 					entity.AddComponent<CollisionComponent>(0.5f);
 					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), color_v);
 				}
 				else if (shapeIdx == 1) // Cube
 				{
 					glm::vec3 halfSize_v = glm::vec3(halfSize[0], halfSize[1], halfSize[2]);
+					entity.AddComponent<PhysicsComponent>(position_v, mass, halfSize_v, angle, axis_v, bounce, friction);
 					entity.AddComponent<CollisionComponent>(halfSize_v);
 					entity.AddComponent<ShapeComponent>(new NormalCube(halfSize_v), color_v);
 				}

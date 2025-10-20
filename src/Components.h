@@ -14,11 +14,15 @@ namespace Quack
 	struct PhysicsComponent // rigid body component?
 	{
 		glm::vec3 velocity;
+		glm::vec3 angularVelocity;
 
 		glm::vec3 position, oldPosition;
 		glm::quat orientation; // rotation
 
 		glm::vec3 forces;
+		glm::vec3 torques; // sum of every rotational force
+
+		glm::mat3 invInertiaTensor; // body resistance to rotation
 
 		float mass = 1.0f;
 		float bounce = 0.7f; // coefficient of restitution, how much energy is kept when entity bounces off a surface
@@ -27,17 +31,7 @@ namespace Quack
 		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
 		float friction = 0.98f; // linear damping?
 		
-		PhysicsComponent(glm::vec3 position, float mass = 1.0f, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f))
-			: position(position), mass(mass) 
-		{
-			float angle = glm::radians(rotationAngle) / 2;
-			orientation.x = rotationAxis.x * sin(angle);
-			orientation.y = rotationAxis.y * sin(angle);
-			orientation.z = rotationAxis.z * sin(angle);
-			orientation.w = cos(angle);
-		}
-
-		PhysicsComponent(glm::vec3 position, float mass, float bounce, float friction, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f))
+		PhysicsComponent(glm::vec3 position, float mass = 1.0f, glm::vec3 halfSize = glm::vec3(1.f), float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f), float bounce = 0.7f, float friction = 0.98f)
 			: position(position), mass(mass), bounce(bounce), friction(friction)
 		{
 			float angle = glm::radians(rotationAngle) / 2;
@@ -45,6 +39,30 @@ namespace Quack
 			orientation.y = rotationAxis.y * sin(angle);
 			orientation.z = rotationAxis.z * sin(angle);
 			orientation.w = cos(angle);
+
+			// I_xx = 1/12 * m * (h^2 + d^2)
+			// I_yy = 1/12 * m * (w^2 + d^2)
+			// I_zz = 1/12 * m * (w^2 + h^2)
+			invInertiaTensor[0][0] = 1.f / (1.f / 12.f * mass * (halfSize.y * halfSize.y + halfSize.z * halfSize.z));
+			invInertiaTensor[1][1] = 1.f / (1.f / 12.f * mass * (halfSize.x * halfSize.x + halfSize.z * halfSize.z));
+			invInertiaTensor[2][2] = 1.f / (1.f / 12.f * mass * (halfSize.x * halfSize.x + halfSize.y * halfSize.y));
+		}
+
+		PhysicsComponent(glm::vec3 position, float mass = 1.0f, float radius = 1.f, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f), float bounce = 0.7f, float friction = 0.98f)
+			: position(position), mass(mass), bounce(bounce), friction(friction)
+		{
+			float angle = glm::radians(rotationAngle) / 2;
+			orientation.x = rotationAxis.x * sin(angle);
+			orientation.y = rotationAxis.y * sin(angle);
+			orientation.z = rotationAxis.z * sin(angle);
+			orientation.w = cos(angle);
+
+			// I_diag = 2/5mr^2
+			float invInertia = 1.f / (2.f / 5.f * mass * radius * radius);
+
+			invInertiaTensor[0][0] = invInertia;
+			invInertiaTensor[1][1] = invInertia;
+			invInertiaTensor[2][2] = invInertia;
 		}
 	};
 
@@ -72,7 +90,7 @@ namespace Quack
 		// width, height, depth
 		glm::vec3 halfSize;
 		float radius;
-		Shape* shape; // Only for drawing / debug
+		Shape* shape; // Only for debug
 
 		CollisionComponent(glm::vec3 halfSize)
 			: halfSize(halfSize), radius(0.f)

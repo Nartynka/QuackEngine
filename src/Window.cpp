@@ -99,6 +99,7 @@ namespace Quack
 	{
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
+		// @TODO: investigate why this sometimes returns [0, 0]
 		return { width, height };
 	}
 

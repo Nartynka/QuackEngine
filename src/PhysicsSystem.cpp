@@ -34,6 +34,7 @@ namespace Quack
 		{
 			auto& [physics] = physicsView.get(entity);
 
+			// linear motion
 			physics.oldPosition = physics.position;
 			glm::vec3 oldVelocity = physics.velocity;
 
@@ -41,6 +42,23 @@ namespace Quack
 
 			physics.velocity = physics.velocity * physics.friction + acceleration * dt;
 			physics.position += (oldVelocity + physics.velocity) * 0.5f * dt;
+
+			// angular motion
+
+			//glm::mat3 R = glm::mat3(physics.orientation);
+			//glm::mat3 wInvI = R * physics.invInertiaTensor * glm::transpose(R);
+			//glm::mat3 wInvI = glm::mat3(1.f) * (1 / (1.0f / 6.0f) * physics.mass * 0.25f);
+
+			glm::vec3 angularAcceleration = physics.invInertiaTensor * physics.torques;
+			physics.angularVelocity += angularAcceleration * dt;
+
+			// TEMP!!!
+			physics.angularVelocity *= physics.friction;
+
+			physics.orientation += 0.5f * glm::quat(0.f, physics.angularVelocity) * physics.orientation * dt;
+			physics.orientation = glm::normalize(physics.orientation);
+
+			physics.torques = glm::vec3(0.f);
 		}
 	}
 
@@ -287,19 +305,33 @@ namespace Quack
 						}
 					}
 
+
 					if (bCollision)
 					{
-						// for every action, there is an equal and opposite reaction
-
+						// Resolve overlap
 						glm::vec3 normal = normalize(shortestAxis);
 						physics.position += normal * shortestOverlap;
 
-
-						glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
+						/// LINEAR FORCES
+						glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. "Normal to the floor"
 						glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
 
-						physics.velocity = velocityTangental - velocityNormal * physics.bounce;
+						// TEMP!!! Will change when proper impulses are done
+						glm::vec3 impulse = velocityTangental - velocityNormal * physics.bounce;
+
+						physics.velocity = impulse;
+
 						//physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
+
+						/// ANGULAR FORCES
+						glm::vec3 contactPoint = physics.position - normal * collision.halfSize;
+						//Renderer::DrawPoint(contactPoint, glm::vec3(0.f, 1.f, 0.f));
+
+						glm::vec3 r = contactPoint - physics.position;
+
+						// @TODO: FIX temp
+						physics.angularVelocity += glm::cross(impulse, r);
+
 					}
 
 					// Visualize the projected intervals for a box
@@ -326,7 +358,7 @@ namespace Quack
 		{
 			auto& [collision, physics] = collisionView.get(entity);
 
-			// @TODO: find better way to distinct if collision shape is sphere or cube
+			// @TODO: find better way to determine whether collision shape is a sphere or a cube
 			// @TODO: make proper sphere - sphere collision
 			if (collision.radius > 0.f)
 			{

@@ -101,30 +101,30 @@ namespace Quack
 		{
 			//QUACK_LOG("Left mouse button pressed!!");
 
-			Entity entity = scene->CreateEntity();
+			//Entity entity = scene->CreateEntity();
 
 			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), glm::vec3(randX(), 5.f, randZ())));
 			//entity.AddComponent<PhysicsComponent>(glm::vec3(0.f, -1.f, 0.f), glm::vec3(0.f, -9.8f, 0.f));
 			//entity.AddComponent<CollisionComponent>(glm::vec3(0.3f, 0.41f, 0.5f));
 			//entity.AddComponent<ModelComponent>(ModelLibrary::duck.get());
 
+			//glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
+			//entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			//entity.AddComponent<PhysicsComponent>(position);
+			//entity.AddComponent<CollisionComponent>(0.5f);
+			//entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), glm::vec4(0.0f, 1.0f, 0.5f, 1.f));
+			Entity entity = scene->CreateEntity();
+
 			glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
 			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-			entity.AddComponent<PhysicsComponent>(position);
-			entity.AddComponent<CollisionComponent>(0.5f);
-			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), glm::vec4(0.0f, 1.0f, 0.5f, 1.f));
+			entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f), 21.37f, glm::vec3(0.f, 0.f, 1.f));
+			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
 		}
 		else if(e.GetButton() == GLFW_MOUSE_BUTTON_RIGHT)
 		{
 			//QUACK_LOG("Right mouse button pressed!!");
 
-			Entity entity = scene->CreateEntity();
-
-			glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
-			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-			entity.AddComponent<PhysicsComponent>(position, 1.f, 21.37f, glm::vec3(0.f, 0.f, 1.f));
-			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
-			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
 		}
 	}
 
@@ -174,31 +174,31 @@ namespace Quack
 		}
 
 		// Stack of spheres
-		float z = -4.f;
-		glm::mat4 transform;
-		glm::vec4 sphereColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
-		for (int i = 0; i < 5; i++)
-		{
-			float y = 2.f;
-			for (int j = 0; j < 5; j++)
-			{
-				float x = -1.f;
-				for (int k = 0; k < 5; k++)
-				{
-					Entity entity = scene->CreateEntity();
-					glm::vec3 position = glm::vec3(x, y, z);
-					transform = glm::translate(glm::mat4(1.0f), position);
-					transform = glm::scale(transform, glm::vec3(0.5f));
-					entity.AddComponent<TransformComponent>(transform);
-					entity.AddComponent<PhysicsComponent>(position);
-					entity.AddComponent<CollisionComponent>(0.25f);
-					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), sphereColor);
-					x += 0.5f;
-				}
-				y +=0.5f;
-			}
-			z -= 0.5f;
-		}
+		//float z = -4.f;
+		//glm::mat4 transform;
+		//glm::vec4 sphereColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
+		//for (int i = 0; i < 5; i++)
+		//{
+		//	float y = 2.f;
+		//	for (int j = 0; j < 5; j++)
+		//	{
+		//		float x = -1.f;
+		//		for (int k = 0; k < 5; k++)
+		//		{
+		//			Entity entity = scene->CreateEntity();
+		//			glm::vec3 position = glm::vec3(x, y, z);
+		//			transform = glm::translate(glm::mat4(1.0f), position);
+		//			transform = glm::scale(transform, glm::vec3(0.5f));
+		//			entity.AddComponent<TransformComponent>(transform);
+		//			entity.AddComponent<PhysicsComponent>(position);
+		//			entity.AddComponent<CollisionComponent>(0.25f);
+		//			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), sphereColor);
+		//			x += 0.5f;
+		//		}
+		//		y +=0.5f;
+		//	}
+		//	z -= 0.5f;
+		//}
 
 
 		LightCube lightCube;
@@ -233,6 +233,8 @@ namespace Quack
 				Renderer::linesShader->SetUniform4fm("view", glm::value_ptr(view));
 				Renderer::linesShader->SetUniform4fm("projection", glm::value_ptr(projection));
 				
+				Renderer::DrawDebug();
+
 				shader.Bind();
 				shader.SetUniform4fm("view", glm::value_ptr(view));
 				shader.SetUniform4fm("projection", glm::value_ptr(projection));
