@@ -39,7 +39,7 @@ namespace Quack
 	{
 		Log::Init();
 
-		window = std::make_unique<Window>(1280, 720);
+		window = std::make_unique<Window>(1920, 1080);
 		window->SetCallback(std::bind(&Engine::OnEvent, this, std::placeholders::_1)); // bind or lambda that is the question :b
 		
 		Input::SetWindow(window->GetWindow());
@@ -145,11 +145,11 @@ namespace Quack
 		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
 		{
 			Entity floor = scene->CreateEntity();
-			//glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
-			glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
+			glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
+			//glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
 			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
 			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 50.f, glm::vec3(0.f, 0.f, 1.f));
+			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 0.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 		{
 			Entity floor = scene->CreateEntity();
@@ -200,6 +200,34 @@ namespace Quack
 		//	z -= 0.5f;
 		//}
 
+		// Stack of cubes
+		//float z = -4.f;
+		//glm::mat4 transform;
+		//glm::vec4 cubeColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
+		//for (int i = 0; i < 1; i++)
+		//{
+		//	float y = 2.f;
+		//	for (int j = 0; j < 5; j++)
+		//	{
+		//		float x = -1.f;
+		//		for (int k = 0; k < 2; k++)
+		//		{
+		//			Entity entity = scene->CreateEntity();
+		//			glm::vec3 position = glm::vec3(x, y, z);
+		//			transform = glm::translate(glm::mat4(1.0f), position);
+		//			transform = glm::scale(transform, glm::vec3(0.5f));
+		//			entity.AddComponent<TransformComponent>(transform);
+		//			entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f));
+		//			entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
+		//			entity.AddComponent<ShapeComponent>(new NormalCube(), cubeColor);
+		//			x += 0.6f;
+		//		}
+		//		y += 0.6f;
+		//	}
+		//	z -= 0.6f;
+		//}
+
+		//entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f), 21.37f, glm::vec3(0.f, 0.f, 1.f));
 
 		LightCube lightCube;
 		lightCube.position = glm::vec3(-1.f, 4.5f, 2.f);
