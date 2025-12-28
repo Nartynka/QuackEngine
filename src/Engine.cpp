@@ -143,14 +143,14 @@ namespace Quack
 
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
-		{
-			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
-			//glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
-			floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 0.f, glm::vec3(0.f, 0.f, 1.f));
-		}
+		//{
+		//	Entity floor = scene->CreateEntity();
+		//	glm::vec3 floorPos = glm::vec3(0.f, -0.5f, -5.f);
+		//	//glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
+		//	floor.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), floorPos));
+		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
+		//	floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, 0.f, glm::vec3(0.f, 0.f, 1.f));
+		//}
 		{
 			Entity floor = scene->CreateEntity();
 			glm::vec3 floorPos = glm::vec3(-3.5f, -5.5f, -5.f);
@@ -173,6 +173,29 @@ namespace Quack
 			floor.AddComponent<ConstraintComponent>(floorPos, floorHalfSize, -40.f, glm::vec3(0.f, 0.f, 1.f));
 		}
 
+
+
+		// WHY WHEN I CHANGE THE ORDER COLLISION IS NOT DETECED :SOB:
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(1.f, 0.f, -5.f);
+			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			auto& p = entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(3.0f, 0.2f, 0.5f));
+			p.velocity = glm::vec3(0.f, 0.f, 0.f);
+			p.gravity = glm::vec3(0.f);
+			entity.AddComponent<CollisionComponent>(glm::vec3(3.0f, 0.2f, 0.5f));
+			entity.AddComponent<ShapeComponent>(new NormalCube(glm::vec3(3.0f, 0.2f, 0.5f)), glm::vec4(0.f, 0.f, 1.f, 1.f));
+		}
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(-0.7f, 3.f, -5.f);
+			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			auto& p = entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f)/*, -50.f, glm::vec3(0.f, 0.f, 1.f)*/);
+			//p.velocity = glm::vec3(0.f, -5.f, 0.f);
+			//p.gravity = glm::vec3(0.f);
+			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
+		}
 		// Stack of spheres
 		//float z = -4.f;
 		//glm::mat4 transform;

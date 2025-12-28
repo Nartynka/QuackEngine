@@ -59,7 +59,7 @@ namespace Quack
 			physics.angularVelocity += angularAcceleration * dt;
 
 			// TEMP!!!
-			//physics.angularVelocity *= physics.friction;
+			physics.angularVelocity *= physics.friction;
 
 			physics.orientation += 0.5f * glm::quat(0.f, physics.angularVelocity) * physics.orientation * dt;
 			physics.orientation = glm::normalize(physics.orientation);
@@ -162,8 +162,7 @@ namespace Quack
 					{
 						glm::vec3 normal = normalize(shortestAxis);
 
-
-
+						glm::vec3 contactPoint = physics.position - normal * collision.halfSize;
 
 
 
@@ -176,7 +175,6 @@ namespace Quack
 						//physics.position += normal * shortestOverlap;
 
 						/// ANGULAR FORCES
-						//glm::vec3 contactPoint = physics.position - normal * collision.halfSize;
 						//Renderer::DrawPoint(contactPoint, glm::vec3(0.f, 1.f, 0.f));
 
 						//glm::vec3 r = contactPoint - physics.position;
@@ -372,29 +370,63 @@ namespace Quack
 						{
 							glm::vec3 normal = normalize(shortestAxis);
 
-							glm::vec3 entityPosition = physics.position - normal * collision.halfSize;
-							glm::vec3 entity2Position = physics2.position + normal * collision2.halfSize;
-
-							glm::vec3 contactPoint = 0.5f * (entityPosition + entity2Position);
-
-
+							// @TODO: This only works if the bodies are the same size!!!
+							glm::vec3 p1 = physics.position - normal * (shortestOverlap * 0.5f);
+							glm::vec3 p2 = physics2.position + normal * (shortestOverlap * 0.5f);
+							glm::vec3 contactPoint = 0.5f * (p1 + p1);
 
 
+							// Arm from center of mass to a point of contact
+							glm::vec3 r1 = contactPoint - physics.position;
+							glm::vec3 r2 = contactPoint - physics2.position;
 
+							// Velocity of a point of the body (v_lin + omega x r)
+							glm::vec3 v1 = physics.velocity + cross(physics.angularVelocity, r1);
+							glm::vec3 v2 = physics2.velocity + cross(physics2.angularVelocity, r2);
 
+							// Relative velocity of two bodies
+							glm::vec3 relativeVelocity = v1 - v2;
 
-							//glm::vec3 rA = contactPoint - physics.position;
-							//glm::vec3 rB = contactPoint - physics2.position;
+							// project relative velocity onto normal to check if the bodies are already separating or moving into one another
 
-							//glm::vec3 vA = physics.velocity + cross(physics.angularVelocity, rA);
-							//glm::vec3 vB = physics2.velocity + cross(physics2.angularVelocity, rB);
+							float normalVelocity = dot(relativeVelocity, normal);
 
-							//glm::vec3 vRel = vA - vB;
+							if (normalVelocity > 0.f)
+								return; // already separating - do nothing
+							
 
-							//float vn = dot(vRel, normal);
-							//
-							//if (vn > 0) return; // separating
-							//
+							float invMass1 = 1.f / physics.mass;
+							float invMass2 = 1.f / physics2.mass;
+
+							// @TODO: think if this is correct
+							float restitution = glm::min(physics.bounce, physics2.bounce);
+							
+							glm::vec3 effectiveMass1 = cross(physics.invInertiaTensor * cross(r1, normal), r1);
+							glm::vec3 effectiveMass2 = cross(physics2.invInertiaTensor * cross(r2, normal), r2);
+
+							// j
+							float impulse = (-(1 + restitution) * normalVelocity) / (invMass1 + invMass2 + dot(normal, effectiveMass1 + effectiveMass2));
+
+							// J
+							glm::vec3 vectorImpulse = impulse * normal;
+
+							physics.velocity += vectorImpulse * invMass1;
+							physics2.velocity -= vectorImpulse * invMass2;
+
+							glm::mat3 R1 = glm::toMat3(physics.orientation);
+							glm::mat3 R2 = glm::toMat3(physics2.orientation);
+							// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
+							glm::mat3 invInertiaWorld1 = R1 * physics.invInertiaTensor * glm::transpose(R1);
+							glm::mat3 invInertiaWorld2 = R2 * physics2.invInertiaTensor * glm::transpose(R2);
+
+							physics.angularVelocity += invInertiaWorld1 * glm::cross(r1, vectorImpulse);
+							physics2.angularVelocity -= invInertiaWorld2 * glm::cross(r2, vectorImpulse);
+
+							
+							/*
+							//physics.position += (normal * shortestOverlap) / 2.f;
+							//physics2.position -= (normal * shortestOverlap) / 2.f;
+
 							//glm::vec3 raCrossN = glm::cross(rA, normal);
 							//glm::vec3 rbCrossN = glm::cross(rB, normal);
 
@@ -427,6 +459,7 @@ namespace Quack
 
 							//physics.position += correction * invMass;
 							//physics2.position -= correction * invMass2;
+							*/
 						}
 					}
 					}
