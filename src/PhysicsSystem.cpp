@@ -391,9 +391,13 @@ namespace Quack
 
 							float normalVelocity = dot(relativeVelocity, normal);
 
+							QUACK_LOG("collision {}", normalVelocity);
+
+							// @BUG: something is wrong here
 							if (normalVelocity > 0.f)
 								return; // already separating - do nothing
 							
+							QUACK_GOOD("collision {}", normalVelocity);
 
 							float invMass1 = 1.f / physics.mass;
 							float invMass2 = 1.f / physics2.mass;
@@ -473,7 +477,7 @@ namespace Quack
 		// vector from sphere to cube
 		glm::vec3 d = spherePosition - cubePosition;
 
-		glm::mat3 cubeAxes = glm::toMat3(cubeOrientation) * glm::mat3(1.f);
+		glm::mat3 cubeAxes = glm::toMat3(cubeOrientation);
 
 		// Find the closest point on OBB to the sphere center
 		float distX = dot(d, cubeAxes[0]);
@@ -502,23 +506,27 @@ namespace Quack
 	bool CheckCollisionCubeWithCube(const glm::vec3& cube1Position, const glm::vec3& cube1HalfSize, const glm::quat& cube1Orientation, const glm::vec3& cube2Position, const glm::vec3& cube2HalfSize, const glm::quat& cube2Orientation, glm::vec3& shortestAxis, float& shortestOverlap)
 	{
 		// OBB - OBB collision (SAT)
-		// !!!! Right now edge - edge will be detected as collision even when there isn't any
-
-		// @TODO: Change manual defined corners to a nice short loop!
 		glm::mat3 cube1Axes = glm::toMat3(cube1Orientation) * glm::mat3(1.f);
 		glm::mat3 cube2Axes = glm::toMat3(cube2Orientation) * glm::mat3(1.f);
 
+		// orientation quat is normalized every frame so no need for normalizing these axes
 		std::vector<glm::vec3> axes = { cube1Axes[0], cube1Axes[1], cube1Axes[2], cube2Axes[0], cube2Axes[1], cube2Axes[2] };
 
-		// Visualize axes from cube1
-		//Renderer::DrawLine(glm::vec3(0.f), cube1Axes[0] * 5.f, glm::vec3(1.f, 0.f, 0.f));
-		//Renderer::DrawLine(glm::vec3(0.f), cube1Axes[1] * 5.f, glm::vec3(0.f, 1.f, 0.f));
-		//Renderer::DrawLine(glm::vec3(0.f), cube1Axes[2] * 5.f, glm::vec3(0.f, 0.f, 1.f));
-		// Visualize axes from cube2
-		//Renderer::DrawLine(glm::vec3(0.f), cube2Axes[0] * 5.f, glm::vec3(1.f, 0.f, 0.f));
-		//Renderer::DrawLine(glm::vec3(0.f), cube2Axes[1] * 5.f, glm::vec3(0.f, 1.f, 0.f));
-		//Renderer::DrawLine(glm::vec3(0.f), cube2Axes[2] * 5.f, glm::vec3(0.f, 0.f, 1.f));
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				glm::vec3 crossedAxis = cross(cube1Axes[i], cube2Axes[j]);
+				
+				// if the axis is zero or near zero (e.g. parallel to another) then it will cause division by 0 when trying to normalize it
+				if(glm::length2(crossedAxis) < 0.00001f)
+					continue;
 
+				axes.push_back(normalize(crossedAxis));
+			}
+		}
+
+		// @TODO: Change manual defined corners to a nice short loop!
 
 		// Cube1 corners in local space
 		glm::vec3 cube1TopRightFrontCorner = cube1HalfSize;
@@ -552,16 +560,6 @@ namespace Quack
 												wCube1TopLeftFrontCorner, wCube1TopLeftBackCorner,
 												wCube1BottomLeftFrontCorner, wCube1BottomLeftBackCorner };
 
-		// Visualize points on the cube1
-		//Renderer::DrawPoint(wCube1TopRightFrontCorner);
-		//Renderer::DrawPoint(wCube1BottomRightFrontCorner);
-		//Renderer::DrawPoint(wCube1TopLeftFrontCorner);
-		//Renderer::DrawPoint(wCube1BottomLeftFrontCorner);
-		//Renderer::DrawPoint(wCube1TopRightBackCorner);
-		//Renderer::DrawPoint(wCube1BottomRightBackCorner);
-		//Renderer::DrawPoint(wCube1TopLeftBackCorner);
-		//Renderer::DrawPoint(wCube1BottomLeftBackCorner);
-
 		// Cube2 corners in local space
 		glm::vec3 cube2TopRightFrontCorner = cube2HalfSize;
 		glm::vec3 cube2TopRightBackCorner = glm::vec3(cube2HalfSize.x, cube2HalfSize.y, -cube2HalfSize.z);
@@ -593,15 +591,6 @@ namespace Quack
 												wCube2TopLeftFrontCorner, wCube2TopLeftBackCorner,
 												wCube2BottomLeftFrontCorner, wCube2BottomLeftBackCorner };
 
-		// Project the points onto axes and find the "shadows"
-		std::vector<glm::vec3> cube1Mins;
-		std::vector<glm::vec3> cube1Maxs;
-
-		std::vector<glm::vec3> cube2Mins;
-		std::vector<glm::vec3> cube2Maxs;
-
-		bool bCollision = true;
-
 		for (const auto& axis : axes)
 		{
 			float c1Min = dot(cube1Points[0], axis);
@@ -615,9 +604,6 @@ namespace Quack
 				c1Max = glm::max(c1Max, p);
 			}
 
-			cube1Mins.push_back(c1Min * axis);
-			cube1Maxs.push_back(c1Max * axis);
-
 			// cube2
 			float c2Min = dot(cube2Points[0], axis);
 			float c2Max = c2Min;
@@ -630,25 +616,21 @@ namespace Quack
 				c2Max = glm::max(c2Max, p);
 			}
 
-			cube2Mins.push_back(c2Min * axis);
-			cube2Maxs.push_back(c2Max * axis);
-
 			if (c1Max < c2Min || c2Max < c1Min)
-				bCollision = false;
-			else // There is no gap on current axis. We have an overlap on current axis
-			{
-				// Amount of overlap
-				float amount = glm::min(c1Max, c2Max) - glm::max(c1Min, c2Min);
+				return false;
 
-				if (amount < shortestOverlap)
-				{
-					shortestOverlap = amount;
-					shortestAxis = axis;
-				}
+			// There is no gap on current axis. We have an overlap
+			// Amount of overlap
+			float amount = glm::min(c1Max, c2Max) - glm::max(c1Min, c2Min);
+
+			if (amount < shortestOverlap)
+			{
+				shortestOverlap = amount;
+				shortestAxis = axis;
 			}
 		}
 
-		return bCollision;
+		return true;
 	}
 
 }
