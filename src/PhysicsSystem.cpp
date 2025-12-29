@@ -373,7 +373,7 @@ namespace Quack
 							// @TODO: This only works if the bodies are the same size!!!
 							glm::vec3 p1 = physics.position - normal * (shortestOverlap * 0.5f);
 							glm::vec3 p2 = physics2.position + normal * (shortestOverlap * 0.5f);
-							glm::vec3 contactPoint = 0.5f * (p1 + p1);
+							glm::vec3 contactPoint = 0.5f * (p1 + p2);
 
 
 							// Arm from center of mass to a point of contact
@@ -391,13 +391,9 @@ namespace Quack
 
 							float normalVelocity = dot(relativeVelocity, normal);
 
-							QUACK_LOG("collision {}", normalVelocity);
-
-							// @BUG: something is wrong here
+							// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
 							if (normalVelocity > 0.f)
 								return; // already separating - do nothing
-							
-							QUACK_GOOD("collision {}", normalVelocity);
 
 							float invMass1 = 1.f / physics.mass;
 							float invMass2 = 1.f / physics2.mass;
