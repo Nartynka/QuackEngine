@@ -20,7 +20,6 @@ namespace Quack
 		glm::quat orientation; // rotation
 
 		glm::vec3 forces;
-		glm::vec3 torques; // sum of every rotational force
 
 		glm::mat3 invInertiaTensor; // body resistance to rotation
 

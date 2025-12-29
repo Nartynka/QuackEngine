@@ -26,7 +26,7 @@ namespace Quack
 		{
 			auto& [physics] = physicsView.get(entity);
 
-			physics.forces = physics.gravity * physics.mass; // For now only one force, gravity
+			physics.forces = physics.gravity * physics.mass;
 		}
 	}
 
@@ -40,8 +40,6 @@ namespace Quack
 		{
 			auto& [physics] = physicsView.get(entity);
 
-			// Force-based physics
-
 			// linear motion
 			physics.oldPosition = physics.position;
 			glm::vec3 oldVelocity = physics.velocity;
@@ -52,21 +50,10 @@ namespace Quack
 			physics.position += (oldVelocity + physics.velocity) * 0.5f * dt;
 
 			// angular motion
-
-			//glm::mat3 R = glm::mat3(physics.orientation);
-			//glm::mat3 wInvI = R * physics.invInertiaTensor * glm::transpose(R);
-			//glm::mat3 wInvI = glm::mat3(1.f) * (1 / (1.0f / 6.0f) * physics.mass * 0.25f);
-
-			glm::vec3 angularAcceleration = physics.invInertiaTensor * physics.torques;
-			physics.angularVelocity += angularAcceleration * dt;
-
-			// TEMP!!!
 			physics.angularVelocity *= physics.friction;
 
 			physics.orientation += 0.5f * glm::quat(0.f, physics.angularVelocity) * physics.orientation * dt;
 			physics.orientation = glm::normalize(physics.orientation);
-
-			physics.torques = glm::vec3(0.f);
 		}
 	}
 
@@ -433,6 +420,7 @@ namespace Quack
 		glm::mat3 invInertiaWorld1 = R1 * physics1.invInertiaTensor * glm::transpose(R1);
 		glm::mat3 invInertiaWorld2 = R2 * physics2.invInertiaTensor * glm::transpose(R2);
 
+		// apply angular momentum change (calculate torque)
 		physics1.angularVelocity += invInertiaWorld1 * glm::cross(r1, vectorImpulse);
 		physics2.angularVelocity -= invInertiaWorld2 * glm::cross(r2, vectorImpulse);
 	}
