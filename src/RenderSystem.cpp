@@ -45,8 +45,6 @@ namespace Quack
 			auto& [modelComp, transform] = modelView.get(entity);
 
 			glm::mat4 model = transform.transform;
-			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 0.5f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.5f));
 
 			shader.SetUniform4fm("model", glm::value_ptr(model));
 			shader.SetUniform4fv("inColor", glm::value_ptr(modelComp.color));
@@ -59,11 +57,11 @@ namespace Quack
 	void RenderCollisionShapes(const std::shared_ptr<Scene> scene)
 	{
 		auto& registry = scene->GetRegistry();
-		auto collisionView = registry.view<CollisionComponent, TransformComponent>();
+		auto view = registry.view<ColliderComponent, TransformComponent>();
 
-		for (auto entity : collisionView)
+		for (auto entity : view)
 		{
-			auto& [collision, transform] = collisionView.get(entity);
+			auto& [collision, transform] = view.get(entity);
 
 			// @TODO: think about better way to do it
 			// remove scale from transformation matrix

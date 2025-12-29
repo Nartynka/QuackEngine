@@ -128,22 +128,22 @@ namespace Quack
 			glm::vec3 axis_v = glm::vec3(axis[0], axis[1], axis[2]);
 			glm::vec4 color_v = glm::vec4(color[0], color[1], color[2], 1.f);
 
-			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position_v));
+			entity.AddComponent<TransformComponent>(position_v, angle, axis_v);
 
 			if (entityTypeIdx == 0) // Particle
 			{
 				if (shapeIdx == 0) // Sphere
 				{
 					// @TODO: ModelLibrary::sphere should take radius, and then pass radius to collision component
-					entity.AddComponent<PhysicsComponent>(position_v, mass, radius, angle, axis_v, bounce, friction);
-					entity.AddComponent<CollisionComponent>(0.5f);
+					entity.AddComponent<RigidBodyComponent>(mass, radius, bounce, friction);
+					entity.AddComponent<ColliderComponent>(0.5f);
 					entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), color_v);
 				}
 				else if (shapeIdx == 1) // Cube
 				{
 					glm::vec3 halfSize_v = glm::vec3(halfSize[0], halfSize[1], halfSize[2]);
-					entity.AddComponent<PhysicsComponent>(position_v, mass, halfSize_v, angle, axis_v, bounce, friction);
-					entity.AddComponent<CollisionComponent>(halfSize_v);
+					entity.AddComponent<RigidBodyComponent>(mass, halfSize_v, bounce, friction);
+					entity.AddComponent<ColliderComponent>(halfSize_v);
 					entity.AddComponent<ShapeComponent>(new NormalCube(halfSize_v), color_v);
 				}
 			}
@@ -151,7 +151,7 @@ namespace Quack
 			{
 				glm::vec3 halfSize_v = glm::vec3(halfSize[0], halfSize[1], halfSize[2]);
 				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize_v), color_v);
-				entity.AddComponent<ConstraintComponent>(position_v, halfSize_v, angle, axis_v);
+				entity.AddComponent<ColliderComponent>(halfSize_v);
 			}
 		}
 
