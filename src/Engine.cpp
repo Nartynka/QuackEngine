@@ -188,7 +188,17 @@ namespace Quack
 		}
 		{
 			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-0.7f, 10.f, -5.f);
+			glm::vec3 position = glm::vec3(-0.7f, 5.f, -5.f);
+			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			auto& p = entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f), -50.f, glm::vec3(0.f, 0.f, 1.f));
+			//p.velocity = glm::vec3(0.f, -5.f, 0.f);
+			//p.gravity = glm::vec3(0.f);
+			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
+		}		
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(-0.7f, 15.f, -5.f);
 			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
 			auto& p = entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f), -50.f, glm::vec3(0.f, 0.f, 1.f));
 			//p.velocity = glm::vec3(0.f, -5.f, 0.f);
@@ -196,6 +206,17 @@ namespace Quack
 			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
 		}
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(-0.7f, 25.f, -5.f);
+			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
+			auto& p = entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f), -50.f, glm::vec3(0.f, 0.f, 1.f));
+			//p.velocity = glm::vec3(0.f, -5.f, 0.f);
+			//p.gravity = glm::vec3(0.f);
+			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));
+			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
+		}
+
 		// Stack of spheres
 		//float z = -4.f;
 		//glm::mat4 transform;

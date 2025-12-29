@@ -11,6 +11,8 @@
 
 namespace Quack
 {
+	void SolveVelocityConstraint(PhysicsComponent& physics1, PhysicsComponent& physics2, const glm::vec3& normal, float shortestOverlap);
+	void SolvePoitionConstraint(PhysicsComponent& physics1, PhysicsComponent& physics2, const glm::vec3& normal, float shortestOverlap);
 	bool CheckCollisionCubeWithCube(const glm::vec3& cube1Position, const glm::vec3& cube1HalfSize, const glm::quat& cube1Orientation, const glm::vec3& cube2Position, const glm::vec3& cube2HalfSize, const glm::quat& cube2Orientation, glm::vec3& shortestAxis, float& shortestOverlap);
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation);
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& cubePosition, const glm::vec3& cubeHalfSzie, const glm::quat& cubeOrientation, const glm::vec3& spherePosition, float sphereRadius);
@@ -370,101 +372,84 @@ namespace Quack
 						{
 							glm::vec3 normal = normalize(shortestAxis);
 
-							// @TODO: This only works if the bodies are the same size!!!
-							glm::vec3 p1 = physics.position - normal * (shortestOverlap * 0.5f);
-							glm::vec3 p2 = physics2.position + normal * (shortestOverlap * 0.5f);
-							glm::vec3 contactPoint = 0.5f * (p1 + p2);
-
-
-							// Arm from center of mass to a point of contact
-							glm::vec3 r1 = contactPoint - physics.position;
-							glm::vec3 r2 = contactPoint - physics2.position;
-
-							// Velocity of a point of the body (v_lin + omega x r)
-							glm::vec3 v1 = physics.velocity + cross(physics.angularVelocity, r1);
-							glm::vec3 v2 = physics2.velocity + cross(physics2.angularVelocity, r2);
-
-							// Relative velocity of two bodies
-							glm::vec3 relativeVelocity = v1 - v2;
-
-							// project relative velocity onto normal to check if the bodies are already separating or moving into one another
-
-							float normalVelocity = dot(relativeVelocity, normal);
-
-							// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
-							if (normalVelocity > 0.f)
-								return; // already separating - do nothing
-
-							float invMass1 = 1.f / physics.mass;
-							float invMass2 = 1.f / physics2.mass;
-
-							// @TODO: think if this is correct
-							float restitution = glm::min(physics.bounce, physics2.bounce);
-							
-							glm::vec3 effectiveMass1 = cross(physics.invInertiaTensor * cross(r1, normal), r1);
-							glm::vec3 effectiveMass2 = cross(physics2.invInertiaTensor * cross(r2, normal), r2);
-
-							// j
-							float impulse = (-(1 + restitution) * normalVelocity) / (invMass1 + invMass2 + dot(normal, effectiveMass1 + effectiveMass2));
-
-							// J
-							glm::vec3 vectorImpulse = impulse * normal;
-
-							physics.velocity += vectorImpulse * invMass1;
-							physics2.velocity -= vectorImpulse * invMass2;
-
-							glm::mat3 R1 = glm::toMat3(physics.orientation);
-							glm::mat3 R2 = glm::toMat3(physics2.orientation);
-							// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
-							glm::mat3 invInertiaWorld1 = R1 * physics.invInertiaTensor * glm::transpose(R1);
-							glm::mat3 invInertiaWorld2 = R2 * physics2.invInertiaTensor * glm::transpose(R2);
-
-							physics.angularVelocity += invInertiaWorld1 * glm::cross(r1, vectorImpulse);
-							physics2.angularVelocity -= invInertiaWorld2 * glm::cross(r2, vectorImpulse);
-
-							
-							/*
-							//physics.position += (normal * shortestOverlap) / 2.f;
-							//physics2.position -= (normal * shortestOverlap) / 2.f;
-
-							//glm::vec3 raCrossN = glm::cross(rA, normal);
-							//glm::vec3 rbCrossN = glm::cross(rB, normal);
-
-							//float invMass = 1.f / physics.mass;
-							//float invMass2 = 1.f / physics.mass;
-
-							//float invMassSum = invMass + invMass2 + dot(normal, cross(physics.invInertiaTensor * raCrossN, rA) + cross(physics2.invInertiaTensor * rbCrossN, rB));
-
-							//float e = (physics.bounce + physics2.bounce) / 2.f;
-
-							//float j = -(1.0f + e) * vn;
-							//j /= invMassSum;
-
-							//glm::vec3 impulse = j * normal;
-
-							//physics.velocity += impulse * invMass;
-							//physics.angularVelocity += physics.invInertiaTensor * glm::cross(rA, impulse);
-
-							//physics2.velocity -= impulse * invMass2;
-							//physics2.angularVelocity -= physics2.invInertiaTensor * glm::cross(rB, impulse);
-
-							//const float percent = 0.8f; // correction strength
-							//const float slop = 0.01f;   // penetration allowance
-
-							//float correctionMag =
-							//	std::max(shortestOverlap - slop, 0.0f) /
-							//	(invMass + invMass2) * percent;
-
-							//glm::vec3 correction = correctionMag * normal;
-
-							//physics.position += correction * invMass;
-							//physics2.position -= correction * invMass2;
-							*/
+							SolveVelocityConstraint(physics, physics2, normal, shortestOverlap);
+							SolvePoitionConstraint(physics, physics2, normal, shortestOverlap);
 						}
 					}
-					}
+				}
 			}
 		}
+	}
+
+	
+	void SolveVelocityConstraint(PhysicsComponent& physics1, PhysicsComponent& physics2, const glm::vec3& normal, float shortestOverlap)
+	{
+		// @TODO: This only works if the bodies are the same size!!!
+		glm::vec3 p1 = physics1.position - normal * (shortestOverlap * 0.5f);
+		glm::vec3 p2 = physics2.position + normal * (shortestOverlap * 0.5f);
+		glm::vec3 contactPoint = 0.5f * (p1 + p2);
+
+
+		// Arm from center of mass to a point of contact
+		glm::vec3 r1 = contactPoint - physics1.position;
+		glm::vec3 r2 = contactPoint - physics2.position;
+
+		// Velocity of a point of the body (v_lin + omega x r)
+		glm::vec3 v1 = physics1.velocity + cross(physics1.angularVelocity, r1);
+		glm::vec3 v2 = physics2.velocity + cross(physics2.angularVelocity, r2);
+
+		// Relative velocity of two bodies
+		glm::vec3 relativeVelocity = v1 - v2;
+
+		// project relative velocity onto normal to check if the bodies are already separating or moving into one another
+
+		float normalVelocity = dot(relativeVelocity, normal);
+
+		// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
+		if (normalVelocity > 0.f)
+			return; // already separating - do nothing
+
+		float invMass1 = 1.f / physics1.mass;
+		float invMass2 = 1.f / physics2.mass;
+
+		// @TODO: think if this is correct
+		float restitution = glm::min(physics1.bounce, physics2.bounce);
+
+		glm::vec3 effectiveMass1 = cross(physics1.invInertiaTensor * cross(r1, normal), r1);
+		glm::vec3 effectiveMass2 = cross(physics2.invInertiaTensor * cross(r2, normal), r2);
+
+		// j
+		float impulse = (-(1 + restitution) * normalVelocity) / (invMass1 + invMass2 + dot(normal, effectiveMass1 + effectiveMass2));
+
+		// J
+		glm::vec3 vectorImpulse = impulse * normal;
+
+		physics1.velocity += vectorImpulse * invMass1;
+		physics2.velocity -= vectorImpulse * invMass2;
+
+		glm::mat3 R1 = glm::toMat3(physics1.orientation);
+		glm::mat3 R2 = glm::toMat3(physics2.orientation);
+		// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
+		glm::mat3 invInertiaWorld1 = R1 * physics1.invInertiaTensor * glm::transpose(R1);
+		glm::mat3 invInertiaWorld2 = R2 * physics2.invInertiaTensor * glm::transpose(R2);
+
+		physics1.angularVelocity += invInertiaWorld1 * glm::cross(r1, vectorImpulse);
+		physics2.angularVelocity -= invInertiaWorld2 * glm::cross(r2, vectorImpulse);
+	}
+
+	void SolvePoitionConstraint(PhysicsComponent& physics1, PhysicsComponent& physics2, const glm::vec3& normal, float shortestOverlap)
+	{
+		float slop = 0.01f;   // allowed penetration
+		float percent = 0.8f; // how aggressive the correction is
+
+		float correctionMag = glm::max(shortestOverlap - slop, 0.0f) * percent;
+		glm::vec3 correction = correctionMag * normal;
+
+		float invMass1 = 1.f / physics1.mass;
+		float invMass2 = 1.f / physics2.mass;
+
+		physics1.position += correction * invMass1 / (invMass1 + invMass2);
+		physics2.position -= correction * invMass2 / (invMass1 + invMass2);
 	}
 
 
