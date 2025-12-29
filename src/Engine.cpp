@@ -180,7 +180,7 @@ namespace Quack
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
 			entity.AddComponent<TransformComponent>(glm::translate(glm::mat4(1.0f), position));
-			auto& p = entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f));
+			auto& p = entity.AddComponent<PhysicsComponent>(position, 10.f, glm::vec3(0.5f));
 			p.velocity = glm::vec3(0.f, 0.f, 0.f);
 			p.gravity = glm::vec3(0.f);
 			entity.AddComponent<CollisionComponent>(glm::vec3(0.5f));

@@ -23,7 +23,7 @@ namespace Quack
 
 		glm::mat3 invInertiaTensor; // body resistance to rotation
 
-		float mass = 1.0f;
+		float invMass = 1.0f;
 		float bounce = 0.7f; // coefficient of restitution, how much energy is kept when entity bounces off a surface
 
 		// Shared across entities
@@ -31,7 +31,7 @@ namespace Quack
 		float friction = 0.98f; // linear damping?
 		
 		PhysicsComponent(glm::vec3 position, float mass = 1.0f, glm::vec3 halfSize = glm::vec3(1.f), float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f), float bounce = 0.7f, float friction = 0.98f)
-			: position(position), mass(mass), bounce(bounce), friction(friction)
+			: position(position), invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
 			float angle = glm::radians(rotationAngle) / 2;
 			orientation.x = rotationAxis.x * sin(angle);
@@ -48,7 +48,7 @@ namespace Quack
 		}
 
 		PhysicsComponent(glm::vec3 position, float mass = 1.0f, float radius = 1.f, float rotationAngle = 0.f, glm::vec3 rotationAxis = glm::vec3(0.f), float bounce = 0.7f, float friction = 0.98f)
-			: position(position), mass(mass), bounce(bounce), friction(friction)
+			: position(position), invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
 			float angle = glm::radians(rotationAngle) / 2;
 			orientation.x = rotationAxis.x * sin(angle);

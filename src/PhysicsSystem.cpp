@@ -26,7 +26,7 @@ namespace Quack
 		{
 			auto& [physics] = physicsView.get(entity);
 
-			physics.forces = physics.gravity * physics.mass;
+			physics.forces = physics.gravity * (1.f / physics.invMass);
 		}
 	}
 
@@ -44,7 +44,7 @@ namespace Quack
 			physics.oldPosition = physics.position;
 			glm::vec3 oldVelocity = physics.velocity;
 
-			glm::vec3 acceleration = physics.forces * (1.0f / physics.mass); // forces * inverse of mass
+			glm::vec3 acceleration = physics.forces * physics.invMass;
 
 			physics.velocity = physics.velocity * physics.friction + acceleration * dt;
 			physics.position += (oldVelocity + physics.velocity) * 0.5f * dt;
@@ -103,7 +103,7 @@ namespace Quack
 			{
 				// each constraint component is a floor
 				const auto& floor = constraints.get<ConstraintComponent>(constraint);
-				glm::mat3 floorAxes = glm::toMat3(floor.orientation) * glm::mat3(1.f);
+				glm::mat3 floorAxes = glm::toMat3(floor.orientation);
 
 				// @TODO: find better way to distinct if collision shape is sphere or cube
 				// For now constraints can only be cube shaped so we don't check the radius of the floor
@@ -122,21 +122,6 @@ namespace Quack
 
 						float penetration = collision.radius - sqrt(distanceSquared); // @TODO: can I omit the sqrt here?
 
-
-
-
-
-
-						//physics.position += collisionNormal * penetration;
-
-						// @TODO: Change to real impulse-based physics!!
-						//glm::vec3 velocityNormal = collisionNormal * glm::dot(collisionNormal, physics.velocity); // perpendicular to the floor. It's not normalized so the name is a bit misleading
-						//glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
-
-						//physics.velocity = velocityTangental - velocityNormal * physics.bounce;
-
-						// This line prevents jittering when sphere bounces forever (on not oriented surface) but prevents the sphere from rolling down sloped/oriented surface
-						//physics.velocity = physics.velocity.y < 0.21f ? glm::vec3(0.f) : physics.velocity; // to prevent jittering
 					}
 				}
 				else
@@ -155,65 +140,7 @@ namespace Quack
 
 
 
-
-
-
-
-
-						// Resolve overlap (Position-based)
-						//physics.position += normal * shortestOverlap;
-
-						/// ANGULAR FORCES
-						//Renderer::DrawPoint(contactPoint, glm::vec3(0.f, 1.f, 0.f));
-
-						//glm::vec3 r = contactPoint - physics.position;
-
-						// Relative velocity, constraints don't have linear & angular velocity so we only take the entity velocities
-						//glm::vec3 relativeVelocity = physics.velocity + cross(physics.angularVelocity, r);
-
-						//// Project relative velocity onto normal to check if the entity is moving away (collision already solved) or is moving towards constrain (collision)
-						//float nV = dot(relativeVelocity, normal);
-
-						//// if collision (not moving away) - solve impulse
-						//if (nV < 0.f)
-						//{
-						//	float invMass = 1 / physics.mass;
-						//	glm::mat3 rotationMatrix = glm::toMat3(physics.orientation);
-						//	glm::mat3 worldInvInertia = rotationMatrix * physics.invInertiaTensor * transpose(rotationMatrix);
-						//	float j = (-(1 + physics.bounce) * nV) / (invMass + dot(normal, cross(worldInvInertia * cross(r, normal), r)));
-						//	glm::vec3 impulse = j * normal;
-						//	physics.velocity += impulse * invMass;
-						//	physics.angularVelocity += worldInvInertia * cross(r, impulse);
-						//	//QUACK_LOG("{} {} {}", physics.angularVelocity.x, physics.angularVelocity.y, physics.angularVelocity.z);
-						//}
-						
-
-
-						// @TODO: Change to real impulse-based!!
-						/// LINEAR FORCES
-						//glm::vec3 velocityNormal = normal * glm::dot(normal, physics.velocity); // perpendicular to the floor. "Normal to the floor"
-						//glm::vec3 velocityTangental = physics.velocity - velocityNormal;		// parallel to the floor
-
-						// TEMP!!! Will change when proper impulses are done
-						//glm::vec3 impulse = velocityTangental - velocityNormal * physics.bounce;
-
-						//physics.velocity = impulse;
-
-						// @TODO: FIX temp
-						//physics.angularVelocity += glm::cross(impulse, r);
-
 					}
-
-					// Visualize the projected intervals for a box
-					//for (int i = 0; i < entityMins.size(); i++)
-					//{
-					//	Renderer::DrawLine(entityMins[i], entityMaxs[i], bCollision ? glm::vec3(1.f, 0.f, 0.f) : glm::vec3(1.f, 1.f, 0.f));
-					//}
-					// Visualize the projected intervals for the floor
-					//for (int i = 0; i < floorMins.size(); i++)
-					//{
-					//	Renderer::DrawLine(floorMins[i], floorMaxs[i], bCollision ? glm::vec3(1.f, 0.f, 0.f) : glm::vec3(0.f, 1.f, 1.f));
-					//}
 				}
 			}
 		}
@@ -396,9 +323,6 @@ namespace Quack
 		if (normalVelocity > 0.f)
 			return; // already separating - do nothing
 
-		float invMass1 = 1.f / physics1.mass;
-		float invMass2 = 1.f / physics2.mass;
-
 		// @TODO: think if this is correct
 		float restitution = glm::min(physics1.bounce, physics2.bounce);
 
@@ -406,13 +330,13 @@ namespace Quack
 		glm::vec3 effectiveMass2 = cross(physics2.invInertiaTensor * cross(r2, normal), r2);
 
 		// j
-		float impulse = (-(1 + restitution) * normalVelocity) / (invMass1 + invMass2 + dot(normal, effectiveMass1 + effectiveMass2));
+		float impulse = (-(1 + restitution) * normalVelocity) / (physics1.invMass + physics2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
 
 		// J
 		glm::vec3 vectorImpulse = impulse * normal;
 
-		physics1.velocity += vectorImpulse * invMass1;
-		physics2.velocity -= vectorImpulse * invMass2;
+		physics1.velocity += vectorImpulse * physics1.invMass;
+		physics2.velocity -= vectorImpulse * physics2.invMass;
 
 		glm::mat3 R1 = glm::toMat3(physics1.orientation);
 		glm::mat3 R2 = glm::toMat3(physics2.orientation);
@@ -433,11 +357,8 @@ namespace Quack
 		float correctionMag = glm::max(shortestOverlap - slop, 0.0f) * percent;
 		glm::vec3 correction = correctionMag * normal;
 
-		float invMass1 = 1.f / physics1.mass;
-		float invMass2 = 1.f / physics2.mass;
-
-		physics1.position += correction * invMass1 / (invMass1 + invMass2);
-		physics2.position -= correction * invMass2 / (invMass1 + invMass2);
+		physics1.position += correction * physics1.invMass / (physics1.invMass + physics2.invMass);
+		physics2.position -= correction * physics2.invMass / (physics1.invMass + physics2.invMass);
 	}
 
 
