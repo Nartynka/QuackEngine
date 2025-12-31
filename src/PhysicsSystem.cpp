@@ -11,15 +11,29 @@
 
 namespace Quack
 {
-	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap);
+	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const glm::vec3& contactPoint);
 	void SolvePoitionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap);
+
 	bool CheckCollisionCubeWithCube(const TransformComponent& transform1, const ColliderComponent& collider1, const TransformComponent& transform2, const ColliderComponent& collider2, glm::vec3& shortestAxis, float& shortestOverlap);
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation);
 
 	struct CollisionManifold
 	{
+		RigidBodyComponent& rigidBody1;
+		RigidBodyComponent& rigidBody2;
 
+		TransformComponent& transform1;
+		TransformComponent& transform2;
+
+		glm::vec3 normal;
+
+		glm::vec3 contactPoint; // later will change to an array
+		float penetration;
 	};
+
+	static std::vector<CollisionManifold> collisionManifolds;
+
+	static RigidBodyComponent staticRigidBody;
 
 
 	void ApplyForces(const std::shared_ptr<Scene> scene)
@@ -87,138 +101,123 @@ namespace Quack
 	}
 
 
-	void CheckCollision(const std::shared_ptr<Scene> scene)
+	void CheckCollisions(const std::shared_ptr<Scene> scene)
 	{
 		auto& registry = scene->GetRegistry();
 
-		// Will remove RigidBodyComponent from here as it will not be used when collision manifolds are in place
-		auto view = registry.view<ColliderComponent, TransformComponent, RigidBodyComponent>();
+		auto view = registry.view<ColliderComponent, TransformComponent>();
 
-		for (auto entity : view)
+		for (auto entity1 : view)
 		{
-			auto& [collider1, transform1, rigidBody1] = view.get(entity);
+			auto& [collider1, transform1] = view.get(entity1);
 
 			for (auto entity2 : view)
 			{
-				if (entity == entity2)
+				// entt entity is just an uint_32 so we can skip the reversed pairs e.g. (2,1) when (1,2) was already checked
+				if (entity1 <= entity2)
 					continue;
 
-				auto& [collider2, transform2, rigidBody2] = view.get(entity2);
+				auto& [collider2, transform2] = view.get(entity2);
+
+				Entity e1(entity1, scene.get());
+				Entity e2(entity2, scene.get());
+
+				RigidBodyComponent& rigidBody1 = e1.HasComponent<RigidBodyComponent>() ? e1.GetComponent<RigidBodyComponent>() : staticRigidBody;
+				RigidBodyComponent& rigidBody2 = e2.HasComponent<RigidBodyComponent>() ? e2.GetComponent<RigidBodyComponent>() : staticRigidBody;
 
 				// @TODO: find better way to determine whether collision shape is a sphere or a cube and make proper sphere - sphere collision
-				if (collider1.radius > 0.f)
+				if (collider1.type == collider2.type && collider1.type == ColliderType::Sphere)
 				{
-					if (collider2.radius > 0.f)
+					// Sphere - Sphere collision
+					glm::vec3 diff = transform1.position - transform2.position;
+					float distanceSquared = dot(diff, diff);
+					float radii = collider1.radius + collider2.radius; // radiuses
+
+					if (distanceSquared < radii * radii)
 					{
-						// Sphere - Sphere collision
-						glm::vec3 diff = transform1.position - transform2.position;
-						float distanceSquared = dot(diff, diff);
-						float radii = collider1.radius + collider2.radius; // radiuses
+						glm::vec3 normal = normalize(diff); // direction from sphere to sphere
 
-						if (distanceSquared < radii * radii)
-						{
-							glm::vec3 collisionNormal = normalize(diff); // direction from sphere to sphere
+						float penetration = (radii - sqrt(distanceSquared));
 
-							float penetration = (radii - sqrt(distanceSquared)) / 2.f; // @TODO: can I omit the sqrt here?
+						glm::vec3 contactPoint = transform1.position - normal * collider1.radius - penetration * 0.5f;
 
-							// Create collision manifold to resolve collision in other function
-						}
+						CollisionManifold a = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, penetration };
+						collisionManifolds.push_back(a);
 					}
-					else
+				}
+				else if (collider1.type == collider2.type && collider1.type == ColliderType::Cube)
+				{
+					// Cube - Cube
+					glm::vec3 shortestAxis;
+					float shortestOverlap = 100000.f;
+
+					bool bCollision = CheckCollisionCubeWithCube(transform1, collider1, transform2, collider2, shortestAxis, shortestOverlap);
+
+					if (bCollision)
 					{
-						// Sphere - Cube collision
-						glm::vec3 closestPoint = FindClosestPointToSphereOnOBB(transform1.position, collider1.radius, transform2.position, collider2.halfSize, transform2.orientation);
+						glm::vec3 normal = normalize(shortestAxis);
 
-						glm::vec3 diff = transform1.position - closestPoint;
-						float distanceSquared = dot(diff, diff); // distance from closes point to the sphere. length of diff without expensive sqrt
+						// @TODO: This only works if the bodies are the same size!!!
+						glm::vec3 p1 = transform1.position + normal * (shortestOverlap * 0.5f);
+						glm::vec3 p2 = transform2.position - normal * (shortestOverlap * 0.5f);
+						glm::vec3 contactPoint = 0.5f * (p1 + p2);
 
-						// if distance is less or equal then we have a collision!
-						if (distanceSquared <= collider1.radius * collider1.radius)
-						{
-							glm::vec3 collisionNormal = normalize(diff); // direction from OBB to sphere
-
-							float penetration = collider1.radius - sqrt(distanceSquared); // @TODO: can I omit the sqrt here?
-
-							// Create collision manifold to resolve collision in other function
-						}
-
+						CollisionManifold a = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, shortestOverlap };
+						collisionManifolds.push_back(a);
 					}
 				}
 				else
 				{
-					if (collider2.radius > 0.f)
+					// Sphere - Cube collision / Cube - Sphere collision
+
+					// @TODO: Find better way to check if first or second entity is a sphere
+					bool isEntity1Sphere = collider1.type == ColliderType::Sphere;
+					TransformComponent& sphereTransform = isEntity1Sphere ? transform1 : transform2;
+					TransformComponent& cubeTransform = isEntity1Sphere ? transform2 : transform1;
+
+					ColliderComponent& sphereCollider = isEntity1Sphere ? collider1 : collider2;
+					ColliderComponent& cubeCollider = isEntity1Sphere ? collider2 : collider1;
+
+					glm::vec3 closestPoint = FindClosestPointToSphereOnOBB(sphereTransform.position, sphereCollider.radius, cubeTransform.position, cubeCollider.halfSize, cubeTransform.orientation);
+
+					glm::vec3 diff = sphereTransform.position - closestPoint;
+					float distanceSquared = dot(diff, diff); // distance from closes point to the sphere. length of diff without expensive sqrt
+
+					// if distance is less or equal then we have a collision!
+					if (distanceSquared <= sphereCollider.radius * sphereCollider.radius)
 					{
-						// Cube - Sphere collision
-						glm::vec3 closestPoint = FindClosestPointToSphereOnOBB(transform2.position, collider2.radius, transform1.position, collider1.halfSize, transform1.orientation);
+						glm::vec3 normal = normalize(diff); // direction from point on OBB to sphere
 
-						glm::vec3 diff = transform2.position - closestPoint;
-						float distanceSquared = dot(diff, diff); // distance from closes point to the sphere. length of diff without expensive sqrt
+						float penetration = sphereCollider.radius - sqrt(distanceSquared);
 
-						// if distance is less or equal then we have a collision!
-						if (distanceSquared <= collider2.radius * collider2.radius)
-						{
-							glm::vec3 collisionNormal = normalize(diff); // direction from OBB to sphere
-
-							float penetration = collider2.radius - sqrt(distanceSquared);
-
-							// Create collision manifold to resolve collision in other function
-						}
-					}
-					else
-					{
-						// Cube - Cube collision
-						glm::vec3 shortestAxis;
-						float shortestOverlap = 100000.f;
-
-						bool bCollision = CheckCollisionCubeWithCube(transform1, collider1, transform2, collider2, shortestAxis, shortestOverlap);
-
-						if (bCollision)
-						{
-							glm::vec3 normal = normalize(shortestAxis);
-
-							// Create collision manifold to resolve collision in other function
-
-							SolveVelocityConstraint(rigidBody1, rigidBody2, transform1, transform2, normal, shortestOverlap);
-							SolvePoitionConstraint(rigidBody1, rigidBody2, transform1, transform2, normal, shortestOverlap);
-						}
+						// @TODO: Change this!!
+						CollisionManifold a = { isEntity1Sphere ? rigidBody1 : rigidBody2, isEntity1Sphere ? rigidBody2 : rigidBody1, sphereTransform, cubeTransform, normal, closestPoint, penetration };
+						collisionManifolds.push_back(a);
 					}
 				}
 			}
-
 		}
 	}
 
 
-	void SolveCollision(const std::shared_ptr<Scene> scene)
+	void SolveCollisions()
 	{
-		auto& registry = scene->GetRegistry();
-		auto view = registry.view<ColliderComponent, TransformComponent>();
-
-		for (auto entity : view)
+		for (const CollisionManifold& manifold : collisionManifolds)
 		{
-			auto& [collider, rigidBody] = view.get(entity);
-			
-			for (auto entity2 : view)
-			{
-				if (entity == entity2)
-					continue;
+			// if both bodies are static then skip solving
+			if (!manifold.rigidBody1.invMass && !manifold.rigidBody2.invMass)
+				continue;
 
-				auto& [collider2, rigidBody2] = view.get(entity2);
-
-				
-			}
+			SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoint);
+			SolvePoitionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
 		}
+
+		collisionManifolds.clear();
 	}
 
 	
-	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
+	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const glm::vec3& contactPoint)
 	{
-		// @TODO: This only works if the bodies are the same size!!!
-		glm::vec3 p1 = transform1.position - normal * (shortestOverlap * 0.5f);
-		glm::vec3 p2 = transform2.position + normal * (shortestOverlap * 0.5f);
-		glm::vec3 contactPoint = 0.5f * (p1 + p2);
-
-
 		// Arm from center of mass to a point of contact
 		glm::vec3 r1 = contactPoint - transform1.position;
 		glm::vec3 r2 = contactPoint - transform2.position;
@@ -236,7 +235,9 @@ namespace Quack
 
 		// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
 		if (normalVelocity > 0.f)
+		{
 			return; // already separating - do nothing
+		}
 
 		// @TODO: think if this is correct
 		float restitution = glm::min(rigidBody1.bounce, rigidBody2.bounce);
@@ -266,7 +267,7 @@ namespace Quack
 
 	void SolvePoitionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
 	{
-		float slop = 0.01f;   // allowed penetration
+		float slop = 0.001f;   // allowed penetration
 		float percent = 0.8f; // how aggressive the correction is
 
 		float correctionMag = glm::max(shortestOverlap - slop, 0.0f) * percent;
@@ -275,6 +276,7 @@ namespace Quack
 		transform1.position += correction * rigidBody1.invMass / (rigidBody1.invMass + rigidBody2.invMass);
 		transform2.position -= correction * rigidBody2.invMass / (rigidBody1.invMass + rigidBody2.invMass);
 	}
+
 
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation)
 	{

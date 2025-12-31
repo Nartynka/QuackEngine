@@ -21,7 +21,7 @@ namespace Quack
 
 	void UpdateTransform(const std::shared_ptr<Scene> scene);
 
-	void CheckCollision(const std::shared_ptr<Scene> scene);
+	void CheckCollisions(const std::shared_ptr<Scene> scene);
 
-	void SolveCollision(const std::shared_ptr<Scene> scene);
+	void SolveCollisions();
 }

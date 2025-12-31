@@ -26,7 +26,12 @@ namespace Quack
 		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
 		float friction = 0.98f; // linear damping?
 
-		RigidBodyComponent(float mass = 1.0f, glm::vec3 halfSize = glm::vec3(1.f), float bounce = 0.7f, float friction = 0.98f)
+		RigidBodyComponent()
+			: invMass(0.f), invInertiaTensor(glm::mat3(0.f))
+		{
+		}
+
+		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.7f, float friction = 0.98f)
 			: invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
 			// I_xx = 1/12 * m * (h^2 + d^2)
@@ -38,7 +43,7 @@ namespace Quack
 			invInertiaTensor[2][2] = 1.f / (1.f / 12.f * mass * (halfSize.x * halfSize.x + halfSize.y * halfSize.y));
 		}
 
-		RigidBodyComponent(float mass = 1.0f, float radius = 1.f, float bounce = 0.7f, float friction = 0.98f)
+		RigidBodyComponent(float mass, float radius, float bounce = 0.7f, float friction = 0.98f)
 			: invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
 			// I_diag = 2/5mr^2
@@ -50,20 +55,27 @@ namespace Quack
 		}
 	};
 
+	enum class ColliderType
+	{
+		Sphere,
+		Cube // box
+	};
+
 	struct ColliderComponent
 	{
 		glm::vec3 halfSize;
 		float radius;
 		Shape* shape; // Only for debug
+		ColliderType type;
 
 		ColliderComponent(glm::vec3 halfSize)
-			: halfSize(halfSize), radius(0.f)
+			: halfSize(halfSize), radius(0.f), type(ColliderType::Cube)
 		{
 			shape = new DebugCube(halfSize);
 		}
 
 		ColliderComponent(float radius)
-			: radius(radius)
+			: radius(radius), type(ColliderType::Sphere)
 		{
 			shape = new DebugSphere(radius);
 		}

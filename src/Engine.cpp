@@ -110,7 +110,6 @@ namespace Quack
 		else if(e.GetButton() == GLFW_MOUSE_BUTTON_RIGHT)
 		{
 			//QUACK_LOG("Right mouse button pressed!!");
-
 		}
 	}
 
@@ -178,45 +177,58 @@ namespace Quack
 		//}
 
 
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(-1.8f, 0.f, -5.f);
+			entity.AddComponent<TransformComponent>(position);
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1000.f, 1.f);
+			//rigidBodyComp.velocity = glm::vec3(0.f, -5.f, 0.f);
+			rigidBodyComp.gravity = glm::vec3(0.f);
+			entity.AddComponent<ColliderComponent>(1.f);
+			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		}
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(-2.0f, 5.f, -5.f);
+			entity.AddComponent<TransformComponent>(position);
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, 1.f);
+			entity.AddComponent<ColliderComponent>(1.f);
+			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		}
+		{
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
+			entity.AddComponent<TransformComponent>(position);
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, 1.f);
+			entity.AddComponent<ColliderComponent>(1.f);
+			entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		}
+
 
 		// Only works correct for the same size cubes!!!!!
 		{
 			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
-			entity.AddComponent<TransformComponent>(position);
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(10.f, glm::vec3(0.5f));
-			rigidBodyComp.velocity = glm::vec3(0.f, 0.f, 0.f);
+			glm::vec3 position = glm::vec3(1.5f, 0.f, -5.f);
+			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(100.f, glm::vec3(0.5f));
 			rigidBodyComp.gravity = glm::vec3(0.f);
 			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
 		}
 		{
 			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-0.7f, 5.f, -5.f);
-			entity.AddComponent<TransformComponent>(position, -50.f, glm::vec3(0.f, 0.f, 1.f));
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			//rigidBodyComp.velocity = glm::vec3(0.f, -5.f, 0.f);
-			//rigidBodyComp.gravity = glm::vec3(0.f);
-			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
-			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
-		}		
-		{
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-0.7f, 15.f, -5.f);
-			entity.AddComponent<TransformComponent>(position, -50.f, glm::vec3(0.f, 0.f, 1.f));
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			//rigidBodyComp.velocity = glm::vec3(0.f, -5.f, 0.f);
-			//rigidBodyComp.gravity = glm::vec3(0.f);
+			glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
+			entity.AddComponent<TransformComponent>(position);
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1000.f, glm::vec3(0.5f));
+			rigidBodyComp.gravity = glm::vec3(0.f);
 			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
 		}
 		{
 			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-0.7f, 25.f, -5.f);
-			entity.AddComponent<TransformComponent>(position, -50.f, glm::vec3(0.f, 0.f, 1.f));
+			glm::vec3 position = glm::vec3(0.f, 5.f, -5.f);
+			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
 			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			//rigidBodyComp.velocity = glm::vec3(0.f, -5.f, 0.f);
-			//rigidBodyComp.gravity = glm::vec3(0.f);
 			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
 		}
@@ -249,33 +261,30 @@ namespace Quack
 		//}
 
 		// Stack of cubes
-		//float z = -4.f;
+		//float z = -4.5f;
 		//glm::mat4 transform;
 		//glm::vec4 cubeColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
-		//for (int i = 0; i < 1; i++)
+		//for (int i = 0; i < 2; i++)
 		//{
-		//	float y = 2.f;
-		//	for (int j = 0; j < 5; j++)
+		//	float y = 6.f;
+		//	for (int j = 0; j < 2; j++)
 		//	{
-		//		float x = -1.f;
-		//		for (int k = 0; k < 2; k++)
+		//		float x = -3.f;
+		//		for (int k = 0; k < 4; k++)
 		//		{
 		//			Entity entity = scene->CreateEntity();
 		//			glm::vec3 position = glm::vec3(x, y, z);
-		//			transform = glm::translate(glm::mat4(1.0f), position);
-		//			transform = glm::scale(transform, glm::vec3(0.5f));
-		//			entity.AddComponent<TransformComponent>(transform);
-		//			entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f));
-		//			entity.AddComponent<CollisionComponent>(glm::vec3(0.25f));
-		//			entity.AddComponent<ShapeComponent>(new NormalCube(), cubeColor);
-		//			x += 0.6f;
+		//			entity.AddComponent<TransformComponent>(position);
+		//			entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+		//			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
+		//			entity.AddComponent<ShapeComponent>(new NormalCube(glm::vec3(0.5f)), cubeColor);
+		//			x += 1.1f;
 		//		}
-		//		y += 0.6f;
+		//		y += 1.1f;
 		//	}
-		//	z -= 0.6f;
+		//	z -= 1.1f;
 		//}
 
-		//entity.AddComponent<PhysicsComponent>(position, 1.f, glm::vec3(0.5f), 21.37f, glm::vec3(0.f, 0.f, 1.f));
 
 		LightCube lightCube;
 		lightCube.position = glm::vec3(-1.f, 4.5f, 2.f);
@@ -321,8 +330,8 @@ namespace Quack
 				ApplyForces(scene);
 				Update(scene, dt); // Update physics
 				//SolveConstraints(scene);
-				CheckCollision(scene);
-				SolveCollision(scene);
+				CheckCollisions(scene);
+				SolveCollisions();
 				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
 
 
