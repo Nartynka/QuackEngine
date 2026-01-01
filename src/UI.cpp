@@ -152,8 +152,8 @@ namespace Quack
 
 			if (shapeIdx == 0) // Sphere
 			{
-				entity.AddComponent<ModelComponent>(ModelLibrary::sphere.get(), color_v);
 				entity.AddComponent<ColliderComponent>(radius);
+				entity.AddComponent<ShapeComponent>(new Sphere(radius), color_v);
 			}
 			else if (shapeIdx == 1) // Cube
 			{

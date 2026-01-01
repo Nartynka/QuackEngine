@@ -145,6 +145,60 @@ namespace Quack
 		}
 	};
 
+	class Sphere : public Shape
+	{
+	public:
+		Sphere(float radius)
+		{
+			int stacks = 16;
+			int sectors = 32;
+
+			// vertices
+			for (int i = 0; i <= stacks; ++i)
+			{
+				float v = (float)i / stacks;
+				float phi = v * glm::pi<float>();        // 0 -> PI
+
+				for (int j = 0; j <= sectors; ++j)
+				{
+					float u = (float)j / sectors;
+					float theta = u * glm::two_pi<float>();  // 0 -> 2PI
+
+					float x = sin(phi) * cos(theta);
+					float y = cos(phi);
+					float z = sin(phi) * sin(theta);
+
+					glm::vec3 position = radius * glm::vec3(x, y, z);
+					glm::vec3 normal = glm::normalize(glm::vec3(x, y, z));
+
+					vertices.insert(vertices.end(), { position.x, position.y, position.z, normal.x, normal.y, normal.z });
+				}
+			}
+
+			// indices
+			for (int i = 0; i < stacks; ++i)
+			{
+				for (int j = 0; j < sectors; ++j)
+				{
+					int k1 = i * (sectors + 1) + j;
+					int k2 = k1 + sectors + 1;
+
+					// triangle 1
+					indices.push_back(k1);
+					indices.push_back(k2);
+					indices.push_back(k1 + 1);
+
+					// triangle 2
+					indices.push_back(k1 + 1);
+					indices.push_back(k2);
+					indices.push_back(k2 + 1);
+				}
+			}
+
+			SetupBuffers();
+		}
+	};
+
 
 	// Debug Shapes
 
