@@ -12,7 +12,7 @@
 namespace Quack
 {
 	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const glm::vec3& contactPoint);
-	void SolvePoitionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap);
+	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap);
 
 	bool CheckCollisionCubeWithCube(const TransformComponent& transform1, const ColliderComponent& collider1, const TransformComponent& transform2, const ColliderComponent& collider2, glm::vec3& shortestAxis, float& shortestOverlap);
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation);
@@ -141,8 +141,8 @@ namespace Quack
 
 						glm::vec3 contactPoint = transform1.position - normal * collider1.radius - penetration * 0.5f;
 
-						CollisionManifold a = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, penetration };
-						collisionManifolds.push_back(a);
+						CollisionManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, penetration };
+						collisionManifolds.push_back(manifold);
 					}
 				}
 				else if (collider1.type == collider2.type && collider1.type == ColliderType::Cube)
@@ -162,8 +162,8 @@ namespace Quack
 						glm::vec3 p2 = transform2.position - normal * (shortestOverlap * 0.5f);
 						glm::vec3 contactPoint = 0.5f * (p1 + p2);
 
-						CollisionManifold a = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, shortestOverlap };
-						collisionManifolds.push_back(a);
+						CollisionManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, shortestOverlap };
+						collisionManifolds.push_back(manifold);
 					}
 				}
 				else
@@ -191,8 +191,8 @@ namespace Quack
 						float penetration = sphereCollider.radius - sqrt(distanceSquared);
 
 						// @TODO: Change this!!
-						CollisionManifold a = { isEntity1Sphere ? rigidBody1 : rigidBody2, isEntity1Sphere ? rigidBody2 : rigidBody1, sphereTransform, cubeTransform, normal, closestPoint, penetration };
-						collisionManifolds.push_back(a);
+						CollisionManifold manifold = { isEntity1Sphere ? rigidBody1 : rigidBody2, isEntity1Sphere ? rigidBody2 : rigidBody1, sphereTransform, cubeTransform, normal, closestPoint, penetration };
+						collisionManifolds.push_back(manifold);
 					}
 				}
 			}
@@ -209,7 +209,7 @@ namespace Quack
 				continue;
 
 			SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoint);
-			SolvePoitionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
+			SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
 		}
 
 		collisionManifolds.clear();
@@ -230,7 +230,6 @@ namespace Quack
 		glm::vec3 relativeVelocity = v1 - v2;
 
 		// project relative velocity onto normal to check if the bodies are already separating or moving into one another
-
 		float normalVelocity = dot(relativeVelocity, normal);
 
 		// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
@@ -265,7 +264,7 @@ namespace Quack
 		rigidBody2.angularVelocity -= invInertiaWorld2 * glm::cross(r2, vectorImpulse);
 	}
 
-	void SolvePoitionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
+	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
 	{
 		float slop = 0.001f;   // allowed penetration
 		float percent = 0.8f; // how aggressive the correction is
