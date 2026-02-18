@@ -132,7 +132,7 @@ namespace Quack
 		ImGui::DragFloat3("Position", position, 0.1f, 0.f, 0.f, "%.2f");
 
 		static float angle, axis[3];
-		ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 1.0f, "%.2f");
+		ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::DragFloat3("Rotation axis", axis, 0.1f, 0.f, 0.f, "%.2f");
 
 		static float color[3] = { 0.5f, 0.0f, 0.5f }; // default color

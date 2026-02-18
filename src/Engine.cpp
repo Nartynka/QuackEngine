@@ -127,16 +127,16 @@ namespace Quack
 		glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 
 		//glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
-		glm::vec3 floorHalfSize = glm::vec3(0.5f);
-		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
-		{
-			Entity floor = scene->CreateEntity();
-			glm::vec3 floorPos = glm::vec3(0.f, 0.f, -5.f);
-			//glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
-			floor.AddComponent<TransformComponent>(floorPos, 0.f, glm::vec3(0.f, 0.f, 1.f));
-			floor.AddComponent<ColliderComponent>(floorHalfSize);
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-		}
+		//glm::vec3 floorHalfSize = glm::vec3(0.5f);
+		//glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
+		//{
+		//	Entity floor = scene->CreateEntity();
+		//	glm::vec3 floorPos = glm::vec3(0.f, 0.f, -5.f);
+		//	//glm::vec3 floorPos = glm::vec3(2.f, -0.5f, -5.f);
+		//	floor.AddComponent<TransformComponent>(floorPos, 0.f, glm::vec3(0.f, 0.f, 1.f));
+		//	floor.AddComponent<ColliderComponent>(floorHalfSize);
+		//	floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
+		//}
 		//{
 		//	Entity floor = scene->CreateEntity();
 		//	glm::vec3 floorPos = glm::vec3(-1.5f, -1.5f, -5.f);
@@ -177,7 +177,7 @@ namespace Quack
 		//}
 
 
-		{
+		{ // first "static" sphere
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(-1.8f, 0.f, -5.f);
 			float radius = 1.f;
@@ -188,7 +188,7 @@ namespace Quack
 			entity.AddComponent<ColliderComponent>(radius);
 			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
-		{
+		{ // first falling sphere
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(-2.0f, 5.f, -5.f);
 			float radius = 1.f;
@@ -197,7 +197,7 @@ namespace Quack
 			entity.AddComponent<ColliderComponent>(radius);
 			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
-		{
+		{ // second falling sphere
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
 			float radius = 1.f;
@@ -209,7 +209,15 @@ namespace Quack
 
 
 		// Only works correct for the same size cubes!!!!!
-		{
+		{ // fist "static" cube
+			Entity floor = scene->CreateEntity();
+			glm::vec3 floorPos = glm::vec3(0.f, 0.f, -5.f);
+			floor.AddComponent<TransformComponent>(floorPos, 0.f, glm::vec3(0.f, 0.f, 1.f));
+			floor.AddComponent<ColliderComponent>(glm::vec3(0.5f));
+			floor.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.0f, 0.5f, 0.5f, 1.0f));
+		}
+
+		{ // second "static" cube
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(1.5f, 0.f, -5.f);
 			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
@@ -218,14 +226,17 @@ namespace Quack
 			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
 		}
-		{
+		{ // first falling cube
+			glm::vec3 size = glm::vec3(0.5f);
+			//glm::vec3 size = glm::vec3(1.f, 0.5f, 3.f);
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(0.f, 5.f, -5.f);
-			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
+			entity.AddComponent<TransformComponent>(position, 30.f, glm::vec3(0.f, 0.f, 1.f));
 			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
-			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
+			entity.AddComponent<ColliderComponent>(size);
+			entity.AddComponent<ShapeComponent>(new NormalCube(size), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
+
 
 		// Stack of spheres
 		//float z = -4.f;
@@ -310,7 +321,7 @@ namespace Quack
 				Renderer::linesShader->SetUniform4fm("view", glm::value_ptr(view));
 				Renderer::linesShader->SetUniform4fm("projection", glm::value_ptr(projection));
 				
-				Renderer::DrawDebug();
+				//Renderer::DrawDebug();
 
 				shader.Bind();
 				shader.SetUniform4fm("view", glm::value_ptr(view));
@@ -321,10 +332,9 @@ namespace Quack
 				// Physics for entities
 				ApplyForces(scene);
 				Update(scene, dt); // Update physics
-				//SolveConstraints(scene);
 				CheckCollisions(scene);
 				SolveCollisions();
-				UpdateTransform(scene); // Update transformComp with position & rotation from physicsComp after physics simulation
+				UpdateTransform(scene); // Update transformComp with position & rotation from rigidBodyComp after physics simulation
 
 
 				// Render entities

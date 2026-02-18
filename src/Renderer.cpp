@@ -105,22 +105,23 @@ namespace Quack
 		glLineWidth(1.0f);
 	}
 
-	static std::vector<glm::vec3> points;
+	//static std::vector<glm::vec3> points;
 
-	void Renderer::DrawDebug()
-	{
-		for (const auto& p : points)
-		{
-			DrawPoint(p);
-		}
-	}
+	//void Renderer::DrawDebug()
+	//{
+	//	// @TODO: add point color
+	//	for (const auto& p : points)
+	//	{
+	//		DrawPoint(p);
+	//	}
+	//}
 
 	void Renderer::DrawPoint(glm::vec3 point, glm::vec3 color /*= glm::vec3(0.f, 1.f, 1.f)*/)
 	{
-		if (points.empty() || std::find(points.begin(), points.end(), point) == points.end())
-		{
-			points.push_back(point);
-		}
+		//if (points.empty() || std::find(points.begin(), points.end(), point) == points.end())
+		//{
+		//	points.push_back(point);
+		//}
 
 		linesShader->Bind();
 

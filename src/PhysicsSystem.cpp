@@ -49,6 +49,8 @@ namespace Quack
 			if(!rigidBody.invMass)
 				continue;
 
+			// mass here is a bit useless because it cancels out when applying forces to acceleration
+			// and gravity is the only force here because the engine is imuplse based xD
 			rigidBody.forces = rigidBody.gravity * (1.f / rigidBody.invMass);
 		}
 	}
@@ -129,17 +131,22 @@ namespace Quack
 				if (collider1.type == collider2.type && collider1.type == ColliderType::Sphere)
 				{
 					// Sphere - Sphere collision
-					glm::vec3 diff = transform1.position - transform2.position;
+					glm::vec3 diff = transform2.position - transform1.position; // from A to B
 					float distanceSquared = dot(diff, diff);
 					float radii = collider1.radius + collider2.radius; // radiuses
 
+					//Renderer::DrawLine(transform1.position, transform1.position + diff);
+
 					if (distanceSquared < radii * radii)
 					{
-						glm::vec3 normal = normalize(diff); // direction from sphere to sphere
+						glm::vec3 normal = normalize(diff); // normal from A to B
 
-						float penetration = (radii - sqrt(distanceSquared));
+						float penetration = radii - sqrt(distanceSquared);
 
-						glm::vec3 contactPoint = transform1.position - normal * collider1.radius - penetration * 0.5f;
+						// @TODO what if the spheres have different radiuses?
+						glm::vec3 contactPoint = transform1.position + normal * collider1.radius - penetration * 0.5f;
+
+						//Renderer::DrawPoint(contactPoint, glm::vec3(1.f, 0.5f, 1.f));
 
 						CollisionManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, penetration };
 						collisionManifolds.push_back(manifold);
@@ -155,12 +162,15 @@ namespace Quack
 
 					if (bCollision)
 					{
-						glm::vec3 normal = normalize(shortestAxis);
+						glm::vec3 normal = normalize(shortestAxis); // normal pointing from A to B
 
 						// @TODO: This only works if the bodies are the same size!!!
-						glm::vec3 p1 = transform1.position + normal * (shortestOverlap * 0.5f);
-						glm::vec3 p2 = transform2.position - normal * (shortestOverlap * 0.5f);
+						glm::vec3 p1 = transform1.position - normal * (shortestOverlap * 0.5f);
+						glm::vec3 p2 = transform2.position + normal * (shortestOverlap * 0.5f);
 						glm::vec3 contactPoint = 0.5f * (p1 + p2);
+						
+						//Renderer::DrawPoint(contactPoint, glm::vec3(1.f, 0.5f, 1.f));
+						//Renderer::DrawLine(contactPoint, contactPoint + normal, glm::vec3(1.f, 0.5f, 1.f));
 
 						CollisionManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, shortestOverlap };
 						collisionManifolds.push_back(manifold);
@@ -180,13 +190,13 @@ namespace Quack
 
 					glm::vec3 closestPoint = FindClosestPointToSphereOnOBB(sphereTransform.position, sphereCollider.radius, cubeTransform.position, cubeCollider.halfSize, cubeTransform.orientation);
 
-					glm::vec3 diff = sphereTransform.position - closestPoint;
+					glm::vec3 diff = closestPoint - sphereTransform.position;
 					float distanceSquared = dot(diff, diff); // distance from closes point to the sphere. length of diff without expensive sqrt
 
 					// if distance is less or equal then we have a collision!
 					if (distanceSquared <= sphereCollider.radius * sphereCollider.radius)
 					{
-						glm::vec3 normal = normalize(diff); // direction from point on OBB to sphere
+						glm::vec3 normal = normalize(diff); // direction from sphere to point on OBB
 
 						float penetration = sphereCollider.radius - sqrt(distanceSquared);
 
@@ -222,14 +232,14 @@ namespace Quack
 		glm::vec3 r1 = contactPoint - transform1.position;
 		glm::vec3 r2 = contactPoint - transform2.position;
 
-		// Velocity of a point of the body (v_lin + omega x r)
+		// Velocity of a point of the body (linear velocity (center of mass) + angular velocity x arm)
 		glm::vec3 v1 = rigidBody1.velocity + cross(rigidBody1.angularVelocity, r1);
 		glm::vec3 v2 = rigidBody2.velocity + cross(rigidBody2.angularVelocity, r2);
 
-		// Relative velocity of two bodies
-		glm::vec3 relativeVelocity = v1 - v2;
+		// Velocity of B relative to A
+		glm::vec3 relativeVelocity = v2 - v1;
 
-		// project relative velocity onto normal to check if the bodies are already separating or moving into one another
+		// check if the bodies are already separating or moving into one another
 		float normalVelocity = dot(relativeVelocity, normal);
 
 		// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
@@ -241,27 +251,29 @@ namespace Quack
 		// @TODO: think if this is correct
 		float restitution = glm::min(rigidBody1.bounce, rigidBody2.bounce);
 
-		glm::vec3 effectiveMass1 = cross(rigidBody1.invInertiaTensor * cross(r1, normal), r1);
-		glm::vec3 effectiveMass2 = cross(rigidBody2.invInertiaTensor * cross(r2, normal), r2);
-
-		// j
-		float impulse = (-(1 + restitution) * normalVelocity) / (rigidBody1.invMass + rigidBody2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
-
-		// J
-		glm::vec3 vectorImpulse = impulse * normal;
-
-		rigidBody1.velocity += vectorImpulse * rigidBody1.invMass;
-		rigidBody2.velocity -= vectorImpulse * rigidBody2.invMass;
-
 		glm::mat3 R1 = glm::toMat3(transform1.orientation);
 		glm::mat3 R2 = glm::toMat3(transform2.orientation);
+		
 		// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
 		glm::mat3 invInertiaWorld1 = R1 * rigidBody1.invInertiaTensor * glm::transpose(R1);
 		glm::mat3 invInertiaWorld2 = R2 * rigidBody2.invInertiaTensor * glm::transpose(R2);
 
+		// arm & normal are in world space so inertia should also be in world space!!!!
+		glm::vec3 effectiveMass1 = cross(invInertiaWorld1 * cross(r1, normal), r1);
+		glm::vec3 effectiveMass2 = cross(invInertiaWorld2 * cross(r2, normal), r2);
+
+		// j
+		float impulse = (-(1.f + restitution) * normalVelocity) / (rigidBody1.invMass + rigidBody2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
+
+		// J
+		glm::vec3 vectorImpulse = impulse * normal;
+
+		rigidBody1.velocity -= vectorImpulse * rigidBody1.invMass;
+		rigidBody2.velocity += vectorImpulse * rigidBody2.invMass;
+
 		// apply angular momentum change (calculate torque)
-		rigidBody1.angularVelocity += invInertiaWorld1 * glm::cross(r1, vectorImpulse);
-		rigidBody2.angularVelocity -= invInertiaWorld2 * glm::cross(r2, vectorImpulse);
+		rigidBody1.angularVelocity -= invInertiaWorld1 * glm::cross(r1, vectorImpulse);
+		rigidBody2.angularVelocity += invInertiaWorld2 * glm::cross(r2, vectorImpulse);
 	}
 
 	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
@@ -272,14 +284,14 @@ namespace Quack
 		float correctionMag = glm::max(shortestOverlap - slop, 0.0f) * percent;
 		glm::vec3 correction = correctionMag * normal;
 
-		transform1.position += correction * rigidBody1.invMass / (rigidBody1.invMass + rigidBody2.invMass);
-		transform2.position -= correction * rigidBody2.invMass / (rigidBody1.invMass + rigidBody2.invMass);
+		transform1.position -= correction * rigidBody1.invMass / (rigidBody1.invMass + rigidBody2.invMass);
+		transform2.position += correction * rigidBody2.invMass / (rigidBody1.invMass + rigidBody2.invMass);
 	}
 
 
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation)
 	{
-		// vector from sphere to cube
+		// vector from cube to sphere
 		glm::vec3 d = spherePosition - cubePosition;
 
 		glm::mat3 cubeAxes = glm::toMat3(cubeOrientation);
@@ -306,8 +318,8 @@ namespace Quack
 	bool CheckCollisionCubeWithCube(const TransformComponent& transform1, const ColliderComponent& collider1, const TransformComponent& transform2, const ColliderComponent& collider2, glm::vec3& shortestAxis, float& shortestOverlap)
 	{
 		// OBB - OBB collision (SAT)
-		glm::mat3 cube1Axes = glm::toMat3(transform1.orientation) * glm::mat3(1.f);
-		glm::mat3 cube2Axes = glm::toMat3(transform2.orientation) * glm::mat3(1.f);
+		glm::mat3 cube1Axes = glm::toMat3(transform1.orientation);
+		glm::mat3 cube2Axes = glm::toMat3(transform2.orientation);
 
 		// orientation quat is normalized every frame so no need for normalizing these axes
 		std::vector<glm::vec3> axes = { cube1Axes[0], cube1Axes[1], cube1Axes[2], cube2Axes[0], cube2Axes[1], cube2Axes[2] };
@@ -317,9 +329,9 @@ namespace Quack
 			for (int j = 0; j < 3; j++)
 			{
 				glm::vec3 crossedAxis = cross(cube1Axes[i], cube2Axes[j]);
-				
+
 				// if the axis is zero or near zero (e.g. parallel to another) then it will cause division by 0 when trying to normalize it
-				if(glm::length2(crossedAxis) < 0.00001f)
+				if (glm::length2(crossedAxis) < 0.00001f)
 					continue;
 
 				axes.push_back(normalize(crossedAxis));
@@ -359,6 +371,7 @@ namespace Quack
 												wCube1BottomRightFrontCorner, wCube1BottomRightBackCorner,
 												wCube1TopLeftFrontCorner, wCube1TopLeftBackCorner,
 												wCube1BottomLeftFrontCorner, wCube1BottomLeftBackCorner };
+
 
 		// Cube2 corners in local space
 		glm::vec3 cube2TopRightFrontCorner = collider2.halfSize;
@@ -429,6 +442,27 @@ namespace Quack
 				shortestAxis = axis;
 			}
 		}
+
+		// Ensure that normal points from A to B
+		glm::vec3 centerToCenter = transform2.position - transform1.position;
+		if (glm::dot(shortestAxis, centerToCenter) < 0.f)
+		{
+			shortestAxis = -shortestAxis;
+		}
+
+		//Renderer::DrawLine(transform2.position, transform2.position + shortestAxis, glm::vec3(1.f, 0.5f, 1.f));
+
+		//Renderer::DrawLine(transform1.position, transform1.position + cube1Axes[0], glm::vec3(1.f, 0.f, 0.f));
+		//Renderer::DrawLine(transform1.position, transform1.position + cube1Axes[1], glm::vec3(0.f, 1.f, 0.f));
+		//Renderer::DrawLine(transform1.position, transform1.position + cube1Axes[2], glm::vec3(0.f, 0.f, 1.f));
+
+		//Renderer::DrawLine(transform2.position, transform2.position + cube2Axes[0], glm::vec3(1.f, 0.f, 0.f));
+		//Renderer::DrawLine(transform2.position, transform2.position + cube2Axes[1], glm::vec3(0.f, 1.f, 0.f));
+		//Renderer::DrawLine(transform2.position, transform2.position + cube2Axes[2], glm::vec3(0.f, 0.f, 1.f));
+
+		//Renderer::DrawLine(transform2.position, transform2.position - cube2Axes[0], glm::vec3(1.f, 0.5f, 0.5f));
+		//Renderer::DrawLine(transform2.position, transform2.position - cube2Axes[1], glm::vec3(0.5f, 1.f, 0.5f));
+		//Renderer::DrawLine(transform2.position, transform2.position - cube2Axes[2], glm::vec3(0.5f, 0.5f, 1.f));
 
 		return true;
 	}
