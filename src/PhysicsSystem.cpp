@@ -11,13 +11,16 @@
 
 namespace Quack
 {
-	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const glm::vec3& contactPoint);
+	struct ContactManifold;
+
+	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints);
 	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap);
 
-	bool CheckCollisionCubeWithCube(const TransformComponent& transform1, const ColliderComponent& collider1, const TransformComponent& transform2, const ColliderComponent& collider2, glm::vec3& shortestAxis, float& shortestOverlap);
+	bool CheckCollisionCubeWithCube(TransformComponent& transform1, TransformComponent& transform2, const ColliderComponent& collider1, const ColliderComponent& collider2, ContactManifold& contactManifold);
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation);
+	std::vector<glm::vec3> CreateFaceFromNormal(const glm::vec3& faceNormal, const glm::mat3& axes, const glm::vec3& position, const glm::vec3& halfSize, glm::vec3& faceCenter);
 
-	struct CollisionManifold
+	struct ContactManifold
 	{
 		RigidBodyComponent& rigidBody1;
 		RigidBodyComponent& rigidBody2;
@@ -27,12 +30,17 @@ namespace Quack
 
 		glm::vec3 normal;
 
-		glm::vec3 contactPoint; // later will change to an array
+		std::vector<glm::vec3> contactPoints; // @TODO: change to array of max 4 points
 		float penetration;
+
+		ContactManifold(RigidBodyComponent& r1, RigidBodyComponent& r2, TransformComponent& t1, TransformComponent& t2, glm::vec3 normal = glm::vec3(0.f), std::vector<glm::vec3> contactPoints = {}, float penetration = 0.f)
+			: rigidBody1(r1), rigidBody2(r2), transform1(t1), transform2(t2), normal(normal), contactPoints(contactPoints), penetration(penetration) {}
 	};
 
-	static std::vector<CollisionManifold> collisionManifolds;
+	static std::vector<ContactManifold> contactManifolds;
 
+
+	// @TODO: delete this and check every time if one of the rigid bodies is nullptr?
 	static RigidBodyComponent staticRigidBody;
 
 
@@ -50,7 +58,7 @@ namespace Quack
 				continue;
 
 			// mass here is a bit useless because it cancels out when applying forces to acceleration
-			// and gravity is the only force here because the engine is imuplse based xD
+			// and gravity is the only force here because the engine is impulse based xD
 			rigidBody.forces = rigidBody.gravity * (1.f / rigidBody.invMass);
 		}
 	}
@@ -148,33 +156,17 @@ namespace Quack
 
 						//Renderer::DrawPoint(contactPoint, glm::vec3(1.f, 0.5f, 1.f));
 
-						CollisionManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, penetration };
-						collisionManifolds.push_back(manifold);
+						ContactManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, {contactPoint}, penetration };
+						contactManifolds.push_back(manifold);
 					}
 				}
 				else if (collider1.type == collider2.type && collider1.type == ColliderType::Cube)
 				{
 					// Cube - Cube
-					glm::vec3 shortestAxis;
-					float shortestOverlap = 100000.f;
+					ContactManifold manifold(rigidBody1, rigidBody2, transform1, transform2);
 
-					bool bCollision = CheckCollisionCubeWithCube(transform1, collider1, transform2, collider2, shortestAxis, shortestOverlap);
-
-					if (bCollision)
-					{
-						glm::vec3 normal = normalize(shortestAxis); // normal pointing from A to B
-
-						// @TODO: This only works if the bodies are the same size!!!
-						glm::vec3 p1 = transform1.position - normal * (shortestOverlap * 0.5f);
-						glm::vec3 p2 = transform2.position + normal * (shortestOverlap * 0.5f);
-						glm::vec3 contactPoint = 0.5f * (p1 + p2);
-						
-						//Renderer::DrawPoint(contactPoint, glm::vec3(1.f, 0.5f, 1.f));
-						//Renderer::DrawLine(contactPoint, contactPoint + normal, glm::vec3(1.f, 0.5f, 1.f));
-
-						CollisionManifold manifold = { rigidBody1, rigidBody2, transform1, transform2, normal, contactPoint, shortestOverlap };
-						collisionManifolds.push_back(manifold);
-					}
+					if (CheckCollisionCubeWithCube(transform1, transform2, collider1, collider2, manifold))
+						contactManifolds.push_back(manifold);
 				}
 				else
 				{
@@ -201,8 +193,8 @@ namespace Quack
 						float penetration = sphereCollider.radius - sqrt(distanceSquared);
 
 						// @TODO: Change this!!
-						CollisionManifold manifold = { isEntity1Sphere ? rigidBody1 : rigidBody2, isEntity1Sphere ? rigidBody2 : rigidBody1, sphereTransform, cubeTransform, normal, closestPoint, penetration };
-						collisionManifolds.push_back(manifold);
+						ContactManifold manifold = { isEntity1Sphere ? rigidBody1 : rigidBody2, isEntity1Sphere ? rigidBody2 : rigidBody1, sphereTransform, cubeTransform, normal, {closestPoint}, penetration };
+						contactManifolds.push_back(manifold);
 					}
 				}
 			}
@@ -212,68 +204,78 @@ namespace Quack
 
 	void SolveCollisions()
 	{
-		for (const CollisionManifold& manifold : collisionManifolds)
+		for (const ContactManifold& manifold : contactManifolds)
 		{
 			// if both bodies are static then skip solving
 			if (!manifold.rigidBody1.invMass && !manifold.rigidBody2.invMass)
 				continue;
 
-			SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoint);
+			// @TODO: Now that we can have more than one point of contact these two function should be refactored to accommodate this
+			SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoints);
 			SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
 		}
 
-		collisionManifolds.clear();
+		contactManifolds.clear();
 	}
 
 	
-	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const glm::vec3& contactPoint)
+	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints)
 	{
-		// Arm from center of mass to a point of contact
-		glm::vec3 r1 = contactPoint - transform1.position;
-		glm::vec3 r2 = contactPoint - transform2.position;
-
-		// Velocity of a point of the body (linear velocity (center of mass) + angular velocity x arm)
-		glm::vec3 v1 = rigidBody1.velocity + cross(rigidBody1.angularVelocity, r1);
-		glm::vec3 v2 = rigidBody2.velocity + cross(rigidBody2.angularVelocity, r2);
-
-		// Velocity of B relative to A
-		glm::vec3 relativeVelocity = v2 - v1;
-
-		// check if the bodies are already separating or moving into one another
-		float normalVelocity = dot(relativeVelocity, normal);
-
-		// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
-		if (normalVelocity > 0.f)
+		if (contactPoints.empty())
 		{
-			return; // already separating - do nothing
+			QUACK_ERROR("Contact Points empty!!!!!");
+			return;
 		}
 
-		// @TODO: think if this is correct
-		float restitution = glm::min(rigidBody1.bounce, rigidBody2.bounce);
+		for (const glm::vec3 contactPoint : contactPoints)
+		{
+			// Arm from center of mass to a point of contact
+			glm::vec3 r1 = contactPoint - transform1.position;
+			glm::vec3 r2 = contactPoint - transform2.position;
 
-		glm::mat3 R1 = glm::toMat3(transform1.orientation);
-		glm::mat3 R2 = glm::toMat3(transform2.orientation);
+			// Velocity of a point of the body (linear velocity (center of mass) + angular velocity x arm)
+			glm::vec3 v1 = rigidBody1.velocity + cross(rigidBody1.angularVelocity, r1);
+			glm::vec3 v2 = rigidBody2.velocity + cross(rigidBody2.angularVelocity, r2);
+
+			// Velocity of B relative to A
+			glm::vec3 relativeVelocity = v2 - v1;
+
+			// check if the bodies are already separating or moving into one another
+			float normalVelocity = dot(relativeVelocity, normal);
+
+			// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
+			if (normalVelocity > 0.f)
+			{
+				return; // already separating - do nothing
+			}
+
+			// @TODO: think if this is correct
+			float restitution = glm::min(rigidBody1.bounce, rigidBody2.bounce);
+
+			glm::mat3 R1 = glm::toMat3(transform1.orientation);
+			glm::mat3 R2 = glm::toMat3(transform2.orientation);
 		
-		// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
-		glm::mat3 invInertiaWorld1 = R1 * rigidBody1.invInertiaTensor * glm::transpose(R1);
-		glm::mat3 invInertiaWorld2 = R2 * rigidBody2.invInertiaTensor * glm::transpose(R2);
+			// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
+			glm::mat3 invInertiaWorld1 = R1 * rigidBody1.invInertiaTensor * glm::transpose(R1);
+			glm::mat3 invInertiaWorld2 = R2 * rigidBody2.invInertiaTensor * glm::transpose(R2);
 
-		// arm & normal are in world space so inertia should also be in world space!!!!
-		glm::vec3 effectiveMass1 = cross(invInertiaWorld1 * cross(r1, normal), r1);
-		glm::vec3 effectiveMass2 = cross(invInertiaWorld2 * cross(r2, normal), r2);
+			// arm & normal are in world space so inertia should also be in world space!!!!
+			glm::vec3 effectiveMass1 = cross(invInertiaWorld1 * cross(r1, normal), r1);
+			glm::vec3 effectiveMass2 = cross(invInertiaWorld2 * cross(r2, normal), r2);
 
-		// j
-		float impulse = (-(1.f + restitution) * normalVelocity) / (rigidBody1.invMass + rigidBody2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
+			// j
+			float impulse = (-(1.f + restitution) * normalVelocity) / (rigidBody1.invMass + rigidBody2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
 
-		// J
-		glm::vec3 vectorImpulse = impulse * normal;
+			// J
+			glm::vec3 vectorImpulse = impulse * normal;
 
-		rigidBody1.velocity -= vectorImpulse * rigidBody1.invMass;
-		rigidBody2.velocity += vectorImpulse * rigidBody2.invMass;
+			rigidBody1.velocity -= vectorImpulse * rigidBody1.invMass;
+			rigidBody2.velocity += vectorImpulse * rigidBody2.invMass;
 
-		// apply angular momentum change (calculate torque)
-		rigidBody1.angularVelocity -= invInertiaWorld1 * glm::cross(r1, vectorImpulse);
-		rigidBody2.angularVelocity += invInertiaWorld2 * glm::cross(r2, vectorImpulse);
+			// apply angular momentum change (calculate torque)
+			rigidBody1.angularVelocity -= invInertiaWorld1 * glm::cross(r1, vectorImpulse);
+			rigidBody2.angularVelocity += invInertiaWorld2 * glm::cross(r2, vectorImpulse);
+		}
 	}
 
 	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
@@ -314,8 +316,8 @@ namespace Quack
 		return closestPoint;
 	}
 
-	// @TODO: Change passing shortestAxis and shortestOverlap to returning collision manifold
-	bool CheckCollisionCubeWithCube(const TransformComponent& transform1, const ColliderComponent& collider1, const TransformComponent& transform2, const ColliderComponent& collider2, glm::vec3& shortestAxis, float& shortestOverlap)
+
+	bool CheckCollisionCubeWithCube(TransformComponent& transform1, TransformComponent& transform2, const ColliderComponent& collider1, const ColliderComponent& collider2, ContactManifold& contactManifold)
 	{
 		// OBB - OBB collision (SAT)
 		glm::mat3 cube1Axes = glm::toMat3(transform1.orientation);
@@ -337,6 +339,8 @@ namespace Quack
 				axes.push_back(normalize(crossedAxis));
 			}
 		}
+		
+
 
 		// @TODO: Change manual defined corners to a nice short loop!
 
@@ -404,8 +408,16 @@ namespace Quack
 												wCube2TopLeftFrontCorner, wCube2TopLeftBackCorner,
 												wCube2BottomLeftFrontCorner, wCube2BottomLeftBackCorner };
 
-		for (const auto& axis : axes)
+		bool isAxisFirstBody = false;
+		bool isAxisCrossProduct = false;
+		int whichCrossProductAxis = -1;
+
+		glm::vec3 shortestAxis;
+		float shortestOverlap = 100000.f;
+
+		for (int i = 0; i < axes.size(); i++)
 		{
+			const glm::vec3& axis = axes[i];
 			float c1Min = dot(cube1Points[0], axis);
 			float c1Max = c1Min;
 
@@ -440,6 +452,10 @@ namespace Quack
 			{
 				shortestOverlap = amount;
 				shortestAxis = axis;
+				// Which body was the axis that won
+				isAxisFirstBody = i < 3;
+				isAxisCrossProduct = i > 5;
+				whichCrossProductAxis = i;
 			}
 		}
 
@@ -450,21 +466,253 @@ namespace Quack
 			shortestAxis = -shortestAxis;
 		}
 
-		//Renderer::DrawLine(transform2.position, transform2.position + shortestAxis, glm::vec3(1.f, 0.5f, 1.f));
+		// Normal always points from A to B so we have to flip it if the first body is not ref
+		glm::vec3 clippingNormal = shortestAxis;
+		if (!isAxisFirstBody)
+		{
+			clippingNormal *= -1;
+		}
 
-		//Renderer::DrawLine(transform1.position, transform1.position + cube1Axes[0], glm::vec3(1.f, 0.f, 0.f));
-		//Renderer::DrawLine(transform1.position, transform1.position + cube1Axes[1], glm::vec3(0.f, 1.f, 0.f));
-		//Renderer::DrawLine(transform1.position, transform1.position + cube1Axes[2], glm::vec3(0.f, 0.f, 1.f));
+		// Find points of contact
 
-		//Renderer::DrawLine(transform2.position, transform2.position + cube2Axes[0], glm::vec3(1.f, 0.f, 0.f));
-		//Renderer::DrawLine(transform2.position, transform2.position + cube2Axes[1], glm::vec3(0.f, 1.f, 0.f));
-		//Renderer::DrawLine(transform2.position, transform2.position + cube2Axes[2], glm::vec3(0.f, 0.f, 1.f));
+		if (isAxisCrossProduct)
+		{
+			// @TODO: fix this, i have had several existential crisis doing this, will fix in the future
 
-		//Renderer::DrawLine(transform2.position, transform2.position - cube2Axes[0], glm::vec3(1.f, 0.5f, 0.5f));
-		//Renderer::DrawLine(transform2.position, transform2.position - cube2Axes[1], glm::vec3(0.5f, 1.f, 0.5f));
-		//Renderer::DrawLine(transform2.position, transform2.position - cube2Axes[2], glm::vec3(0.5f, 0.5f, 1.f));
+			//QUACK_LOG("Axis is from cross product");
+			int crossAxisIndex = whichCrossProductAxis - 6;
+
+			int i = crossAxisIndex / 3;
+			int j = crossAxisIndex % 3;
+
+			glm::vec3 crossAxis1 = cube1Axes[i];
+			glm::vec3 crossAxis2 = cube2Axes[j];
+
+			glm::vec3 otherA1 = cube1Axes[(i + 1) % 3];
+			glm::vec3 otherA2 = cube1Axes[(i + 2) % 3];
+
+			float sa1 = glm::sign(glm::dot(shortestAxis, otherA1));
+			float sa2 = glm::sign(glm::dot(shortestAxis, otherA2));
+
+			glm::vec3 edgeCenterA = transform1.position + sa1 * otherA1 * collider1.halfSize[(i + 1) % 3] + sa2 * otherA2 * collider1.halfSize[(i + 2) % 3];
+
+			glm::vec3 otherB1 = cube2Axes[(j + 1) % 3];
+			glm::vec3 otherB2 = cube2Axes[(j + 2) % 3];
+
+			float sb1 = glm::sign(glm::dot(shortestAxis, -otherB1));
+			float sb2 = glm::sign(glm::dot(shortestAxis, -otherB2));
+
+			glm::vec3 edgeCenterB = transform2.position + sb1 * otherB1 * collider2.halfSize[(j + 1) % 3] + sb2 * otherB2 * collider2.halfSize[(j + 2) % 3];
+
+			glm::vec3 contactPoint = (edgeCenterA + edgeCenterB) * 0.5f;
+
+			Renderer::DrawPoint(contactPoint, glm::vec3(1.f, 0.5f, 0.5f));
+
+
+			contactManifold.normal = shortestAxis;
+			contactManifold.penetration = shortestOverlap;
+			contactManifold.contactPoints = { contactPoint };
+
+			return true;
+		}
+
+
+
+		TransformComponent& incTransform = isAxisFirstBody ? transform2 : transform1;
+		TransformComponent& refTransform = isAxisFirstBody ? transform1 : transform2;
+		const ColliderComponent& incCollider = isAxisFirstBody ? collider2 : collider1;
+		const ColliderComponent& refCollider = isAxisFirstBody ? collider1 : collider2;
+
+		glm::mat3 incAxes = glm::toMat3(incTransform.orientation);
+		glm::mat3 refAxes = glm::toMat3(refTransform.orientation);
+
+		glm::vec3 incFaceNormal = incAxes[0];
+		float incDot = 1.f;
+
+		glm::vec3 refFaceNormal = refAxes[0];
+		float refDot = -1.f;
+
+		// Find which of the 6 faces is the incident (most anti parallel) & reference (most parallel) face
+		for (int i = 0; i < 3; i++)
+		{
+			float incDir = glm::dot(clippingNormal, incAxes[i]);
+
+			if (incDir < incDot)
+			{
+				incDot = incDir;
+				incFaceNormal = incAxes[i];
+			}
+
+			if (-incDir < incDot)
+			{
+				incDot = -incDir;
+				incFaceNormal = -incAxes[i];
+			}
+
+			float refDir = glm::dot(clippingNormal, refAxes[i]);
+
+			if (refDir > refDot)
+			{
+				refDot = refDir;
+				refFaceNormal = refAxes[i];
+			}
+
+			if (-refDir > refDot)
+			{
+				refDot = -refDir;
+				refFaceNormal = -refAxes[i];
+			}
+		}
+
+		// Faces from normals
+		glm::vec3 incFaceCenter;
+		std::vector<glm::vec3> incFace = CreateFaceFromNormal(incFaceNormal, incAxes, incTransform.position, incCollider.halfSize, incFaceCenter);
+
+		glm::vec3 refFaceCenter;
+		std::vector<glm::vec3> refFace = CreateFaceFromNormal(refFaceNormal, refAxes, refTransform.position, refCollider.halfSize, refFaceCenter);
+
+		// Clipping
+		// Side planes from edges
+		std::vector<glm::vec3> planePoints;
+		std::vector<glm::vec3> planeNormals;
+
+		// Colors for debugging
+		//glm::vec3 color[4] = { glm::vec3(1.f, 0.5f, 0.5f), glm::vec3(0.5f, 1.f, 0.5f), glm::vec3(0.5f, 0.5f, 1.f), glm::vec3(1.f, 1.f, 1.f) };
+		for (int i = 0; i < 4; i++)
+		{
+			glm::vec3 planePoint = refFace[i];
+			glm::vec3 edgeDir = normalize(refFace[(i + 1) % 4] - refFace[i]);
+			glm::vec3 planeNormal = cross(edgeDir, clippingNormal);
+			
+			// Check if the plane points inward
+			if (dot(refFaceCenter - planePoint, planeNormal) < 0)
+				planeNormal = -planeNormal;
+
+			planePoints.push_back(planePoint);
+			planeNormals.push_back(planeNormal);
+
+			//Renderer::DrawLine(planePoint + edgeDir * 0.5f, planePoint + edgeDir * 0.5f + planeNormal * 0.5f, color[i]);
+			//Renderer::DrawLine(planePoint, planePoint + edgeDir * 5.f, color[i]);
+			//Renderer::DrawLine(planePoint, planePoint - edgeDir * 5.f, color[i]);
+			//Renderer::DrawLine(planePoint, planePoint + clippingNormal * 5.f, color[i]);
+			//Renderer::DrawLine(planePoint, planePoint - clippingNormal * 5.f, color[i]);
+		}
+
+
+		std::vector<glm::vec3> contactPolygon = incFace;
+
+		for (int i = 0; i < 4; i++)
+		{
+			std::vector<glm::vec3> clippedPolygon;
+
+			for (int j = 0; j < contactPolygon.size(); j++)
+			{
+				// Break loop if there is only one contact point
+				if (contactPolygon.size() < 2)
+					break;
+
+				// Check if point is on the cutting plane
+				glm::vec3 currentVertex = contactPolygon[j];
+				glm::vec3 nextVertex = contactPolygon[(j + 1) % contactPolygon.size()];
+
+				float distanceCurrent = dot(currentVertex - planePoints[i], planeNormals[i]);
+				float distanceNext = dot(nextVertex - planePoints[i], planeNormals[i]);
+
+				if (distanceCurrent >= 0)
+				{
+					// Current point inside
+					if (distanceNext >= 0)
+					{
+						clippedPolygon.push_back(nextVertex);
+					}
+					else
+					{
+						float t = distanceCurrent / (distanceCurrent - distanceNext);
+						glm::vec3 intersectionPoint = currentVertex + t * (nextVertex - currentVertex);
+						clippedPolygon.push_back(intersectionPoint);
+					}
+				}
+				else
+				{
+					// Current point outside
+					if (distanceNext >= 0)
+					{
+						float t = distanceCurrent / (distanceCurrent - distanceNext);
+						glm::vec3 intersectionPoint = currentVertex + t * (nextVertex - currentVertex);
+						clippedPolygon.push_back(intersectionPoint);
+
+						clippedPolygon.push_back(nextVertex);
+					}
+					// If both points outside then we keep nothing
+				}
+			}
+
+			contactPolygon = clippedPolygon;
+		}
+
+		std::vector<glm::vec3> contactPoints;
+
+		for (glm::vec3 point : contactPolygon)
+		{
+			bool isPointPenetrating = dot(point - refFace[0], clippingNormal) <= shortestOverlap + 0.01f;
+
+			if (isPointPenetrating)
+			{
+				contactPoints.push_back(point);
+				Renderer::DrawPoint(point, glm::vec3(0.f, 1.f, 0.f));
+			}
+		}
+		
+		contactManifold.normal = shortestAxis;
+		contactManifold.penetration = shortestOverlap;
+		contactManifold.contactPoints = contactPoints;
 
 		return true;
 	}
 
+
+	std::vector<glm::vec3> CreateFaceFromNormal(const glm::vec3& faceNormal, const glm::mat3& axes, const glm::vec3& position, const glm::vec3& halfSize, glm::vec3& faceCenter)
+	{
+		float dx = dot(faceNormal, axes[0]);
+		float dy = dot(faceNormal, axes[1]);
+		float dz = dot(faceNormal, axes[2]);
+
+		glm::vec3 topLeftVertex, bottomLeftVertex, bottomRightVertex, topRightVertex;
+
+		if (abs(dx) > abs(dy) && abs(dx) > abs(dz))
+		{
+			faceCenter = position + axes[0] * halfSize.x * glm::sign(dx);
+
+			topLeftVertex = faceCenter + axes[1] * halfSize.y + axes[2] * halfSize.z;
+			bottomLeftVertex = faceCenter - axes[1] * halfSize.y + axes[2] * halfSize.z;
+			bottomRightVertex = faceCenter - axes[1] * halfSize.y - axes[2] * halfSize.z;
+			topRightVertex = faceCenter + axes[1] * halfSize.y - axes[2] * halfSize.z;
+
+			//QUACK_LOG("x face");
+		}
+		else if (abs(dy) > abs(dx) && abs(dy) > abs(dz))
+		{
+			faceCenter = position + axes[1] * halfSize.y * glm::sign(dy);
+
+			topLeftVertex = faceCenter + axes[0] * halfSize.x + axes[2] * halfSize.z;
+			bottomLeftVertex = faceCenter - axes[0] * halfSize.x + axes[2] * halfSize.z;
+			bottomRightVertex = faceCenter - axes[0] * halfSize.x - axes[2] * halfSize.z;
+			topRightVertex = faceCenter + axes[0] * halfSize.x - axes[2] * halfSize.z;
+
+			//QUACK_LOG("y face");
+		}
+		else if (abs(dz) > abs(dx) && abs(dz) > abs(dy))
+		{
+			faceCenter = position + axes[2] * halfSize.z * glm::sign(dz);
+
+			topLeftVertex = faceCenter + axes[1] * halfSize.y + axes[0] * halfSize.x;
+			bottomLeftVertex = faceCenter - axes[1] * halfSize.y + axes[0] * halfSize.x;
+			bottomRightVertex = faceCenter - axes[1] * halfSize.y - axes[0] * halfSize.x;
+			topRightVertex = faceCenter + axes[1] * halfSize.y - axes[0] * halfSize.x;
+
+			//QUACK_LOG("z face");
+		}
+
+		return { topLeftVertex, bottomLeftVertex, bottomRightVertex, topRightVertex };
+	}
 }

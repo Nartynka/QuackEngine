@@ -177,58 +177,60 @@ namespace Quack
 		//}
 
 
-		{ // first "static" sphere
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-1.8f, 0.f, -5.f);
-			float radius = 1.f;
-			entity.AddComponent<TransformComponent>(position);
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1000.f, radius);
-			//rigidBodyComp.velocity = glm::vec3(0.f, -5.f, 0.f);
-			rigidBodyComp.gravity = glm::vec3(0.f);
-			entity.AddComponent<ColliderComponent>(radius);
-			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
-		{ // first falling sphere
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-2.0f, 5.f, -5.f);
-			float radius = 1.f;
-			entity.AddComponent<TransformComponent>(position);
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, radius);
-			entity.AddComponent<ColliderComponent>(radius);
-			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
-		{ // second falling sphere
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
-			float radius = 1.f;
-			entity.AddComponent<TransformComponent>(position);
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, radius);
-			entity.AddComponent<ColliderComponent>(radius);
-			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
+		//{ // first "static" sphere
+		//	Entity entity = scene->CreateEntity();
+		//	glm::vec3 position = glm::vec3(-1.8f, 0.f, -5.f);
+		//	float radius = 1.f;
+		//	entity.AddComponent<TransformComponent>(position);
+		//	auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1000.f, radius);
+		//	//rigidBodyComp.velocity = glm::vec3(0.f, -5.f, 0.f);
+		//	rigidBodyComp.gravity = glm::vec3(0.f);
+		//	entity.AddComponent<ColliderComponent>(radius);
+		//	entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		//}
+		//{ // first falling sphere
+		//	Entity entity = scene->CreateEntity();
+		//	glm::vec3 position = glm::vec3(-2.0f, 5.f, -5.f);
+		//	float radius = 1.f;
+		//	entity.AddComponent<TransformComponent>(position);
+		//	auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, radius);
+		//	entity.AddComponent<ColliderComponent>(radius);
+		//	entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		//}
+		//{ // second falling sphere
+		//	Entity entity = scene->CreateEntity();
+		//	glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
+		//	float radius = 1.f;
+		//	entity.AddComponent<TransformComponent>(position);
+		//	auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, radius);
+		//	entity.AddComponent<ColliderComponent>(radius);
+		//	entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		//}
 
 
 		// Only works correct for the same size cubes!!!!!
 		{ // fist "static" cube
 			Entity floor = scene->CreateEntity();
 			glm::vec3 floorPos = glm::vec3(0.f, 0.f, -5.f);
+			//glm::vec3 floorSize = glm::vec3(3.5f, 0.1f, 4.5f);
+			glm::vec3 floorSize = glm::vec3(0.5f);
 			floor.AddComponent<TransformComponent>(floorPos, 0.f, glm::vec3(0.f, 0.f, 1.f));
-			floor.AddComponent<ColliderComponent>(glm::vec3(0.5f));
-			floor.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.0f, 0.5f, 0.5f, 1.0f));
+			floor.AddComponent<ColliderComponent>(floorSize);
+			floor.AddComponent<ShapeComponent>(new NormalCube(floorSize), glm::vec4(0.0f, 0.5f, 0.5f, 1.0f));
 		}
 
-		{ // second "static" cube
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(1.5f, 0.f, -5.f);
-			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(100.f, glm::vec3(0.5f));
-			rigidBodyComp.gravity = glm::vec3(0.f);
-			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
-			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
-		}
+		//{ // second "static" cube
+		//	Entity entity = scene->CreateEntity();
+		//	glm::vec3 position = glm::vec3(1.5f, 0.f, -5.f);
+		//	entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
+		//	auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(100.f, glm::vec3(0.5f));
+		//	rigidBodyComp.gravity = glm::vec3(0.f);
+		//	entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
+		//	entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.f, 0.f, 1.f, 1.f));
+		//}
 		{ // first falling cube
 			glm::vec3 size = glm::vec3(0.5f);
-			//glm::vec3 size = glm::vec3(1.f, 0.5f, 3.f);
+			//glm::vec3 size = glm::vec3(1.f, 0.5f, 2.f);
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(0.f, 5.f, -5.f);
 			entity.AddComponent<TransformComponent>(position, 30.f, glm::vec3(0.f, 0.f, 1.f));
@@ -338,7 +340,7 @@ namespace Quack
 
 
 				// Render entities
-				RenderShapes(scene, shader);
+				//RenderShapes(scene, shader);
 				RenderModels(scene, shader);
 				RenderCollisionShapes(scene);
 
