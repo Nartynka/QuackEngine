@@ -39,8 +39,6 @@ namespace Quack
 
 	static std::vector<ContactManifold> contactManifolds;
 
-
-	// @TODO: delete this and check every time if one of the rigid bodies is nullptr?
 	static RigidBodyComponent staticRigidBody;
 
 
@@ -202,23 +200,30 @@ namespace Quack
 	}
 
 
+	const int SOLVER_ITERATIONS = 8;
+
 	void SolveCollisions()
 	{
-		for (const ContactManifold& manifold : contactManifolds)
+		for (int i = 0; i < SOLVER_ITERATIONS; i++)
 		{
-			// if both bodies are static then skip solving
-			if (!manifold.rigidBody1.invMass && !manifold.rigidBody2.invMass)
-				continue;
+			for (const ContactManifold& manifold : contactManifolds)
+			{
+				// if both bodies are static then skip solving
+				if (!manifold.rigidBody1.invMass && !manifold.rigidBody2.invMass)
+					continue;
 
-			// @TODO: Now that we can have more than one point of contact these two function should be refactored to accommodate this
-			SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoints);
-			SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
+				SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoints);
+				
+				// XDD @TODO: Of course move it out the loop
+				if(i == 0)
+					SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
+			}
 		}
 
 		contactManifolds.clear();
 	}
 
-	
+
 	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints)
 	{
 		if (contactPoints.empty())
@@ -226,6 +231,15 @@ namespace Quack
 			QUACK_ERROR("Contact Points empty!!!!!");
 			return;
 		}
+
+		float restitution = rigidBody1.bounce * rigidBody2.bounce;
+
+		glm::mat3 R1 = glm::toMat3(transform1.orientation);
+		glm::mat3 R2 = glm::toMat3(transform2.orientation);
+
+		// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
+		glm::mat3 invInertiaWorld1 = R1 * rigidBody1.invInertiaTensor * glm::transpose(R1);
+		glm::mat3 invInertiaWorld2 = R2 * rigidBody2.invInertiaTensor * glm::transpose(R2);
 
 		for (const glm::vec3 contactPoint : contactPoints)
 		{
@@ -246,18 +260,12 @@ namespace Quack
 			// @TODO introduce a bias or something that even if normal velocity is positive but penetration exists then still apply impulse
 			if (normalVelocity > 0.f)
 			{
-				return; // already separating - do nothing
+				continue; // already separating - do nothing
 			}
 
-			// @TODO: think if this is correct
-			float restitution = glm::min(rigidBody1.bounce, rigidBody2.bounce);
-
-			glm::mat3 R1 = glm::toMat3(transform1.orientation);
-			glm::mat3 R2 = glm::toMat3(transform2.orientation);
-		
-			// transpose is the same as inverse (because the rotation matrix is orthogonal) but transpose is less expensive
-			glm::mat3 invInertiaWorld1 = R1 * rigidBody1.invInertiaTensor * glm::transpose(R1);
-			glm::mat3 invInertiaWorld2 = R2 * rigidBody2.invInertiaTensor * glm::transpose(R2);
+			// If resting then no bounce should be present
+			if (abs(normalVelocity) < 0.2f)
+				restitution = 0.f;
 
 			// arm & normal are in world space so inertia should also be in world space!!!!
 			glm::vec3 effectiveMass1 = cross(invInertiaWorld1 * cross(r1, normal), r1);
@@ -267,7 +275,7 @@ namespace Quack
 			float impulse = (-(1.f + restitution) * normalVelocity) / (rigidBody1.invMass + rigidBody2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
 
 			// J
-			glm::vec3 vectorImpulse = impulse * normal;
+			glm::vec3 vectorImpulse = glm::max(impulse, 0.f) * normal;
 
 			rigidBody1.velocity -= vectorImpulse * rigidBody1.invMass;
 			rigidBody2.velocity += vectorImpulse * rigidBody2.invMass;
