@@ -65,24 +65,19 @@ namespace Quack
 	{
 		glm::vec3 halfSize;
 		float radius;
-		Shape* shape; // Only for debug
+		std::unique_ptr<Shape> shape; // Only for debug
 		ColliderType type;
 
 		ColliderComponent(glm::vec3 halfSize)
 			: halfSize(halfSize), radius(0.f), type(ColliderType::Cube)
 		{
-			shape = new DebugCube(halfSize);
+			shape = std::make_unique<DebugCube>(halfSize);
 		}
 
 		ColliderComponent(float radius)
 			: radius(radius), type(ColliderType::Sphere)
 		{
-			shape = new DebugSphere(radius);
-		}
-
-		~ColliderComponent()
-		{
-			delete shape;
+			shape = std::make_unique<DebugSphere>(radius);
 		}
 	};
 
@@ -112,16 +107,11 @@ namespace Quack
 
 	struct ShapeComponent
 	{
-		Shape* shape;
+		std::unique_ptr<Shape> shape;
 		glm::vec4 color;
 
 		ShapeComponent(Shape* shape, glm::vec4 color = glm::vec4(1.f))
 			: shape(shape), color(color) {}
-
-		~ShapeComponent()
-		{
-			delete shape;
-		}
 	};
 
 	struct ModelComponent

@@ -18,7 +18,6 @@ namespace Quack
 		entt::registry& GetRegistry();
 
 		int GetEntityCount();
-		//void DestroyEntity(const Entity& entity); // delete, remove?
 	private:
 		entt::registry registry;
 	};

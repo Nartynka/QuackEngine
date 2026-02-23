@@ -15,6 +15,7 @@ namespace Quack
 	{
 	public:
 		Shape() = default;
+		virtual ~Shape() = default;
 
 		void SetupBuffers(bool hasNormals = true)
 		{

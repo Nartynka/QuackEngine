@@ -27,9 +27,4 @@ namespace Quack
 		return (int)registry.storage<entt::entity>().size();
 	}
 
-	//void Scene::DestroyEntity(const Entity& entity)
-	//{
-
-	//}
-
 }

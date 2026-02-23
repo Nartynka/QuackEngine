@@ -61,6 +61,7 @@ namespace Quack
 		}
 	}
 
+	const float Y_TRESHOLD = -100.f;
 
 	void Update(const std::shared_ptr<Scene> scene, float dt)
 	{
@@ -84,6 +85,9 @@ namespace Quack
 
 			transform.orientation += 0.5f * glm::quat(0.f, rigidBody.angularVelocity) * transform.orientation * dt;
 			transform.orientation = glm::normalize(transform.orientation);
+
+			if (transform.position.y < Y_TRESHOLD)
+				registry.destroy(entity);
 		}
 	}
 
