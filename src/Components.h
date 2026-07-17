@@ -103,6 +103,25 @@ namespace Quack
 	};
 
 
+
+	//struct ElasticConstraintComponent
+	//{
+	//	//int idx_a = -1;
+	//	//int idx_b = -1;
+
+	//	// Store entity pointer or a int idx :thinking:
+	//	Entity* entity_a = nullptr;
+	//	Entity* entity_b = nullptr;
+
+	//	float distance = 0.1f;
+	//	float stiffness = 0.1f;
+
+	//	ElasticConstraintComponent(Entity* e1, Entity* e2, float distance = 0.1f) 
+	//		: entity_a(e1), entity_b(e2), distance(distance) {}
+	//};
+
+
+
 	/// Rendering components
 
 	struct ShapeComponent

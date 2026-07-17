@@ -24,4 +24,6 @@ namespace Quack
 	void CheckCollisions(const std::shared_ptr<Scene> scene);
 
 	void SolveCollisions();
+
+	//void UpdateConstraints(const std::shared_ptr<Scene> scene, float dt); // Resolve constraints
 }

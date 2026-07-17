@@ -19,7 +19,6 @@ namespace Quack
 		void Shutdown();
 	private:
 
-		void RenderStats();
 		void RenderMenu();
 
 		void RenderCombo(const char* label, const char* elements[], int count, int& currentIdx);

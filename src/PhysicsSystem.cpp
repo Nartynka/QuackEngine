@@ -113,6 +113,50 @@ namespace Quack
 	}
 
 
+
+	//void UpdateConstraints(const std::shared_ptr<Scene> scene, float dt)
+	//{
+	//	auto& registry = scene->GetRegistry();
+	//
+	//	auto view = registry.view<ElasticConstraintComponent>();
+	//
+	//	for (int i = 5; i > 0; i--)
+	//	{
+	//		for (auto entity : view)
+	//		{
+	//			auto& [constraint] = view.get(entity);
+	//
+	//			Entity* a = constraint.entity_a;
+	//			Entity* b = constraint.entity_b;
+	//
+	//			auto& transA = a->GetComponent<TransformComponent>();
+	//			auto& transB = b->GetComponent<TransformComponent>();
+	//
+	//			float massA = 0.f;
+	//			float massB = 0.f;
+	//			if(a->HasComponent<RigidBodyComponent>())
+	//				massA = 1.f / a->GetComponent<RigidBodyComponent>().invMass;
+	//		
+	//			if (b->HasComponent<RigidBodyComponent>())
+	//				massB = 1.f / b->GetComponent<RigidBodyComponent>().invMass;
+	//
+	//			glm::vec3 diff = transB.position - transA.position;
+	//			float distance = length(diff);
+	//		
+	//			float displacement = constraint.distance - distance;
+	//			glm::vec3 dir = normalize(diff);
+	//
+	//			//float alpha = constraint.compliance / dt;
+	//
+	//			transA.position += -dir * displacement * (massA / (massA + massB) * constraint.stiffness);
+	//			transB.position += dir * displacement * (massB / (massA + massB) * constraint.stiffness);
+	//
+	//			Renderer::DrawLine(transA.position, transB.position);
+	//		}
+	//	}
+	//}
+
+
 	void CheckCollisions(const std::shared_ptr<Scene> scene)
 	{
 		auto& registry = scene->GetRegistry();
