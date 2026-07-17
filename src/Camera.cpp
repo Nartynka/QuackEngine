@@ -1,11 +1,12 @@
 #include "Camera.h"
 
 #include <GLFW\glfw3.h> // Maybe in future create QuackKeyCodes to not include this here only for key codes
+#include <gtc\matrix_transform.inl>
 
 #include "Input.h"
 #include "Event.h"
 #include "MouseEvent.h"
-#include "gtc\matrix_transform.inl"
+#include "KeyEvent.h"
 
 
 namespace Quack
@@ -63,6 +64,19 @@ namespace Quack
 				MouseCameraSpeed(e.offsetY);
 			else
 				MouseZoom(e.offsetY);
+		});
+
+		dispatcher.Dispatch<KeyPressedEvent>([this](const KeyPressedEvent& e)
+		{
+			if (e.GetKeyCode() == GLFW_KEY_R)
+			{
+				position = glm::vec3(0.f, 0.5f, 5.f);
+				yaw = -90.f;
+				pitch = 0.f;
+				front = glm::vec3(0.f, 0.f, -1.f);
+				fov = 45.f;
+				speed = 5.f;
+			}
 		});
 	}
 
