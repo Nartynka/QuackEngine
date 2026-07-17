@@ -21,6 +21,9 @@ namespace Quack
 
 		void Update(float dt); // maybe process input would be a better name
 		void OnEvent(Event& event);
+
+		glm::mat4 GetView();
+		glm::mat4 GetProjection(int width, int height);
 	private:
 		float yaw = -90.f;
 		float pitch = 0.f;

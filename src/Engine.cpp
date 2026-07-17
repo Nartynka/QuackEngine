@@ -406,11 +406,11 @@ namespace Quack
 				// first vector moves the scene???
 				// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
 				// the second vector is the point that we look at 
-				view = glm::lookAt(camera->position, camera->position + camera->front, camera->up);
+				view = camera->GetView();
 				auto [width, height] = window->GetWindowSize();
 
 				// @TODO: width and height can be 0 and cause a crash
-				projection = glm::perspective(glm::radians(camera->fov), (float)width / (float)height, 0.1f, 100.0f);
+				projection = camera->GetProjection(width, height);
 
 				Renderer::linesShader->Bind();
 				Renderer::linesShader->SetUniform4fm("view", glm::value_ptr(view));

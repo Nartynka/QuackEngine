@@ -5,6 +5,7 @@
 #include "Input.h"
 #include "Event.h"
 #include "MouseEvent.h"
+#include "gtc\matrix_transform.inl"
 
 
 namespace Quack
@@ -63,6 +64,16 @@ namespace Quack
 			else
 				MouseZoom(e.offsetY);
 		});
+	}
+
+	glm::mat4 Camera::GetView()
+	{
+		return glm::lookAt(position, position + front, up);
+	}
+
+	glm::mat4 Camera::GetProjection(int width, int height)
+	{
+		return glm::perspective(glm::radians(fov), (float)width / (float)height, 0.1f, 100.0f);
 	}
 
 	void Camera::MousePan(const glm::vec2& offset, float dt)
