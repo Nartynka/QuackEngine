@@ -9,7 +9,8 @@ namespace Quack
 	void Log::Init()
 	{
 		logger = spdlog::stdout_color_mt("Quack");
-		spdlog::set_pattern("%^[%T] %s:%# %n: %v%$");
+		//spdlog::set_pattern("%^[%T] %s:%# %n: %v%$");
+		spdlog::set_pattern("%^[%T] %s:%# %v%$");
 		spdlog::set_level(spdlog::level::trace);
 	}
 }

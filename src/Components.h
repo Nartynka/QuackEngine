@@ -11,6 +11,8 @@ namespace Quack
 {
 	/// Physics component
 
+	class Entity;
+
 	struct RigidBodyComponent
 	{
 		glm::vec3 velocity = glm::vec3(0.f);
@@ -21,20 +23,20 @@ namespace Quack
 		glm::mat3 invInertiaTensor; // body resistance to rotation
 
 		float invMass = 1.0f;
-		float bounce = 0.7f; // coefficient of restitution, how much energy is kept when entity collides with something
+		float bounce; // coefficient of restitution, how much energy is kept when entity collides with something
 
 		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
-		float friction = 0.98f; // linear damping?
+		float friction; // damping, in future will implement proper Coulomb friction
 
 		RigidBodyComponent()
-			: invMass(0.f), invInertiaTensor(glm::mat3(0.f))
+			: invMass(0.f), invInertiaTensor(glm::mat3(0.f)), bounce(0.f), friction(0.98f)
 		{
 		}
 
-		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.7f, float friction = 0.98f)
+		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.3f, float friction = 0.98f)
 			: invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
-			// I_xx = 1/12 * m * (h^2 + d^2)
+			// I_xx = 1/12 * m * (h^2 + d^2)	
 			// I_yy = 1/12 * m * (w^2 + d^2)
 			// I_zz = 1/12 * m * (w^2 + h^2)
 
@@ -43,7 +45,7 @@ namespace Quack
 			invInertiaTensor[2][2] = 1.f / (1.f / 12.f * mass * (halfSize.x * halfSize.x + halfSize.y * halfSize.y));
 		}
 
-		RigidBodyComponent(float mass, float radius, float bounce = 0.7f, float friction = 0.98f)
+		RigidBodyComponent(float mass, float radius, float bounce = 0.3f, float friction = 0.98f)
 			: invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
 			// I_diag = 2/5mr^2

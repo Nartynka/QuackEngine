@@ -13,7 +13,7 @@ namespace Quack
 {
 	struct ContactManifold;
 
-	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints);
+	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints, std::vector<float>& accumulatedImpulses);
 	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap);
 
 	bool CheckCollisionCubeWithCube(TransformComponent& transform1, TransformComponent& transform2, const ColliderComponent& collider1, const ColliderComponent& collider2, ContactManifold& contactManifold);
@@ -31,10 +31,20 @@ namespace Quack
 		glm::vec3 normal;
 
 		std::vector<glm::vec3> contactPoints; // @TODO: change to array of max 4 points
+		std::vector<float> accumulatedImpulses;
 		float penetration;
 
 		ContactManifold(RigidBodyComponent& r1, RigidBodyComponent& r2, TransformComponent& t1, TransformComponent& t2, glm::vec3 normal = glm::vec3(0.f), std::vector<glm::vec3> contactPoints = {}, float penetration = 0.f)
-			: rigidBody1(r1), rigidBody2(r2), transform1(t1), transform2(t2), normal(normal), contactPoints(contactPoints), penetration(penetration) {}
+			: rigidBody1(r1), rigidBody2(r2), transform1(t1), transform2(t2), normal(normal), contactPoints(contactPoints), penetration(penetration) 
+		{
+			accumulatedImpulses.resize(contactPoints.size(), 0.f);
+		}
+
+		void SetContactPoints(const std::vector<glm::vec3>& points)
+		{
+			contactPoints = points;
+			accumulatedImpulses.resize(points.size(), 0.f);
+		}
 	};
 
 	static std::vector<ContactManifold> contactManifolds;
@@ -248,31 +258,30 @@ namespace Quack
 	}
 
 
-	const int SOLVER_ITERATIONS = 8;
+	const int SOLVER_ITERATIONS = 10;
 
 	void SolveCollisions()
 	{
+		if (contactManifolds.empty())
+			return;
+
 		for (int i = 0; i < SOLVER_ITERATIONS; i++)
 		{
-			for (const ContactManifold& manifold : contactManifolds)
+			for (ContactManifold& manifold : contactManifolds)
 			{
 				// if both bodies are static then skip solving
 				if (!manifold.rigidBody1.invMass && !manifold.rigidBody2.invMass)
 					continue;
 
-				SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoints);
+				SolveVelocityConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.contactPoints, manifold.accumulatedImpulses);
 				
-				// XDD @TODO: Of course move it out the loop
-				if(i == 0)
-					SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
+				SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
 			}
 		}
-
 		contactManifolds.clear();
 	}
 
-
-	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints)
+	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints, std::vector<float>& accumulatedImpulses)
 	{
 		if (contactPoints.empty())
 		{
@@ -280,7 +289,7 @@ namespace Quack
 			return;
 		}
 
-		float restitution = rigidBody1.bounce * rigidBody2.bounce;
+		float restitution = glm::max(rigidBody1.bounce,rigidBody2.bounce);
 
 		glm::mat3 R1 = glm::toMat3(transform1.orientation);
 		glm::mat3 R2 = glm::toMat3(transform2.orientation);
@@ -289,8 +298,10 @@ namespace Quack
 		glm::mat3 invInertiaWorld1 = R1 * rigidBody1.invInertiaTensor * glm::transpose(R1);
 		glm::mat3 invInertiaWorld2 = R2 * rigidBody2.invInertiaTensor * glm::transpose(R2);
 
-		for (const glm::vec3 contactPoint : contactPoints)
+		for (int i = 0; i < contactPoints.size(); i++)
 		{
+			const glm::vec3 contactPoint = contactPoints[i];
+
 			// Arm from center of mass to a point of contact
 			glm::vec3 r1 = contactPoint - transform1.position;
 			glm::vec3 r2 = contactPoint - transform2.position;
@@ -316,14 +327,25 @@ namespace Quack
 				restitution = 0.f;
 
 			// arm & normal are in world space so inertia should also be in world space!!!!
-			glm::vec3 effectiveMass1 = cross(invInertiaWorld1 * cross(r1, normal), r1);
-			glm::vec3 effectiveMass2 = cross(invInertiaWorld2 * cross(r2, normal), r2);
+			// rotational/angular resistance vector
+			glm::vec3 rotResistance1 = cross(invInertiaWorld1 * cross(r1, normal), r1);
+			glm::vec3 rotResistance2 = cross(invInertiaWorld2 * cross(r2, normal), r2);
 
-			// j
-			float impulse = (-(1.f + restitution) * normalVelocity) / (rigidBody1.invMass + rigidBody2.invMass + dot(normal, effectiveMass1 + effectiveMass2));
+			// "effective mass of this collision"
+			float effectiveMass = rigidBody1.invMass + rigidBody2.invMass + dot(normal, rotResistance1 + rotResistance2);
 
-			// J
-			glm::vec3 vectorImpulse = glm::max(impulse, 0.f) * normal;
+			float deltaImpulse = (-(1.f + restitution) * normalVelocity) / effectiveMass;
+
+			// We want to ensure that the total applied impulse in this frame in not negative 
+			// box sitting on a floor can't pull itself, it can only push. If it could the floor would turn into superglue and wouldn't let go of the box
+			float& accumulatedImpulse = accumulatedImpulses[i];
+			
+			float newAccumulated = glm::max(accumulatedImpulse + deltaImpulse, 0.0f);
+			float impulseToApply = newAccumulated - accumulatedImpulse;
+
+			accumulatedImpulse = newAccumulated;
+
+			glm::vec3 vectorImpulse = impulseToApply * normal;
 
 			rigidBody1.velocity -= vectorImpulse * rigidBody1.invMass;
 			rigidBody2.velocity += vectorImpulse * rigidBody2.invMass;
@@ -334,16 +356,20 @@ namespace Quack
 		}
 	}
 
+
+
 	void SolvePositionConstraint(const RigidBodyComponent& rigidBody1, const RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float shortestOverlap)
 	{
-		float slop = 0.001f;   // allowed penetration
-		float percent = 0.8f; // how aggressive the correction is
+		float slop = 0.01f;   // allowed penetration
+		float percent = 0.2f; // how aggressive the correction is
 
 		float correctionMag = glm::max(shortestOverlap - slop, 0.0f) * percent;
 		glm::vec3 correction = correctionMag * normal;
 
-		transform1.position -= correction * rigidBody1.invMass / (rigidBody1.invMass + rigidBody2.invMass);
-		transform2.position += correction * rigidBody2.invMass / (rigidBody1.invMass + rigidBody2.invMass);
+		if(rigidBody1.invMass) // prevents from static bodies disappearing and setting position to NaN
+			transform1.position -= correction * rigidBody1.invMass / (rigidBody1.invMass + rigidBody2.invMass);
+		if (rigidBody2.invMass)
+			transform2.position += correction * rigidBody2.invMass / (rigidBody1.invMass + rigidBody2.invMass);
 	}
 
 
@@ -567,7 +593,7 @@ namespace Quack
 
 			contactManifold.normal = shortestAxis;
 			contactManifold.penetration = shortestOverlap;
-			contactManifold.contactPoints = { contactPoint };
+			contactManifold.SetContactPoints({ contactPoint });
 
 			return true;
 		}
@@ -722,6 +748,7 @@ namespace Quack
 		contactManifold.normal = shortestAxis;
 		contactManifold.penetration = shortestOverlap;
 		contactManifold.contactPoints = contactPoints;
+		contactManifold.SetContactPoints(contactPoints);
 
 		return true;
 	}
