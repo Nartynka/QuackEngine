@@ -40,7 +40,9 @@ namespace Quack
 			{
 				//QUACK_LOG("Event!!! {}", event.GetName());
 				callback((const T&)event);
-				event.handled = true;
+
+				if(event.GetEventType() != EventType::KeyPressed)
+					event.handled = true;
 			}
 		}
 

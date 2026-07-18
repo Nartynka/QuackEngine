@@ -24,6 +24,7 @@ namespace Quack
 		void Run();
 
 		void OnMouseButtonPressed(const MouseButtonPressedEvent& e);
+		void OnKeyPressed(const KeyPressedEvent& e);
 	private:
 		std::unique_ptr<Window> window;
 		std::shared_ptr<Scene> scene;

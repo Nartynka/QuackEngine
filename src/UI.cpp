@@ -98,7 +98,7 @@ namespace Quack
 
 			if (ImGui::Button("Spawn floor", { -1.f, 0.0f }))
 			{
-				context->SpawnFloor();
+				context->SpawnFloorScene();
 			}
 		}
 
@@ -156,7 +156,7 @@ namespace Quack
 			ImGui::SeparatorText("World orientation:");
 
 			static float position[3] = { 0.f, 5.f, -5.f };
-			ImGui::DragFloat3("Position", position, 0.1f, 0.f, 0.f, "%.2f");
+			ImGui::DragFloat3("##Position", position, 0.1f, 0.f, 0.f, "%.2f");
 
 			static float angle, axis[3];
 			ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 0.0f, "%.2f");
