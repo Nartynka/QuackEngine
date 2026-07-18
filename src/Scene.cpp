@@ -96,68 +96,24 @@ namespace Quack
 		}
 	}
 
-	void Scene::SpawnPlinckoScene()
+	void Scene::SpawnTiltedFloorsScene()
 	{
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
+		glm::vec3 floorPos = glm::vec3(2.f, 0.f, -5.f);
+		float rotation = 40.f;
+
+		for (int i = 0; i < 8; i++)
 		{
-			// top right tilted floor
 			Entity floor = CreateEntity();
-			glm::vec3 floorPos = glm::vec3(2.f, -9.5f, -5.f);
-			floor.AddComponent<TransformComponent>(floorPos, 40.f, glm::vec3(0.f, 0.f, 1.f));
+			floor.AddComponent<TransformComponent>(floorPos, rotation, glm::vec3(0.f, 0.f, 1.f));
 			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
 			floor.AddComponent<ColliderComponent>(floorHalfSize);
-		}
-		{
-			// top left tilted floor
-			Entity floor = CreateEntity();
-			glm::vec3 floorPos = glm::vec3(-3.5f, -13.5f, -5.f);
-			floor.AddComponent<TransformComponent>(floorPos, -40.f, glm::vec3(0.f, 0.f, 1.f));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-			floor.AddComponent<ColliderComponent>(floorHalfSize);
-		}
-		{
-			// bottom right tilted floor
-			Entity floor = CreateEntity();
-			glm::vec3 floorPos = glm::vec3(2.f, -17.5f, -5.f);
-			floor.AddComponent<TransformComponent>(floorPos, 40.f, glm::vec3(0.f, 0.f, 1.f));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-			floor.AddComponent<ColliderComponent>(floorHalfSize);
-		}
-		{
-			// bottom left tilted floor
-			Entity floor = CreateEntity();
-			glm::vec3 floorPos = glm::vec3(-3.5f, -21.5f, -5.f);
-			floor.AddComponent<TransformComponent>(floorPos, -40.f, glm::vec3(0.f, 0.f, 1.f));
-			floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-			floor.AddComponent<ColliderComponent>(floorHalfSize);
-		}
-		glm::vec3 wallHalfSize = glm::vec3(20.f, 0.1f, 15.f);
-		glm::vec4 wallColor = glm::vec4(1.f, 0.5f, 1.f, 1.0f);
-		{
-			// right wall
-			Entity wall = CreateEntity();
-			glm::vec3 wallPos = glm::vec3(6.f, -15.f, 0.f);
-			wall.AddComponent<TransformComponent>(wallPos, 90.f, glm::vec3(0.f, 0.f, 1.f));
-			wall.AddComponent<ShapeComponent>(new NormalCube(wallHalfSize), wallColor);
-			wall.AddComponent<ColliderComponent>(wallHalfSize);
-		}
-		{
-			// left wall
-			Entity wall = CreateEntity();
-			glm::vec3 wallPos = glm::vec3(-8.f, -15.f, 0.f);
-			wall.AddComponent<TransformComponent>(wallPos, 90.f, glm::vec3(0.f, 0.f, 1.f));
-			wall.AddComponent<ShapeComponent>(new NormalCube(wallHalfSize), wallColor);
-			wall.AddComponent<ColliderComponent>(wallHalfSize);
-		}
-		{
-			// back wall
-			glm::vec3 halfSize = glm::vec3(7.f, 0.1f, 20.f);
-			Entity wall = CreateEntity();
-			glm::vec3 wallPos = glm::vec3(-1.f, -15.f, -15.11f);
-			wall.AddComponent<TransformComponent>(wallPos, 90.f, glm::vec3(1.f, 0.f, 0.f));
-			wall.AddComponent<ShapeComponent>(new NormalCube(halfSize), wallColor);
-			wall.AddComponent<ColliderComponent>(halfSize);
+
+			floorPos.x += 2;
+			floorPos.x *= -1;
+			floorPos.y -= 4;
+			rotation *= -1;
 		}
 	}
 

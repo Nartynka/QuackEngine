@@ -22,7 +22,7 @@ namespace Quack
 
 		void SpawnFloorScene();
 		void SpawnTestScene();
-		void SpawnPlinckoScene();
+		void SpawnTiltedFloorsScene();
 
 		void SpawnStackOfCubes(int* size, float* pos);
 		void SpawnStackOfSpheres(int* size, float* pos);

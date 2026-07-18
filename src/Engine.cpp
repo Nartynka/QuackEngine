@@ -163,7 +163,7 @@ namespace Quack
 		else if (e.GetKeyCode() == GLFW_KEY_3)
 		{
 			scene->ClearEntities();
-			scene->SpawnPlinckoScene();
+			scene->SpawnTiltedFloorsScene();
 		}
 		else if (e.GetKeyCode() == GLFW_KEY_4)
 		{
