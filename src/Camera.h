@@ -11,7 +11,7 @@ namespace Quack
 	public:
 		Camera();
 
-		glm::vec3 position = glm::vec3(0.f, 0.5f, 5.f);
+		glm::vec3 position = glm::vec3(0.f, 2.f, 5.f);
 		glm::vec3 front = glm::vec3(0.f, 0.f, -1.f);
 		glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
 		float fov = 45.0f;

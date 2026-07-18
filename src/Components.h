@@ -33,7 +33,7 @@ namespace Quack
 		{
 		}
 
-		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.3f, float friction = 0.98f)
+		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.f, float friction = 0.98f)
 			: invMass(1.f / mass), bounce(bounce), friction(friction)
 		{
 			// I_xx = 1/12 * m * (h^2 + d^2)	

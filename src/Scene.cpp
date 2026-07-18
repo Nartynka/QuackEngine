@@ -42,7 +42,7 @@ namespace Quack
 		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
 
 		Entity floor = CreateEntity();
-		glm::vec3 floorPos = glm::vec3(-2.f, 0.f, -5.f);
+		glm::vec3 floorPos = glm::vec3(0.f, -floorHalfSize.y, -5.f);
 		floor.AddComponent<TransformComponent>(floorPos);
 		floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
 		floor.AddComponent<ColliderComponent>(floorHalfSize);
@@ -114,6 +114,41 @@ namespace Quack
 			floorPos.x *= -1;
 			floorPos.y -= 4;
 			rotation *= -1;
+		}
+	}
+
+	void Scene::SpawnCribbingTower()
+	{
+		glm::vec3 halfSize = glm::vec3(0.2f, 0.2f, 2.f);
+		glm::vec4 cubeColor = glm::vec4(0.1f, 0.5f, 0.7f, 1.f);
+
+		glm::vec3 frontPosition = glm::vec3(-1.f, halfSize.y, -5.f);
+		glm::vec3 sidePosition = glm::vec3(frontPosition.x + halfSize.z * 0.5f, frontPosition.y + halfSize.y * 2, frontPosition.z + halfSize.z * 0.5f);
+		int sign = 1;
+
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 2; j++)
+			{
+				Entity front = CreateEntity();
+				front.AddComponent<TransformComponent>(frontPosition);
+				auto& r = front.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				r.gravity = glm::vec3(0.f);
+				front.AddComponent<ColliderComponent>(halfSize);
+				front.AddComponent<ShapeComponent>(new NormalCube(halfSize), cubeColor);
+				frontPosition.x += halfSize.z * sign;
+				sign *= -1;
+
+				Entity side = CreateEntity();
+				side.AddComponent<TransformComponent>(sidePosition, 90.f, glm::vec3(0.f, 1.f, 0.f));
+				auto& r2 = side.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				r2.gravity = glm::vec3(0.f);
+				side.AddComponent<ColliderComponent>(halfSize);
+				side.AddComponent<ShapeComponent>(new NormalCube(halfSize), cubeColor);
+				sidePosition.z = frontPosition.z + halfSize.z * 0.5f * sign;
+			}
+			frontPosition.y += halfSize.y * 4;
+			sidePosition.y += halfSize.y * 4;
 		}
 	}
 

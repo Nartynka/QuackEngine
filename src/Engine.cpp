@@ -111,10 +111,10 @@ namespace Quack
 			//entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
 
 			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(-2.0f, 5.f, -5.f);
+			glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
 			glm::vec3 halfSize = glm::vec3(0.5f);
 			entity.AddComponent<TransformComponent>(position, 60.f, glm::vec3(0.f, 0.f, 1.f));
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
+			entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
 			entity.AddComponent<ColliderComponent>(halfSize);
 			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
@@ -148,8 +148,6 @@ namespace Quack
 
 	void Engine::OnKeyPressed(const KeyPressedEvent& e)
 	{
-		QUACK_LOG("Key pressed: " + std::to_string(e.GetKeyCode()));
-
 		if (e.GetKeyCode() == GLFW_KEY_1)
 		{
 			scene->ClearEntities();
@@ -166,6 +164,20 @@ namespace Quack
 			scene->SpawnTiltedFloorsScene();
 		}
 		else if (e.GetKeyCode() == GLFW_KEY_4)
+		{
+			scene->SpawnCribbingTower();
+		}
+		else if (e.GetKeyCode() == GLFW_KEY_5)
+		{
+			glm::vec3 halfSize = glm::vec3(0.1f, 0.1f, 1.f);
+			glm::vec3 position = glm::vec3(-1.f, 2.f, -5.f);
+			Entity entity = scene->CreateEntity();
+			entity.AddComponent<TransformComponent>(position);
+			entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
+			entity.AddComponent<ColliderComponent>(halfSize);
+			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.1f, 0.5f, 0.7f, 1.f));
+		}
+		else if (e.GetKeyCode() == GLFW_KEY_6)
 		{
 			// @TODO: In future this will be other constraints scene (e.g. hinges, joints, rope, PBD?)
 			/*
@@ -248,10 +260,7 @@ namespace Quack
 
 				camera->Update(dt);
 				ui->StartFrame();
-				// Maybe view & projection should be in camera class?
-				// first vector moves the scene???
-				// camera move is the inverse of what we want to do? inverse the direction of where we want to go???
-				// the second vector is the point that we look at 
+
 				view = camera->GetView();
 				auto [width, height] = window->GetWindowSize();
 
