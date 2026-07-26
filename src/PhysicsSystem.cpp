@@ -11,6 +11,11 @@
 
 namespace Quack
 {
+	const int SOLVER_ITERATIONS = 10;
+	const float PERSISTENT_CONTACT_THRESHOLD_SQ = 0.02f * 0.02f;
+
+	const float Y_TRESHOLD = -100.f;
+
 	struct ContactManifold;
 
 	void SolveVelocityConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, const TransformComponent& transform1, const TransformComponent& transform2, const glm::vec3& normal, const std::vector<glm::vec3>& contactPoints, std::vector<float>& accumulatedImpulses);
@@ -47,7 +52,15 @@ namespace Quack
 		}
 	};
 
+	struct CachedContact
+	{
+		glm::vec3 worldPosition; // world space is not ideal but i have tried complicated things with local space
+								 // and it also made it more jittery than without warm starting
+		float accumulatedImpulse;
+	};
+
 	static std::vector<ContactManifold> contactManifolds;
+	static std::vector<CachedContact> prevFrameContacts;
 
 	static RigidBodyComponent staticRigidBody;
 
@@ -71,7 +84,6 @@ namespace Quack
 		}
 	}
 
-	const float Y_TRESHOLD = -100.f;
 
 	void Update(const std::shared_ptr<Scene> scene, float dt)
 	{
@@ -222,7 +234,25 @@ namespace Quack
 					ContactManifold manifold(rigidBody1, rigidBody2, transform1, transform2);
 
 					if (CheckCollisionCubeWithCube(transform1, transform2, collider1, collider2, manifold))
+					{
+						for (int i = 0; i < manifold.contactPoints.size(); i++)
+						{
+							const glm::vec3& newContactPoint = manifold.contactPoints[i];
+							for (CachedContact& oldContactPoint : prevFrameContacts)
+							{
+								if (glm::length2(newContactPoint - oldContactPoint.worldPosition) < PERSISTENT_CONTACT_THRESHOLD_SQ)
+								{
+									//QUACK_LOG("Found point match!");
+									manifold.accumulatedImpulses[i] = oldContactPoint.accumulatedImpulse;
+									oldContactPoint.accumulatedImpulse = 0.f; // to prevent double-assigning
+									break;
+								}
+								//QUACK_LOG("To far away :(");
+							}
+						}
+
 						contactManifolds.push_back(manifold);
+					}
 				}
 				else
 				{
@@ -255,15 +285,45 @@ namespace Quack
 				}
 			}
 		}
+
+		prevFrameContacts.clear();
 	}
 
-
-	const int SOLVER_ITERATIONS = 10;
 
 	void SolveCollisions()
 	{
 		if (contactManifolds.empty())
 			return;
+
+		// Warm start
+		for (const ContactManifold& manifold : contactManifolds)
+		{
+			glm::mat3 R1 = glm::toMat3(manifold.transform1.orientation);
+			glm::mat3 R2 = glm::toMat3(manifold.transform2.orientation);
+
+			glm::mat3 invInertiaWorld1 = R1 * manifold.rigidBody1.invInertiaTensor * glm::transpose(R1);
+			glm::mat3 invInertiaWorld2 = R2 * manifold.rigidBody2.invInertiaTensor * glm::transpose(R2);
+
+			for (int i = 0; i < manifold.contactPoints.size(); i++)
+			{
+				if(manifold.accumulatedImpulses[i] <= 0.f)
+					continue;
+
+				const glm::vec3& contactPoint = manifold.contactPoints[i];
+
+				glm::vec3 vectorImpulse = manifold.accumulatedImpulses[i] * manifold.normal;
+
+				glm::vec3 r1 = contactPoint - manifold.transform1.position;
+				glm::vec3 r2 = contactPoint - manifold.transform2.position;
+
+				manifold.rigidBody1.velocity -= vectorImpulse * manifold.rigidBody1.invMass;
+				manifold.rigidBody2.velocity += vectorImpulse * manifold.rigidBody2.invMass;
+
+				manifold.rigidBody1.angularVelocity -= invInertiaWorld1 * glm::cross(r1, vectorImpulse);
+				manifold.rigidBody2.angularVelocity += invInertiaWorld2 * glm::cross(r2, vectorImpulse);
+			}
+		}
+
 
 		for (int i = 0; i < SOLVER_ITERATIONS; i++)
 		{
@@ -278,6 +338,16 @@ namespace Quack
 				SolvePositionConstraint(manifold.rigidBody1, manifold.rigidBody2, manifold.transform1, manifold.transform2, manifold.normal, manifold.penetration);
 			}
 		}
+
+
+		for (const ContactManifold& manifold : contactManifolds)
+		{
+			for (int i = 0; i < manifold.contactPoints.size(); i++)
+			{
+				prevFrameContacts.push_back({ manifold.contactPoints[i], manifold.accumulatedImpulses[i] });
+			}
+		}
+
 		contactManifolds.clear();
 	}
 
@@ -289,7 +359,8 @@ namespace Quack
 			return;
 		}
 
-		float restitution = glm::max(rigidBody1.bounce,rigidBody2.bounce);
+		//float restitution = glm::max(rigidBody1.bounce,rigidBody2.bounce);
+		float restitution = 0.f;
 
 		glm::mat3 R1 = glm::toMat3(transform1.orientation);
 		glm::mat3 R2 = glm::toMat3(transform2.orientation);
@@ -300,7 +371,7 @@ namespace Quack
 
 		for (int i = 0; i < contactPoints.size(); i++)
 		{
-			const glm::vec3 contactPoint = contactPoints[i];
+			const glm::vec3& contactPoint = contactPoints[i];
 
 			// Arm from center of mass to a point of contact
 			glm::vec3 r1 = contactPoint - transform1.position;
@@ -337,7 +408,7 @@ namespace Quack
 			float deltaImpulse = (-(1.f + restitution) * normalVelocity) / effectiveMass;
 
 			// We want to ensure that the total applied impulse in this frame in not negative 
-			// box sitting on a floor can't pull itself, it can only push. If it could the floor would turn into superglue and wouldn't let go of the box
+			// box sitting on a floor can't pull itself, it can only push. If it could the floor would turn into super glue and wouldn't let go of the box
 			float& accumulatedImpulse = accumulatedImpulses[i];
 			
 			float newAccumulated = glm::max(accumulatedImpulse + deltaImpulse, 0.0f);
@@ -346,6 +417,8 @@ namespace Quack
 			accumulatedImpulse = newAccumulated;
 
 			glm::vec3 vectorImpulse = impulseToApply * normal;
+
+			//QUACK_WARN("imp: {}", impulseToApply);
 
 			rigidBody1.velocity -= vectorImpulse * rigidBody1.invMass;
 			rigidBody2.velocity += vectorImpulse * rigidBody2.invMass;

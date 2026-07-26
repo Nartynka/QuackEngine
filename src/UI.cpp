@@ -75,7 +75,7 @@ namespace Quack
 			static int size[3] = { 2, 2, 2 };
 			ImGui::DragInt3("Size", size, 1.f, 1, INT_MAX, "%d", ImGuiSliderFlags_AlwaysClamp);
 			
-			static float pos[3] = { -3.f, 6.f, -4.f };
+			static float pos[3] = { 0.f, 6.f, -4.f };
 			ImGui::DragFloat3("Position", pos);
 
 			float buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
