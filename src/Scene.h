@@ -31,9 +31,12 @@ namespace Quack
 
 		const char* GetCurrentSceneName();
 
+		float dt;
+
 		bool bWarmStart = true;
 		bool bPositionalCorrection = false;
 		bool isWireframeMode = false;
+		bool isPaused = false;
 
 	private:
 		entt::registry registry;

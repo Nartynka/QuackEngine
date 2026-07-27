@@ -226,6 +226,9 @@ namespace Quack
 		ImGui::Text("Positional correction [Y]: %s", context->bPositionalCorrection ? "on" : "off");
 		ImGui::Text("Scene [1-3]: %s", context->GetCurrentSceneName());
 		ImGui::Text("Wireframe [F]: %s", context->isWireframeMode ? "on" : "off");
+		ImGui::Text("Pause [P]: %s", context->isPaused ? "on" : "off");
+		ImGui::NewLine();
+		ImGui::Text("fps: %.2f (%.2f ms)", 1.f / context->dt, context->dt * 1000);
 
 		ImGui::End();
 	}

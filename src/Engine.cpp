@@ -100,50 +100,59 @@ namespace Quack
 
 	void Engine::OnMouseButtonPressed(const MouseButtonPressedEvent& e)
 	{
-		if (e.GetButton() == GLFW_MOUSE_BUTTON_LEFT)
+		if (!scene->isPaused)
 		{
-			//Entity entity = scene->CreateEntity();
-			//glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
-			//entity.AddComponent<TransformComponent>(position, 21.37f, glm::vec3(0.f, 0.f, 1.f));
-			//entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			//entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
-			//entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
+			if (e.GetButton() == GLFW_MOUSE_BUTTON_LEFT)
+			{
+				//Entity entity = scene->CreateEntity();
+				//glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
+				//entity.AddComponent<TransformComponent>(position, 21.37f, glm::vec3(0.f, 0.f, 1.f));
+				//entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+				//entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
+				//entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
 
-			// Cube
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
-			glm::vec3 halfSize = glm::vec3(0.5f);
-			entity.AddComponent<TransformComponent>(position/*, 60.f, glm::vec3(0.f, 0.f, 1.f)*/);
-			entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
-			entity.AddComponent<ColliderComponent>(halfSize);
-			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
-		else if(e.GetButton() == GLFW_MOUSE_BUTTON_MIDDLE)
-		{
-			// Sphere
-			Entity entity = scene->CreateEntity();
-			glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
-			entity.AddComponent<TransformComponent>(position);
-			entity.AddComponent<RigidBodyComponent>(1.f, 0.5f);
-			entity.AddComponent<ColliderComponent>(0.5f);
-			entity.AddComponent<ShapeComponent>(new Sphere(0.5f), glm::vec4(1.f, 0.f, 1.f, 1.f));
+				// Cube
+				Entity entity = scene->CreateEntity();
+				glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
+				glm::vec3 halfSize = glm::vec3(0.5f);
+				entity.AddComponent<TransformComponent>(position/*, 60.f, glm::vec3(0.f, 0.f, 1.f)*/);
+				entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				entity.AddComponent<ColliderComponent>(halfSize);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
+			}
+			else if(e.GetButton() == GLFW_MOUSE_BUTTON_MIDDLE)
+			{
+				// Sphere
+				Entity entity = scene->CreateEntity();
+				glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
+				entity.AddComponent<TransformComponent>(position);
+				entity.AddComponent<RigidBodyComponent>(1.f, 0.5f);
+				entity.AddComponent<ColliderComponent>(0.5f);
+				entity.AddComponent<ShapeComponent>(new Sphere(0.5f), glm::vec4(1.f, 0.f, 1.f, 1.f));
+			}
 		}
 	}
+
+	bool shouldDoOneStep = false;
 
 	void Engine::OnKeyPressed(const KeyPressedEvent& e)
 	{
 		if (e.GetKeyCode() == GLFW_KEY_F)
-		{
 			scene->isWireframeMode = !scene->isWireframeMode;
-		}
 
 		if (e.GetKeyCode() == GLFW_KEY_T)
-		{
 			scene->bWarmStart = !scene->bWarmStart;
-		}
+
 		if (e.GetKeyCode() == GLFW_KEY_Y)
-		{
 			scene->bPositionalCorrection = !scene->bPositionalCorrection;
+
+		if (e.GetKeyCode() == GLFW_KEY_P)
+			scene->isPaused = !scene->isPaused;
+
+		if (e.GetKeyCode() == GLFW_KEY_L)
+		{
+			scene->isPaused = true;
+			shouldDoOneStep = true;
 		}
 
 
@@ -225,7 +234,7 @@ namespace Quack
 	void Engine::Run()
 	{
 		const float DESIRED_DT = 1 / 60.f; // 60 FPS
-		
+
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
 
@@ -235,9 +244,7 @@ namespace Quack
 
 		glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 
-
 		scene->SpawnFloorScene();
-
 
 		LightCube lightCube;
 		lightCube.position = glm::vec3(-1.f, 4.5f, 2.f);
@@ -250,7 +257,7 @@ namespace Quack
 		{
 			float currentTime = (float)glfwGetTime(); // time since glfw initialization in seconds
 			float dt = glm::min(currentTime - lastTime, 0.1f);
-			
+
 			if (dt >= DESIRED_DT)
 			{
 				lastTime = currentTime;
@@ -259,6 +266,7 @@ namespace Quack
 
 				camera->Update(dt);
 				ui->StartFrame();
+				scene->dt = dt;
 
 				view = camera->GetView();
 				auto [width, height] = window->GetWindowSize();
@@ -283,14 +291,16 @@ namespace Quack
 				//r.velocity.x = sin(glfwGetTime()) * 30.f;
 				//r.velocity.z = cos(glfwGetTime()) * 30.f;
 
-				// Physics for entities
-				ApplyForces(scene);
-				Update(scene, dt); // Update physics
-				//UpdateConstraints(scene, dt);
-				CheckCollisions(scene);
-				SolveCollisions(scene);
-				UpdateTransform(scene); // Update transformComp with position & rotation from rigidBodyComp after physics simulation
-
+				if (!scene->isPaused || shouldDoOneStep)
+				{
+					// Physics for entities
+					ApplyForces(scene);
+					Update(scene, dt); // Update physics
+					//UpdateConstraints(scene, dt);
+					CheckCollisions(scene);
+					SolveCollisions(scene);
+					UpdateTransform(scene); // Update transformComp with position & rotation from rigidBodyComp after physics simulation
+				}
 
 				// Render entities
 				if(!scene->isWireframeMode)
@@ -304,6 +314,8 @@ namespace Quack
 				//lightCube.shader->Bind();
 				//lightCube.shader->SetUniform4fm("MVP", glm::value_ptr(projection * view * model));
 				//Renderer::Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
+
+				shouldDoOneStep = false;
 
 				ui->EndFrame();
 				window->Update();
