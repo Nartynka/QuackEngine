@@ -12,6 +12,7 @@ Visual Studio project files will be in QuackEngine/Build folder
 ## Progress
 https://github.com/user-attachments/assets/55a83383-c4ce-453a-a82c-8b70ed9b21d3
 
-*And some funny errors along the way*
+*He just likes to jump ~ Pedro Pascal*
 
-https://github.com/user-attachments/assets/091175f5-a85b-42ab-92df-fb4647ecc5c7
+https://github.com/user-attachments/assets/e809bd4e-9025-4230-ab2c-86c15640332e
+
