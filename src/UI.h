@@ -20,6 +20,7 @@ namespace Quack
 	private:
 
 		void RenderMenu();
+		void RenderStats();
 
 		void RenderCombo(const char* label, const char* elements[], int count, int& currentIdx);
 

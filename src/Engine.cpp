@@ -103,51 +103,50 @@ namespace Quack
 		if (e.GetButton() == GLFW_MOUSE_BUTTON_LEFT)
 		{
 			//Entity entity = scene->CreateEntity();
-
 			//glm::vec3 position = glm::vec3(randX(), 5.f, randZ());
 			//entity.AddComponent<TransformComponent>(position, 21.37f, glm::vec3(0.f, 0.f, 1.f));
 			//entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
 			//entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			//entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 0.0f, 0.5f, 1.0f));
 
+			// Cube
 			Entity entity = scene->CreateEntity();
 			glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
 			glm::vec3 halfSize = glm::vec3(0.5f);
-			entity.AddComponent<TransformComponent>(position, 60.f, glm::vec3(0.f, 0.f, 1.f));
+			entity.AddComponent<TransformComponent>(position/*, 60.f, glm::vec3(0.f, 0.f, 1.f)*/);
 			entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
 			entity.AddComponent<ColliderComponent>(halfSize);
 			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
 		else if(e.GetButton() == GLFW_MOUSE_BUTTON_MIDDLE)
 		{
-			float z = -4.5f;
-			glm::mat4 transform;
-			glm::vec4 cubeColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
-			for (int i = 0; i < 3; i++)
-			{
-				float y = 6.f;
-				for (int j = 0; j < 3; j++)
-				{
-					float x = -3.f;
-					for (int k = 0; k < 4; k++)
-					{
-						Entity entity = scene->CreateEntity();
-						glm::vec3 position = glm::vec3(x, y, z);
-						entity.AddComponent<TransformComponent>(position);
-						entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-						entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
-						entity.AddComponent<ShapeComponent>(new NormalCube(glm::vec3(0.5f)), cubeColor);
-						x += 1.1f;
-					}
-					y += 1.1f;
-				}
-				z -= 1.1f;
-			}
+			// Sphere
+			Entity entity = scene->CreateEntity();
+			glm::vec3 position = glm::vec3(0.0f, 5.f, -5.f);
+			entity.AddComponent<TransformComponent>(position);
+			entity.AddComponent<RigidBodyComponent>(1.f, 0.5f);
+			entity.AddComponent<ColliderComponent>(0.5f);
+			entity.AddComponent<ShapeComponent>(new Sphere(0.5f), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
 	}
 
 	void Engine::OnKeyPressed(const KeyPressedEvent& e)
 	{
+		if (e.GetKeyCode() == GLFW_KEY_F)
+		{
+			scene->isWireframeMode = !scene->isWireframeMode;
+		}
+
+		if (e.GetKeyCode() == GLFW_KEY_T)
+		{
+			scene->bWarmStart = !scene->bWarmStart;
+		}
+		if (e.GetKeyCode() == GLFW_KEY_Y)
+		{
+			scene->bPositionalCorrection = !scene->bPositionalCorrection;
+		}
+
+
 		if (e.GetKeyCode() == GLFW_KEY_1)
 		{
 			scene->ClearEntities();
@@ -289,12 +288,13 @@ namespace Quack
 				Update(scene, dt); // Update physics
 				//UpdateConstraints(scene, dt);
 				CheckCollisions(scene);
-				SolveCollisions();
+				SolveCollisions(scene);
 				UpdateTransform(scene); // Update transformComp with position & rotation from rigidBodyComp after physics simulation
 
 
 				// Render entities
-				RenderShapes(scene, shader);
+				if(!scene->isWireframeMode)
+					RenderShapes(scene, shader);
 				RenderModels(scene, shader);
 				RenderCollisionShapes(scene);
 

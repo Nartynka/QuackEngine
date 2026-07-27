@@ -38,6 +38,8 @@ namespace Quack
 
 	void Scene::SpawnFloorScene()
 	{
+		currentScene = 0;
+
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
 
@@ -50,12 +52,32 @@ namespace Quack
 
 	void Scene::SpawnTestScene()
 	{
+		currentScene = 1;
+
 		{ // first falling cube
 			Entity entity = CreateEntity();
 			glm::vec3 halfSize = glm::vec3(0.5f);
-			glm::vec3 position = glm::vec3(0.f, 2.f, -5.f);
+			glm::vec3 position = glm::vec3(0.f, 2.5f, -5.f);
 			entity.AddComponent<TransformComponent>(position);
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(10.f, glm::vec3(0.5f));
+			entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+			entity.AddComponent<ColliderComponent>(halfSize);
+			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		}
+		{ // second falling cube
+			Entity entity = CreateEntity();
+			glm::vec3 halfSize = glm::vec3(0.5f);
+			glm::vec3 position = glm::vec3(0.f, 4.f, -5.f);
+			entity.AddComponent<TransformComponent>(position);
+			entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+			entity.AddComponent<ColliderComponent>(halfSize);
+			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		}
+		{ // third falling cube
+			Entity entity = CreateEntity();
+			glm::vec3 halfSize = glm::vec3(0.5f);
+			glm::vec3 position = glm::vec3(0.f, 6.f, -5.f);
+			entity.AddComponent<TransformComponent>(position);
+			entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
 			entity.AddComponent<ColliderComponent>(halfSize);
 			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
@@ -63,18 +85,19 @@ namespace Quack
 			Entity entity = CreateEntity();
 			glm::vec3 position = glm::vec3(0.f, 1.f, -5.f);
 			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(100.f, glm::vec3(0.5f));
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1000.f, glm::vec3(0.5f));
+			rigidBodyComp.gravity = glm::vec3(0.f);
 			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 1.0f, 0.5f, 1.f));
 		}
-		{ // second static cube, without rigid body
-			Entity entity = CreateEntity();
-			glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
-			glm::vec3 halfSize = glm::vec3(0.5f);
-			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
-			entity.AddComponent<ColliderComponent>(halfSize);
-			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.0f, 0.5f, 0.5f, 1.0f));
-		}
+		//{ // second static cube, without rigid body
+		//	Entity entity = CreateEntity();
+		//	glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
+		//	glm::vec3 halfSize = glm::vec3(0.5f);
+		//	entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
+		//	entity.AddComponent<ColliderComponent>(halfSize);
+		//	entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.0f, 0.5f, 0.5f, 1.0f));
+		//}
 
 		{ // duck model
 			Entity entity = CreateEntity();
@@ -90,7 +113,7 @@ namespace Quack
 			glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
 			float radius = 1.f;
 			entity.AddComponent<TransformComponent>(position);
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(10.f, radius);
+			entity.AddComponent<RigidBodyComponent>(10.f, radius);
 			entity.AddComponent<ColliderComponent>(radius);
 			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
@@ -98,6 +121,8 @@ namespace Quack
 
 	void Scene::SpawnTiltedFloorsScene()
 	{
+		currentScene = 2;
+
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
 		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
 		glm::vec3 floorPos = glm::vec3(2.f, 0.f, -5.f);
@@ -206,6 +231,11 @@ namespace Quack
 			}
 			z -= 0.9f;
 		}
+	}
+
+	const char* Scene::GetCurrentSceneName()
+	{
+		return sceneName[currentScene];
 	}
 
 }

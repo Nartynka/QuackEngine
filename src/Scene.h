@@ -29,8 +29,16 @@ namespace Quack
 		void SpawnStackOfCubes(int* size, float* pos);
 		void SpawnStackOfSpheres(int* size, float* pos);
 
+		const char* GetCurrentSceneName();
+
+		bool bWarmStart = true;
+		bool bPositionalCorrection = false;
+		bool isWireframeMode = false;
+
 	private:
 		entt::registry registry;
 
+		const char* sceneName[3] = { "Default", "Test", "Tilted Floors"};
+		int currentScene = 0;
 	};
 }

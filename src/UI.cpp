@@ -46,6 +46,7 @@ namespace Quack
 		ImGui::NewFrame();
 
 		RenderMenu();
+		RenderStats();
 
 		// Last created window by imgui takes the focus and we don't want that
 		static bool isFirstFrame = true;
@@ -215,6 +216,19 @@ namespace Quack
 		ImGui::End();
 	}
 
+
+	void UI::RenderStats()
+	{
+		ImGui::SetNextWindowPos(ImVec2(20, 20));
+		ImGui::Begin("##", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration);
+
+		ImGui::Text("Warm starting [T]: %s", context->bWarmStart ? "on" : "off");
+		ImGui::Text("Positional correction [Y]: %s", context->bPositionalCorrection ? "on" : "off");
+		ImGui::Text("Scene [1-3]: %s", context->GetCurrentSceneName());
+		ImGui::Text("Wireframe [F]: %s", context->isWireframeMode ? "on" : "off");
+
+		ImGui::End();
+	}
 
 	void UI::RenderCombo(const char* label, const char* elements[], int count, int& currentIdx)
 	{
