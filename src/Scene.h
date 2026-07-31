@@ -34,8 +34,8 @@ namespace Quack
 		float dt;
 
 		bool bWarmStart = true;
-		bool bPositionalCorrection = false;
-		bool isWireframeMode = false;
+		bool bPositionalCorrection = true;
+		bool isWireframeMode = true;
 		bool isPaused = false;
 
 	private:

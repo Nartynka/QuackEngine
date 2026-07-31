@@ -63,29 +63,29 @@ namespace Quack
 			entity.AddComponent<ColliderComponent>(halfSize);
 			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
-		{ // second falling cube
-			Entity entity = CreateEntity();
-			glm::vec3 halfSize = glm::vec3(0.5f);
-			glm::vec3 position = glm::vec3(0.f, 4.f, -5.f);
-			entity.AddComponent<TransformComponent>(position);
-			entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			entity.AddComponent<ColliderComponent>(halfSize);
-			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
-		{ // third falling cube
-			Entity entity = CreateEntity();
-			glm::vec3 halfSize = glm::vec3(0.5f);
-			glm::vec3 position = glm::vec3(0.f, 6.f, -5.f);
-			entity.AddComponent<TransformComponent>(position);
-			entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
-			entity.AddComponent<ColliderComponent>(halfSize);
-			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
+		//{ // second falling cube
+		//	Entity entity = CreateEntity();
+		//	glm::vec3 halfSize = glm::vec3(0.5f);
+		//	glm::vec3 position = glm::vec3(0.f, 4.f, -5.f);
+		//	entity.AddComponent<TransformComponent>(position);
+		//	entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+		//	entity.AddComponent<ColliderComponent>(halfSize);
+		//	entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		//}
+		//{ // third falling cube
+		//	Entity entity = CreateEntity();
+		//	glm::vec3 halfSize = glm::vec3(0.5f);
+		//	glm::vec3 position = glm::vec3(0.f, 6.f, -5.f);
+		//	entity.AddComponent<TransformComponent>(position);
+		//	entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+		//	entity.AddComponent<ColliderComponent>(halfSize);
+		//	entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		//}
 		{ // first "static" cube (rigid of big mass)
 			Entity entity = CreateEntity();
 			glm::vec3 position = glm::vec3(0.f, 1.f, -5.f);
 			entity.AddComponent<TransformComponent>(position, 0.f, glm::vec3(0.f, 0.f, 1.f));
-			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1000.f, glm::vec3(0.5f));
+			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(100000.f, glm::vec3(0.5f));
 			rigidBodyComp.gravity = glm::vec3(0.f);
 			entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 			entity.AddComponent<ShapeComponent>(new NormalCube(), glm::vec4(0.5f, 1.0f, 0.5f, 1.f));
@@ -108,15 +108,15 @@ namespace Quack
 			auto& rigidBodyComp = entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.7f));
 			rigidBodyComp.gravity = glm::vec3(0.f);
 		}
-		{ // second falling sphere
-			Entity entity = CreateEntity();
-			glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
-			float radius = 1.f;
-			entity.AddComponent<TransformComponent>(position);
-			entity.AddComponent<RigidBodyComponent>(10.f, radius);
-			entity.AddComponent<ColliderComponent>(radius);
-			entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-		}
+		//{ // first falling sphere
+		//	Entity entity = CreateEntity();
+		//	glm::vec3 position = glm::vec3(2.0f, 5.f, -6.f);
+		//	float radius = 1.f;
+		//	entity.AddComponent<TransformComponent>(position);
+		//	entity.AddComponent<RigidBodyComponent>(10.f, radius);
+		//	entity.AddComponent<ColliderComponent>(radius);
+		//	entity.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
+		//}
 	}
 
 	void Scene::SpawnTiltedFloorsScene()
@@ -158,7 +158,7 @@ namespace Quack
 				Entity front = CreateEntity();
 				front.AddComponent<TransformComponent>(frontPosition);
 				auto& r = front.AddComponent<RigidBodyComponent>(1.f, halfSize);
-				r.gravity = glm::vec3(0.f);
+				//r.gravity = glm::vec3(0.f);
 				front.AddComponent<ColliderComponent>(halfSize);
 				front.AddComponent<ShapeComponent>(new NormalCube(halfSize), cubeColor);
 				frontPosition.x += halfSize.z * sign;
@@ -167,7 +167,7 @@ namespace Quack
 				Entity side = CreateEntity();
 				side.AddComponent<TransformComponent>(sidePosition, 90.f, glm::vec3(0.f, 1.f, 0.f));
 				auto& r2 = side.AddComponent<RigidBodyComponent>(1.f, halfSize);
-				r2.gravity = glm::vec3(0.f);
+				//r2.gravity = glm::vec3(0.f);
 				side.AddComponent<ColliderComponent>(halfSize);
 				side.AddComponent<ShapeComponent>(new NormalCube(halfSize), cubeColor);
 				sidePosition.z = frontPosition.z + halfSize.z * 0.5f * sign;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <glm.hpp>
 
 namespace Quack
 {
