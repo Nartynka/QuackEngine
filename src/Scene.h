@@ -23,9 +23,10 @@ namespace Quack
 		void SpawnFloorScene();
 		void SpawnTestScene();
 		void SpawnTiltedFloorsScene();
+		void SpawnCribbingTowerScene();
+		void SpawnPyramidScene(int size = 3, glm::vec3 center = { 0.f, 0.5f, -5.f });
 
-		void SpawnCribbingTower();
-
+		void SpawnFloor();
 		void SpawnStackOfCubes(int* size, float* pos);
 		void SpawnStackOfSpheres(int* size, float* pos);
 
@@ -35,13 +36,14 @@ namespace Quack
 
 		bool bWarmStart = true;
 		bool bPositionalCorrection = true;
-		bool isWireframeMode = true;
+		bool isWireframeMode = false;
 		bool isPaused = false;
+		bool shouldDoOneStep = false;
 
 	private:
 		entt::registry registry;
 
-		const char* sceneName[3] = { "Default", "Test", "Tilted Floors"};
+		const char* sceneName[5] = { "Default", "Test", "Tilted Floors", "Cribbing Tower", "Pyramid"};
 		int currentScene = 0;
 	};
 }

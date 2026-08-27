@@ -99,7 +99,7 @@ namespace Quack
 
 			if (ImGui::Button("Spawn floor", { -1.f, 0.0f }))
 			{
-				context->SpawnFloorScene();
+				context->SpawnFloor();
 			}
 		}
 

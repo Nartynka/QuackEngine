@@ -133,8 +133,6 @@ namespace Quack
 		}
 	}
 
-	bool shouldDoOneStep = false;
-
 	void Engine::OnKeyPressed(const KeyPressedEvent& e)
 	{
 		if (e.GetKeyCode() == GLFW_KEY_F)
@@ -152,82 +150,52 @@ namespace Quack
 		if (e.GetKeyCode() == GLFW_KEY_L)
 		{
 			scene->isPaused = true;
-			shouldDoOneStep = true;
+			scene->shouldDoOneStep = true;
 		}
 
 
-		if (e.GetKeyCode() == GLFW_KEY_1)
+		switch (e.GetKeyCode())
 		{
-			scene->ClearEntities();
+		case GLFW_KEY_1:
 			scene->SpawnFloorScene();
-		}
-		else if (e.GetKeyCode() == GLFW_KEY_2)
-		{
-			scene->ClearEntities();
+			break;
+		case GLFW_KEY_2:
 			scene->SpawnTestScene();
-		}
-		else if (e.GetKeyCode() == GLFW_KEY_3)
-		{
-			scene->ClearEntities();
+			break;
+		case GLFW_KEY_3:
 			scene->SpawnTiltedFloorsScene();
+			break;
+		case GLFW_KEY_4:
+			scene->SpawnCribbingTowerScene();
+			break;
+		case GLFW_KEY_5:
+			scene->SpawnPyramidScene();
+			break;
+		default:
+			break;
 		}
-		else if (e.GetKeyCode() == GLFW_KEY_4)
-		{
-			scene->SpawnCribbingTower();
-		}
-		else if (e.GetKeyCode() == GLFW_KEY_5)
-		{
-			glm::vec3 halfSize = glm::vec3(0.1f, 0.1f, 1.f);
-			glm::vec3 position = glm::vec3(-1.f, 2.f, -5.f);
-			Entity entity = scene->CreateEntity();
-			entity.AddComponent<TransformComponent>(position);
-			entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
-			entity.AddComponent<ColliderComponent>(halfSize);
-			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.1f, 0.5f, 0.7f, 1.f));
-		}
-		else if (e.GetKeyCode() == GLFW_KEY_6)
-		{
-			// @TODO: In future this will be other constraints scene (e.g. hinges, joints, rope, PBD?)
-			/*
-			//Entity sphere1 = scene->CreateEntity();
-			//{
-			//	glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
-			//	float radius = 1.f;
-			//	sphere1.AddComponent<TransformComponent>(position);
-			//	//auto& rigidBodyComp = sphere1.AddComponent<RigidBodyComponent>(1.f, radius);
-			//	//rigidBodyComp.gravity = glm::vec3(0.f);
-			//	sphere1.AddComponent<ColliderComponent>(radius);
-			//	sphere1.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-			//}
 
-			//Entity sphere2 = scene->CreateEntity();
-			//{
-			//	glm::vec3 position = glm::vec3(-2.f, 0.f, -5.f);
-			//	float radius = 1.f;
-			//	sphere2.AddComponent<TransformComponent>(position);
-			//	auto& rigidBodyComp = sphere2.AddComponent<RigidBodyComponent>(1.f, radius);
-			//	//rigidBodyComp.gravity = glm::vec3(0.f);
-			//	sphere2.AddComponent<ColliderComponent>(radius);
-			//	sphere2.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-			//}
 
-			//Entity sphere3 = scene->CreateEntity();
-			//{
-			//	glm::vec3 position = glm::vec3(-4.f, 0.f, -5.f);
-			//	float radius = 1.f;
-			//	sphere3.AddComponent<TransformComponent>(position);
-			//	auto& rigidBodyComp = sphere3.AddComponent<RigidBodyComponent>(1.f, radius);
-			//	//rigidBodyComp.gravity = glm::vec3(0.f);
-			//	sphere3.AddComponent<ColliderComponent>(radius);
-			//	sphere3.AddComponent<ShapeComponent>(new Sphere(radius), glm::vec4(1.f, 0.f, 1.f, 1.f));
-			//}
-
+		if (e.GetKeyCode() == GLFW_KEY_6) 
+		{
+			//glm::vec3 halfSize = glm::vec3(0.1f, 0.1f, 1.f);
+			//glm::vec3 position = glm::vec3(-1.f, 2.f, -5.f);
 			//Entity entity = scene->CreateEntity();
-			//entity.AddComponent<ElasticConstraintComponent>(&sphere1, &sphere2, 3.f);
+			//entity.AddComponent<TransformComponent>(position);
+			//entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
+			//entity.AddComponent<ColliderComponent>(halfSize);
+			//entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.1f, 0.5f, 0.7f, 1.f));
+		}
+		else if (e.GetKeyCode() == GLFW_KEY_7)
+		{
 
-			//Entity entity2 = scene->CreateEntity();
-			//entity2.AddComponent<ElasticConstraintComponent>(&sphere2, &sphere3, 3.f);
-			*/
+			glm::vec3 array[] = { 
+				{-1.f, 0.f, 1.f,}, 
+				{1.f, 0.f, 1.f}, 
+				{1.f, 0.f, -1.f }
+			};
+
+			Renderer::DrawPolygon(3, array);
 		}
 	}
 
@@ -286,12 +254,7 @@ namespace Quack
 
 				shader.SetUniform3fv("viewPos", glm::value_ptr(camera->position));
 
-
-				//auto& r = sphere2.GetComponent<RigidBodyComponent>();
-				//r.velocity.x = sin(glfwGetTime()) * 30.f;
-				//r.velocity.z = cos(glfwGetTime()) * 30.f;
-
-				if (!scene->isPaused || shouldDoOneStep)
+				if (!scene->isPaused || scene->shouldDoOneStep)
 				{
 					// Physics for entities
 					ApplyForces(scene);
@@ -315,7 +278,7 @@ namespace Quack
 				//lightCube.shader->SetUniform4fm("MVP", glm::value_ptr(projection * view * model));
 				//Renderer::Draw(*lightCube.shape->vao, *lightCube.shape->ibo, *lightCube.shader);
 
-				shouldDoOneStep = false;
+				scene->shouldDoOneStep = false;
 
 				ui->EndFrame();
 				window->Update();

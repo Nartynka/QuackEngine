@@ -38,20 +38,15 @@ namespace Quack
 
 	void Scene::SpawnFloorScene()
 	{
+		ClearEntities();
 		currentScene = 0;
-
-		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
-		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
-
-		Entity floor = CreateEntity();
-		glm::vec3 floorPos = glm::vec3(0.f, -floorHalfSize.y, -5.f);
-		floor.AddComponent<TransformComponent>(floorPos);
-		floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
-		floor.AddComponent<ColliderComponent>(floorHalfSize);
+		
+		SpawnFloor();
 	}
 
 	void Scene::SpawnTestScene()
 	{
+		ClearEntities();
 		currentScene = 1;
 
 		{ // first falling cube
@@ -121,6 +116,7 @@ namespace Quack
 
 	void Scene::SpawnTiltedFloorsScene()
 	{
+		ClearEntities();
 		currentScene = 2;
 
 		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
@@ -142,8 +138,13 @@ namespace Quack
 		}
 	}
 
-	void Scene::SpawnCribbingTower()
+	void Scene::SpawnCribbingTowerScene()
 	{
+		ClearEntities();
+		currentScene = 3;
+
+		SpawnFloor();
+
 		glm::vec3 halfSize = glm::vec3(0.2f, 0.2f, 2.f);
 		glm::vec4 cubeColor = glm::vec4(0.1f, 0.5f, 0.7f, 1.f);
 
@@ -177,7 +178,52 @@ namespace Quack
 		}
 	}
 
+	void Scene::SpawnPyramidScene(int size, glm::vec3 center)
+	{
+		ClearEntities();
+		currentScene = 4;
+
+		SpawnFloor();
+
+		glm::vec4 cubeColor = glm::vec4(0.0f, 1.0f, 0.5f, 1.f);
+
+		float spacing = 1.1f;
+
+		for (int y = 0; y < size; y++)
+		{
+			int layerSize = size - y;
+			float offset = (layerSize - 1) * (spacing * 0.5f);
+
+			for (int x = 0; x < layerSize; x++)
+			{
+				for (int z = 0; z < layerSize; z++)
+				{
+					Entity entity = CreateEntity();
+
+					glm::vec3 position = glm::vec3(center.x + x * spacing - offset, center.y + y * spacing, center.z + z * spacing - offset);
+
+					entity.AddComponent<TransformComponent>(position);
+					entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+					entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
+					entity.AddComponent<ShapeComponent>(new NormalCube(glm::vec3(0.5f)), cubeColor);
+				}
+			}
+		}
+	}
+
 	/// == Spawning shape stacks ==
+
+	void Scene::SpawnFloor()
+	{
+		glm::vec3 floorHalfSize = glm::vec3(3.5f, 0.1f, 4.5f);
+		glm::vec4 floorColor = glm::vec4(0.0f, 0.5f, 0.5f, 1.0f);
+
+		Entity floor = CreateEntity();
+		glm::vec3 floorPos = glm::vec3(0.f, -floorHalfSize.y, -5.f);
+		floor.AddComponent<TransformComponent>(floorPos);
+		floor.AddComponent<ShapeComponent>(new NormalCube(floorHalfSize), floorColor);
+		floor.AddComponent<ColliderComponent>(floorHalfSize);
+	}
 
 	void Scene::SpawnStackOfCubes(int* size, float* pos)
 	{
