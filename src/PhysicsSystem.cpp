@@ -24,6 +24,7 @@ namespace Quack
 	bool CheckCollisionCubeWithCube(TransformComponent& transform1, TransformComponent& transform2, const ColliderComponent& collider1, const ColliderComponent& collider2, ContactManifold& contactManifold);
 	glm::vec3 FindClosestPointToSphereOnOBB(const glm::vec3& spherePosition, float sphereRadius, const glm::vec3& cubePosition, const glm::vec3& cubeHalfSize, const glm::quat& cubeOrientation);
 	std::vector<glm::vec3> CreateFaceFromNormal(const glm::vec3& faceNormal, const glm::mat3& axes, const glm::vec3& position, const glm::vec3& halfSize, glm::vec3& faceCenter);
+	std::vector<glm::vec3> GetVerticesFromSize(const glm::vec3& halfSize);
 
 	struct ContactManifold
 	{
@@ -148,50 +149,6 @@ namespace Quack
 			//transform.transform *= glm::scale(glm::mat4(1.f), scale);
 		}
 	}
-
-
-
-	//void UpdateConstraints(const std::shared_ptr<Scene> scene, float dt)
-	//{
-	//	auto& registry = scene->GetRegistry();
-	//
-	//	auto view = registry.view<ElasticConstraintComponent>();
-	//
-	//	for (int i = 5; i > 0; i--)
-	//	{
-	//		for (auto entity : view)
-	//		{
-	//			auto& [constraint] = view.get(entity);
-	//
-	//			Entity* a = constraint.entity_a;
-	//			Entity* b = constraint.entity_b;
-	//
-	//			auto& transA = a->GetComponent<TransformComponent>();
-	//			auto& transB = b->GetComponent<TransformComponent>();
-	//
-	//			float massA = 0.f;
-	//			float massB = 0.f;
-	//			if(a->HasComponent<RigidBodyComponent>())
-	//				massA = 1.f / a->GetComponent<RigidBodyComponent>().invMass;
-	//		
-	//			if (b->HasComponent<RigidBodyComponent>())
-	//				massB = 1.f / b->GetComponent<RigidBodyComponent>().invMass;
-	//
-	//			glm::vec3 diff = transB.position - transA.position;
-	//			float distance = length(diff);
-	//		
-	//			float displacement = constraint.distance - distance;
-	//			glm::vec3 dir = normalize(diff);
-	//
-	//			//float alpha = constraint.compliance / dt;
-	//
-	//			transA.position += -dir * displacement * (massA / (massA + massB) * constraint.stiffness);
-	//			transB.position += dir * displacement * (massB / (massA + massB) * constraint.stiffness);
-	//
-	//			Renderer::DrawLine(transA.position, transB.position);
-	//		}
-	//	}
-	//}
 
 
 	void CheckCollisions(const std::shared_ptr<Scene> scene)
@@ -341,8 +298,8 @@ namespace Quack
 			for (const ContactManifold& manifold : contactManifolds)
 			{
 				// Right now there can be more than 4 contact points and it breaks the simulation
-				if(manifold.contactPoints.size() > 4)
-					QUACK_LOG("{}", manifold.contactPoints.size());
+				//if(manifold.contactPoints.size() > 4)
+				//	QUACK_LOG("{}", manifold.contactPoints.size());
 
 				glm::mat3 R1 = glm::toMat3(manifold.transform1.orientation);
 				glm::mat3 R2 = glm::toMat3(manifold.transform2.orientation);
@@ -673,71 +630,27 @@ namespace Quack
 		
 
 
-		// @TODO: Change manual defined corners to a nice short loop!
+		std::vector<glm::vec3> cube1LocalVertices = GetVerticesFromSize(collider1.halfSize);
+		std::vector<glm::vec3> cube2LocalVertices = GetVerticesFromSize(collider2.halfSize);
 
-		// Cube1 corners in local space
-		glm::vec3 cube1TopRightFrontCorner = collider1.halfSize;
-		glm::vec3 cube1TopRightBackCorner = glm::vec3(collider1.halfSize.x, collider1.halfSize.y, -collider1.halfSize.z);
+		std::vector<glm::vec3> cube1Vertices;
+		std::vector<glm::vec3> cube2Vertices;
 
-		glm::vec3 cube1BottomRightFrontCorner = glm::vec3(collider1.halfSize.x, -collider1.halfSize.y, collider1.halfSize.z);
-		glm::vec3 cube1BottomRightBackCorner = glm::vec3(collider1.halfSize.x, -collider1.halfSize.y, -collider1.halfSize.z);
+		for (const auto& v : cube1LocalVertices)
+		{
+			// Cube1 corners in world space (rotated and translated)
+			// THE ORDER MATTERS!!! vec3 * quat is not the same as quat * vec3!!!!!!!!!!!!!!
+			cube1Vertices.emplace_back(transform1.orientation * v + transform1.position);
+		}
 
-		glm::vec3 cube1TopLeftFrontCorner = glm::vec3(-collider1.halfSize.x, collider1.halfSize.y, collider1.halfSize.z);
-		glm::vec3 cube1TopLeftBackCorner = glm::vec3(-collider1.halfSize.x, collider1.halfSize.y, -collider1.halfSize.z);
-
-		glm::vec3 cube1BottomLeftFrontCorner = glm::vec3(-collider1.halfSize.x, -collider1.halfSize.y, collider1.halfSize.z);
-		glm::vec3 cube1BottomLeftBackCorner = -collider1.halfSize;
-
-		// Cube1 corners in world space (rotated and translated)
-		// THE ORDER MATTERS!!! vec3 * quat is not the same as quat * vec3!!!!!!!!!!!!!!
-		glm::vec3 wCube1TopRightFrontCorner = (transform1.orientation * cube1TopRightFrontCorner) + transform1.position;
-		glm::vec3 wCube1TopRightBackCorner = (transform1.orientation * cube1TopRightBackCorner) + transform1.position;
-
-		glm::vec3 wCube1BottomRightFrontCorner = (transform1.orientation * cube1BottomRightFrontCorner) + transform1.position;
-		glm::vec3 wCube1BottomRightBackCorner = (transform1.orientation * cube1BottomRightBackCorner) + transform1.position;
-
-		glm::vec3 wCube1TopLeftFrontCorner = (transform1.orientation * cube1TopLeftFrontCorner) + transform1.position;
-		glm::vec3 wCube1TopLeftBackCorner = (transform1.orientation * cube1TopLeftBackCorner) + transform1.position;
-
-		glm::vec3 wCube1BottomLeftFrontCorner = (transform1.orientation * cube1BottomLeftFrontCorner) + transform1.position;
-		glm::vec3 wCube1BottomLeftBackCorner = (transform1.orientation * cube1BottomLeftBackCorner) + transform1.position;
-
-		std::vector<glm::vec3> cube1Points = { wCube1TopRightFrontCorner, wCube1TopRightBackCorner,
-												wCube1BottomRightFrontCorner, wCube1BottomRightBackCorner,
-												wCube1TopLeftFrontCorner, wCube1TopLeftBackCorner,
-												wCube1BottomLeftFrontCorner, wCube1BottomLeftBackCorner };
+		for (const auto& v : cube2LocalVertices)
+		{
+			cube2Vertices.emplace_back(transform2.orientation * v + transform2.position);
+		}
 
 
-		// Cube2 corners in local space
-		glm::vec3 cube2TopRightFrontCorner = collider2.halfSize;
-		glm::vec3 cube2TopRightBackCorner = glm::vec3(collider2.halfSize.x, collider2.halfSize.y, -collider2.halfSize.z);
 
-		glm::vec3 cube2BottomRightFrontCorner = glm::vec3(collider2.halfSize.x, -collider2.halfSize.y, collider2.halfSize.z);
-		glm::vec3 cube2BottomRightBackCorner = glm::vec3(collider2.halfSize.x, -collider2.halfSize.y, -collider2.halfSize.z);
-
-		glm::vec3 cube2TopLeftFrontCorner = glm::vec3(-collider2.halfSize.x, collider2.halfSize.y, collider2.halfSize.z);
-		glm::vec3 cube2TopLeftBackCorner = glm::vec3(-collider2.halfSize.x, collider2.halfSize.y, -collider2.halfSize.z);
-
-		glm::vec3 cube2BottomLeftFrontCorner = glm::vec3(-collider2.halfSize.x, -collider2.halfSize.y, collider2.halfSize.z);
-		glm::vec3 cube2BottomLeftBackCorner = -collider2.halfSize;
-
-		// Cube2 corners in world space (rotated and translated)
-		glm::vec3 wCube2TopRightFrontCorner = (transform2.orientation * cube2TopRightFrontCorner) + transform2.position;
-		glm::vec3 wCube2TopRightBackCorner = (transform2.orientation * cube2TopRightBackCorner) + transform2.position;
-
-		glm::vec3 wCube2BottomRightFrontCorner = (transform2.orientation * cube2BottomRightFrontCorner) + transform2.position;
-		glm::vec3 wCube2BottomRightBackCorner = (transform2.orientation * cube2BottomRightBackCorner) + transform2.position;
-
-		glm::vec3 wCube2TopLeftFrontCorner = (transform2.orientation * cube2TopLeftFrontCorner) + transform2.position;
-		glm::vec3 wCube2TopLeftBackCorner = (transform2.orientation * cube2TopLeftBackCorner) + transform2.position;
-
-		glm::vec3 wCube2BottomLeftFrontCorner = (transform2.orientation * cube2BottomLeftFrontCorner) + transform2.position;
-		glm::vec3 wCube2BottomLeftBackCorner = (transform2.orientation * cube2BottomLeftBackCorner) + transform2.position;
-
-		std::vector<glm::vec3> cube2Points = { wCube2TopRightFrontCorner, wCube2TopRightBackCorner,
-												wCube2BottomRightFrontCorner, wCube2BottomRightBackCorner,
-												wCube2TopLeftFrontCorner, wCube2TopLeftBackCorner,
-												wCube2BottomLeftFrontCorner, wCube2BottomLeftBackCorner };
+		// @TODO: Rewrite this!
 
 		bool isAxisFirstBody = false;
 		bool isAxisCrossProduct = false;
@@ -749,10 +662,10 @@ namespace Quack
 		for (int i = 0; i < axes.size(); i++)
 		{
 			const glm::vec3& axis = axes[i];
-			float c1Min = dot(cube1Points[0], axis);
+			float c1Min = dot(cube1Vertices[0], axis);
 			float c1Max = c1Min;
 
-			for (const auto& point : cube1Points)
+			for (const auto& point : cube1Vertices)
 			{
 				float p = dot(point, axis);
 
@@ -761,10 +674,10 @@ namespace Quack
 			}
 
 			// cube2
-			float c2Min = dot(cube2Points[0], axis);
+			float c2Min = dot(cube2Vertices[0], axis);
 			float c2Max = c2Min;
 
-			for (const auto& point : cube2Points)
+			for (const auto& point : cube2Vertices)
 			{
 				float p = dot(point, axis);
 
@@ -1024,6 +937,33 @@ namespace Quack
 	}
 
 
+	// Return cube vertices from half size in local space
+	std::vector<glm::vec3> GetVerticesFromSize(const glm::vec3& halfSize)
+	{
+		// i in binary is:
+		// 0000, 0001, 0010, 0011, 0100, 0101, ...
+		// the bit shift shifts the bit that we are interested in (3rd for x, 2nd for y, 1st for z) to the right (is now the fist bit)
+		// With AND operator we make sure that we get only one single bit from it
+		// x doesn't need AND mask because the third bit is the highest bit we will get
+		// z doesn't need bit shift because the bit we are interested in is already the first bit
+		// 
+		// Now to convert [0; 1] to [1; -1] we multiply by 2 and get [0; 2] and subtract it from 1 to get [1; -1]! 
+		// (if we were to substract 1 from it and not it from 1 then we would get [-1; 1] and not [1; -1])
+
+		std::vector<glm::vec3> localVertices;
+
+		for (int i = 0; i < 8; i++)
+		{
+			glm::vec3 v = { (1 - (i >> 2) * 2) * halfSize.x, (1 - (i >> 1 & 1) * 2) * halfSize.y, (1 - (i & 1) * 2) * halfSize.z };
+
+			localVertices.push_back(v);
+		}
+
+		return localVertices;
+	}
+
+
+
 	std::vector<glm::vec3> CreateFaceFromNormal(const glm::vec3& faceNormal, const glm::mat3& axes, const glm::vec3& position, const glm::vec3& halfSize, glm::vec3& faceCenter)
 	{
 		float dx = dot(faceNormal, axes[0]);
@@ -1068,4 +1008,6 @@ namespace Quack
 
 		return { topLeftVertex, bottomLeftVertex, bottomRightVertex, topRightVertex };
 	}
+
+
 }
