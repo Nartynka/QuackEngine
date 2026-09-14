@@ -90,6 +90,14 @@ namespace Quack
 		return dis(gen);
 	}
 
+	int randRange(int min, int max)
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<int> dis(min, max);
+		return dis(gen);
+	}
+
 	inline float randX()
 	{
 		return randRange(-3.5f, 3.5f);
@@ -272,6 +280,149 @@ namespace Quack
 			sphere.AddComponent<ColliderComponent>(0.5f);
 			sphere.AddComponent<RigidBodyComponent>(50.f, 0.5f, 0.f);
 			sphere.AddComponent<ShapeComponent>(new Sphere(0.5f));
+		}
+
+		else if (e.GetKeyCode() == GLFW_KEY_8)
+		{
+			scene->ClearEntities();
+			scene->SpawnFloor();
+
+			glm::vec3 halfSize = glm::vec3(0.5f);
+			glm::vec3 position = glm::vec3(0.f, 0.5f, -3.f);
+
+			{
+				position.x = -2.f;
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position);
+				entity.AddComponent<ColliderComponent>(halfSize);
+				entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 0.5f, 1.f, 1.f));
+			}
+			{
+				position.z = -6.f;
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position);
+				entity.AddComponent<ColliderComponent>(halfSize);
+				entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.5f, 1.f, 0.5f, 1.f));
+			}
+			{
+				position.x = 2.f;
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position);
+				entity.AddComponent<ColliderComponent>(halfSize);
+				entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.5f, 0.5f, 1.f, 1.f));
+			}
+			{
+				position.z = -3.f;
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position);
+				entity.AddComponent<ColliderComponent>(halfSize);
+				entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(1.f, 1.f, 0.5f, 1.f));
+			}
+
+			{
+				glm::vec3 halfSize = glm::vec3(2.f, 0.2f, 1.5f);
+				glm::vec3 position = glm::vec3(0.f, 1.5f, -4.5f);
+
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position);
+				entity.AddComponent<ColliderComponent>(halfSize);
+				entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.f, 1.f, 1.f, 1.f));
+			}
+		}
+		else if (e.GetKeyCode() == GLFW_KEY_9)
+		{
+			float gap = 0.1f;
+			glm::vec3 halfSize = glm::vec3(0.3f, 0.2f, 0.3f*3 + gap);
+			glm::vec3 axis = glm::vec3(0.f, 1.f, 0.f);
+
+			glm::vec4 colors[9] = { 
+				glm::vec4(1.f, 0.5f, 0.5f, 1.f),
+				glm::vec4(0.5f, 1.f, 0.5f, 1.f),
+				glm::vec4(0.5f, 0.5f, 1.f, 1.f),
+
+				glm::vec4(0.5f, 1.f, 1.f, 1.f),
+				glm::vec4(1.f, 0.5f, 1.f, 1.f),
+				glm::vec4(1.f, 1.f, 0.5f, 1.f),
+
+				glm::vec4(0.2f, 0.7f, 1.f, 1.f),
+				glm::vec4(1.f, 0.2f, 0.7f, 1.f),
+				glm::vec4(0.7f, 1.f, 0.2f, 1.f)
+			};
+
+
+			// jenga
+			for (int i = 0; i < 10; i++)
+			{
+				glm::vec3 position = glm::vec3(0.f, 0.22f, -4.f);
+				position.y += halfSize.y * 2 * i+gap;
+				if (i % 2)
+				{
+					{
+						position.z += -halfSize.x * 2 - gap;
+						Entity entity = scene->CreateEntity();
+						entity.AddComponent<TransformComponent>(position, 90.f, axis);
+						entity.AddComponent<ColliderComponent>(halfSize);
+						if(i>0)
+							entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+						entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), colors[randRange(0, 9)]);
+					}
+					{
+						position.z += halfSize.x * 2 + gap;
+						Entity entity = scene->CreateEntity();
+						entity.AddComponent<TransformComponent>(position, 90.f, axis);
+						entity.AddComponent<ColliderComponent>(halfSize);
+						if (i > 0)
+							entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+						entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), colors[randRange(0, 9)]);
+					}
+					{
+						position.z += halfSize.x * 2 + gap;
+						Entity entity = scene->CreateEntity();
+						entity.AddComponent<TransformComponent>(position, 90.f, axis);
+						entity.AddComponent<ColliderComponent>(halfSize);
+						if (i > 0)
+							entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+						entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), colors[randRange(0, 9)]);
+					}
+
+				}
+				else
+				{
+					{
+						position.x = -halfSize.x * 2 - gap;
+						Entity entity = scene->CreateEntity();
+						entity.AddComponent<TransformComponent>(position);
+						entity.AddComponent<ColliderComponent>(halfSize);
+						if (i > 0)
+							entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+						entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), colors[randRange(0, 9)]);
+					}
+					{
+						position.x += halfSize.x * 2 + gap;
+						Entity entity = scene->CreateEntity();
+						entity.AddComponent<TransformComponent>(position);
+						entity.AddComponent<ColliderComponent>(halfSize);
+						if (i > 0)
+							entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+						entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), colors[randRange(0, 9)]);
+					}
+					{
+						position.x = halfSize.x * 2 + gap;
+						Entity entity = scene->CreateEntity();
+						entity.AddComponent<TransformComponent>(position);
+						entity.AddComponent<ColliderComponent>(halfSize);
+						if (i > 0)
+							entity.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+						entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), colors[randRange(0, 9)]);
+					}
+
+				}
+			}
 		}
 	}
 

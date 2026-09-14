@@ -12,10 +12,10 @@
 namespace Quack
 {
 	const int SOLVER_ITERATIONS = 10;
-	const float PERSISTENT_CONTACT_THRESHOLD_SR = 1e-4f; // square root = 0.01
+	const float PERSISTENT_CONTACT_THRESHOLD_SR = 1e-6f; // square root = 0.001
 
 	const float Y_TRESHOLD = -100.f;
-	const float EPSILON = 1e-3f;
+	const float EPSILON = 1e-4f;
 
 	struct ContactManifold;
 	struct Hit;
@@ -27,7 +27,7 @@ namespace Quack
 	void SolvePositionConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float penetration, const std::vector<glm::vec3>& contactPoints);
 
 	bool CheckCollisionCubeWithCube(TransformComponent& transform1, TransformComponent& transform2, const ColliderComponent& collider1, const ColliderComponent& collider2, Hit& hit);
-	std::vector<glm::vec3> GenerateContactPoints(const Hit& hit, RigidBodyComponent& r1, RigidBodyComponent& r2);
+	std::vector<glm::vec3> GenerateContactPoints(const Hit& hit);
 
 	Face BuildFace(const glm::vec3& position, const glm::vec3& faceNormal, const glm::vec3 axes[3], int normalIndex, const glm::vec3& halfSize);
 	std::vector<glm::vec3> PolygonClipping(const Plane* sidePlanes, int planeCount, const glm::vec3& clippingNormal, const glm::vec3* faceToBeClipped);
@@ -298,7 +298,7 @@ namespace Quack
 					{
 						ContactManifold manifold(rigidBody1, rigidBody2, transform1, transform2, collisionData.normal, collisionData.penetrationDepth);
 
-						std::vector<glm::vec3> worldContactPoints = GenerateContactPoints(collisionData, rigidBody1, rigidBody2);
+						std::vector<glm::vec3> worldContactPoints = GenerateContactPoints(collisionData);
 
 						std::vector<glm::vec3> local1contactPoints;
 						std::vector<glm::vec3> local2contactPoints;
@@ -332,9 +332,9 @@ namespace Quack
 									manifold.accumulatedFrictions1[i] = oldContactPoint.accumulatedFriction1;
 									manifold.accumulatedFrictions2[i] = oldContactPoint.accumulatedFriction2;
 
-									//oldContactPoint.accumulatedImpulse = 0.f; // to prevent double-assigning
-									//oldContactPoint.accumulatedFriction1 = 0.f;
-									//oldContactPoint.accumulatedFriction2 = 0.f;
+									oldContactPoint.accumulatedImpulse = 0.f; // to prevent double-assigning
+									oldContactPoint.accumulatedFriction1 = 0.f;
+									oldContactPoint.accumulatedFriction2 = 0.f;
 									break;
 								}
 								//QUACK_LOG("To far away :( {}", glm::length2(newLocalContact1 - oldContactPoint.localPosition1));
@@ -448,7 +448,7 @@ namespace Quack
 		{
 			for (ContactManifold& manifold : contactManifolds)
 			{
-				// if both bodies are static then skip solving
+				// if both bodies are static then skip solving (should never happen)
 				if (!manifold.rigidBody1.invMass && !manifold.rigidBody2.invMass)
 					continue;
 
@@ -634,11 +634,11 @@ namespace Quack
 
 	void SolvePositionConstraint(RigidBodyComponent& rigidBody1, RigidBodyComponent& rigidBody2, TransformComponent& transform1, TransformComponent& transform2, const glm::vec3& normal, float penetration, const std::vector<glm::vec3>& contactPoints)
 	{
-		float slop = 0.001f; // allowed penetration
-		float beta = 0.1f;  // how aggressive the correction is, 1 = remove all overlap in one timestep
+		float slop = 0.002f; // allowed penetration
+		float beta = 0.2f;  // how aggressive the correction is, 1 = remove all overlap in one timestep
 	
 		// @TODO: recalculate penetration after each iteration or calculate penetration for each point manually
-		float correctionMag = glm::max(penetration * 0.5f - slop, 0.0f) * beta;
+		float correctionMag = glm::max(penetration - slop, 0.0f) * beta / contactPoints.size();
 
 		glm::mat3 R1 = glm::toMat3(transform1.orientation);
 		glm::mat3 R2 = glm::toMat3(transform2.orientation);
@@ -982,7 +982,7 @@ namespace Quack
 		return { {v1, v2, v3, v4}, faceNormal };
 	}
 
-	std::vector<glm::vec3> GenerateContactPoints(const Hit& hit, RigidBodyComponent& r1, RigidBodyComponent& r2)
+	std::vector<glm::vec3> GenerateContactPoints(const Hit& hit)
 	{
 		// After a lot of pain, suffering and floating point errors it's fixed!! \o/
 		// Well almost xD
@@ -1035,19 +1035,18 @@ namespace Quack
 			// signed distance "t" from point on a plane (refFace) to clipped polygon point
 			float distance = glm::dot(clippingNormal, p - refFace[0]);
 
-			if (distance <= 0.006f)
+			if (distance <= 0.005f)
 			{
 				glm::vec3 projection = p - distance * clippingNormal;
 				contactPoints.push_back(projection);
 				//Renderer::DrawPoint(projection, glm::vec3(0.f, 1.f, 1.f));
 			}
-			//else
-			//{
-			//	QUACK_LOG("Point above ref face: {}", distance);
-			//}
+			else
+			{
+				//QUACK_LOG("Point above ref face: {}", distance);
+			}
 		}
 
-		Renderer::DrawPolygon(contactPoints.size(), contactPoints.data(), glm::vec3(0.f, 1.f, 1.f));
 		//Renderer::DrawPolygon(clippedPolygon.size(), clippedPolygon.data(), glm::vec3(1.f, 1.f, 1.f));
 
 		// There shouldn't be a situation where there are no contact points
@@ -1059,18 +1058,20 @@ namespace Quack
 			QUACK_ERROR("Contact points empty!! Number of points after clipping: {}", clippedPolygon.size());
 		}
 
-		if (contactPoints.size() > 4)
-		{
-			QUACK_WARN("More than 4 contact points!!!! {}", contactPoints.size());
-			// @TODO: remove this xD
-			//contactPoints.erase(contactPoints.begin()+4, contactPoints.end());
-			contactPoints.erase(contactPoints.end()-1);
-		}
-
 		//if (contactPoints.size() < 4)
 		//{
 		//	QUACK_WARN("Less than 4 contact points!! {} Number of points after clipping: {}", contactPoints.size(), clippedPolygon.size());
 		//}
+
+		if (contactPoints.size() > 4)
+		{
+			//QUACK_WARN("More than 4 contact points!!!! {}", contactPoints.size());
+			// @TODO: remove this xD
+			//contactPoints.erase(contactPoints.begin()+4, contactPoints.end());
+			//contactPoints.erase(contactPoints.end()-1);
+		}
+
+		Renderer::DrawPolygon(contactPoints.size(), contactPoints.data(), glm::vec3(0.f, 1.f, 1.f));
 
 		return contactPoints;
 	}
@@ -1102,7 +1103,7 @@ namespace Quack
 		glm::vec3 A = edgeCenter - edgeDir * halfSize[index];
 		glm::vec3 B = edgeCenter + edgeDir * halfSize[index];
 
-		Renderer::DrawPoint(edgeCenter, glm::vec3(1.f, 0.f, 0.f));
+		//Renderer::DrawPoint(edgeCenter, glm::vec3(1.f, 0.f, 0.f));
 		Renderer::DrawLine(A, B, glm::vec3(1.f, 1.f, 0.f));
 
 		return { A, B };
@@ -1157,11 +1158,11 @@ namespace Quack
 		//if (glm::epsilonNotEqual(x, 0.f, 0.00001f) || glm::epsilonNotEqual(y, 0.f, 0.00001f))
 		//	QUACK_LOG("{}, {}", x, y);
 
-		Renderer::DrawLine(L1, L2, glm::vec3(1.f, 0.f, 1.f));
+		//Renderer::DrawLine(L1, L2, glm::vec3(1.f, 0.f, 1.f));
 
 		glm::vec3 point = (L1+L2) * 0.5f;
 
-		Renderer::DrawPoint(point, glm::vec3(0.f, 1.f, 1.f));
+		//Renderer::DrawPoint(point, glm::vec3(0.f, 1.f, 1.f));
 
 		return point;
 	}
@@ -1224,49 +1225,6 @@ namespace Quack
 					// onPlane-onPlane
 					newClippedPolygon.push_back(v2);
 				}
-
-				/*
-				if (d1 > 0.f)
-				{
-					// Both outside (keep nothing)
-					if (d2 > 0.f) {}
-
-					// Outside inside (keep intersection & v2)
-					else
-					{
-						//QUACK_LOG("Outside-inside, keeping v2 & new intersection point {} {}", i, j);
-						glm::vec3 intersection = CreateIntersectionPoint(v1, v2, sidePlanes[i]);
-
-						//if(intersection-v1)
-
-						newClippedPolygon.push_back(intersection);
-						newClippedPolygon.push_back(v2);
-					}
-				}
-				else
-				{
-					// inside outside (keep only intersection)
-					if (d2 > 0.f)
-					{
-						//QUACK_LOG("Inside-outside, keeping only intersection");
-
-						float denom = glm::dot(normal, (v2 - v1));
-
-						if(glm::abs(denom) < EPSILON)
-							continue;
-
-						glm::vec3 intersection = CreateIntersectionPoint(v1, v2, sidePlanes[i]);
-						
-						newClippedPolygon.push_back(intersection);
-					}
-					// inside inside (keep v2)
-					else
-					{
-						//QUACK_LOG("Inside-inside, keeping v2 {} {}", i, j);
-						newClippedPolygon.push_back(v2);
-					}
-				}
-				*/
 			}
 
 			polygonToBeClipped = newClippedPolygon;
@@ -1293,7 +1251,7 @@ namespace Quack
 				// sqrt(0.0001) = 0.01f
 				// sqrt(0.00001) = 0.0031f
 				// sqrt(0.000001) = 0.001f
-				if (glm::length2(point - uniquePoint) < 1e-6f)
+				if (glm::length2(point - uniquePoint) < 1e-4f)
 				{
 					isDuplicate = true;
 					break;
@@ -1336,6 +1294,7 @@ namespace Quack
 
 		// If the point lays on the / close to plane then return the point as an intersection
 		// which will be discarded when removing duplicates
+		// This never should happen
 		if (glm::abs(num) < EPSILON || glm::abs(denom) < EPSILON)
 			return v1;
 
