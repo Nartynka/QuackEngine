@@ -35,6 +35,8 @@
 
 namespace Quack
 {
+	void MathPrimer(const std::shared_ptr<Scene> scene);
+
 	Engine::Engine()
 	{
 		Log::Init();
@@ -288,6 +290,7 @@ namespace Quack
 
 		scene->SpawnFloorScene();
 
+
 		LightCube lightCube;
 		lightCube.position = glm::vec3(-1.f, 4.5f, 2.f);
 		shader.SetUniform3f("lightColor", 1.f, 1.f, 1.f);
@@ -321,6 +324,8 @@ namespace Quack
 				Renderer::linesShader->SetUniform4fm("projection", glm::value_ptr(projection));
 				
 				//Renderer::DrawDebug();
+
+				//MathPrimer(scene);
 
 				shader.Bind();
 				shader.SetUniform4fm("view", glm::value_ptr(view));
