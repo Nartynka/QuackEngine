@@ -178,24 +178,98 @@ namespace Quack
 
 		if (e.GetKeyCode() == GLFW_KEY_6) 
 		{
-			//glm::vec3 halfSize = glm::vec3(0.1f, 0.1f, 1.f);
-			//glm::vec3 position = glm::vec3(-1.f, 2.f, -5.f);
-			//Entity entity = scene->CreateEntity();
-			//entity.AddComponent<TransformComponent>(position);
-			//entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
-			//entity.AddComponent<ColliderComponent>(halfSize);
-			//entity.AddComponent<ShapeComponent>(new NormalCube(halfSize), glm::vec4(0.1f, 0.5f, 0.7f, 1.f));
+			scene->ClearEntities();
+
+			glm::vec3 halfSize = glm::vec3(0.5f);
+			glm::vec3 position = glm::vec3(0.f, 0.f, -5.f);
+			
+			
+			{
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position, 30.f, glm::vec3(1.f, 0.f, 0.f));
+				entity.AddComponent<ColliderComponent>(halfSize);
+				//entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize));
+
+				position.y = 5.f;
+				Entity entity2 = scene->CreateEntity();
+				entity2.AddComponent<TransformComponent>(position, 30.f, glm::vec3(0.f, 0.f, 1.f));
+				entity2.AddComponent<ColliderComponent>(halfSize);
+				entity2.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity2.AddComponent<ShapeComponent>(new NormalCube(halfSize));
+			}
+			
+			{
+				position.x = -4.f;
+				position.y = 0.f;
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position, 45.f, glm::vec3(0.f, 0.f, 1.f));
+				entity.AddComponent<ColliderComponent>(halfSize);
+				//auto& r = entity.AddComponent<RigidBodyComponent>(1000.f, halfSize, 0.f);
+				//r.gravity = glm::vec3(0.f);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize));
+
+				position.y = 5.f;
+				Entity entity2 = scene->CreateEntity();
+				entity2.AddComponent<TransformComponent>(position, 45.f, glm::vec3(1.f, 0.f, 0.f));
+				entity2.AddComponent<ColliderComponent>(halfSize);
+				entity2.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity2.AddComponent<ShapeComponent>(new NormalCube(halfSize));
+			}
+			{
+				position.x = 4.f;
+				position.y = 0.f;
+				Entity entity = scene->CreateEntity();
+				entity.AddComponent<TransformComponent>(position, 90.f, glm::vec3(0.333333f, 0.f, 0.5f));
+				entity.AddComponent<ColliderComponent>(halfSize);
+				//entity.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				entity.AddComponent<ShapeComponent>(new NormalCube(halfSize));
+
+				position.y = 5.f;
+				position.x = 3.8f;
+				position.z = -4.5f;
+				Entity entity2 = scene->CreateEntity();
+				entity2.AddComponent<TransformComponent>(position, 45.f, glm::vec3(1.f, 0.44f, 0.f));
+				entity2.AddComponent<ColliderComponent>(halfSize);
+				entity2.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
+				entity2.AddComponent<ShapeComponent>(new NormalCube(halfSize));
+			}
 		}
 		else if (e.GetKeyCode() == GLFW_KEY_7)
 		{
+			scene->ClearEntities();
+			scene->SpawnFloor();
 
-			glm::vec3 array[] = { 
-				{-1.f, 0.f, 1.f,}, 
-				{1.f, 0.f, 1.f}, 
-				{1.f, 0.f, -1.f }
-			};
+			glm::vec3 halfSize1 = glm::vec3(0.6f, 0.6f, 2.f);
+			glm::vec3 halfSize2 = glm::vec3(0.5f, 0.1f, 3.f);
+			glm::vec4 cubeColor = glm::vec4(0.1f, 0.5f, 0.7f, 1.f);
 
-			Renderer::DrawPolygon(3, array);
+			glm::vec3 position = glm::vec3(-0.5f, 0.f, -5.f);
+			glm::vec3 position2 = glm::vec3(position.x, position.y + halfSize2.y * 2 + halfSize1.y+0.1f, position.z);
+
+			Entity entity = scene->CreateEntity();
+			entity.AddComponent<TransformComponent>(position, 45.f, glm::vec3(0.f,0.f,1.f));
+			//entity.AddComponent<RigidBodyComponent>(1.f, halfSize1);
+			entity.AddComponent<ColliderComponent>(halfSize1);
+			entity.AddComponent<ShapeComponent>(new NormalCube(halfSize1), cubeColor);
+
+			Entity side = scene->CreateEntity();
+			side.AddComponent<TransformComponent>(position2, 90.f, glm::vec3(0.f, 1.f, 0.f));
+			side.AddComponent<RigidBodyComponent>(0.5f, halfSize2, 0.f, 1.f);
+			side.AddComponent<ColliderComponent>(halfSize2);
+			side.AddComponent<ShapeComponent>(new NormalCube(halfSize2), cubeColor);
+
+			Entity cube = scene->CreateEntity();
+			cube.AddComponent<TransformComponent>(glm::vec3(position.x+2.5f, position2.y + 0.26f, position2.z ));
+			cube.AddComponent<ColliderComponent>(glm::vec3(0.25f));
+			cube.AddComponent<RigidBodyComponent>(0.01f, glm::vec3(0.25f), 0.f, 1.f);
+			cube.AddComponent<ShapeComponent>(new NormalCube(glm::vec3(0.25f)));
+
+			Entity sphere = scene->CreateEntity();
+			sphere.AddComponent<TransformComponent>(glm::vec3(position.x - 2.5f, position2.y + 15.f, position2.z));
+			sphere.AddComponent<ColliderComponent>(0.5f);
+			sphere.AddComponent<RigidBodyComponent>(50.f, 0.5f, 0.f);
+			sphere.AddComponent<ShapeComponent>(new Sphere(0.5f));
 		}
 	}
 
@@ -266,7 +340,7 @@ namespace Quack
 				}
 
 				// Render entities
-				if(!scene->isWireframeMode)
+				if (!scene->isWireframeMode)
 					RenderShapes(scene, shader);
 				RenderModels(scene, shader);
 				RenderCollisionShapes(scene);

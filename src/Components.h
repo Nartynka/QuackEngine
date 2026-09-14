@@ -25,20 +25,19 @@ namespace Quack
 
 		float invMass;
 		float bounce; // coefficient of restitution, how much energy is kept when entity collides with something
+		float frictionCoef;
 
 		glm::vec3 gravity = glm::vec3(0.0f, -9.81f, 0.0f);
-		float damping;
-
-		float frictionCoef;
+		float damping = 0.98f;
 
 
 		RigidBodyComponent()
-			: invMass(0.f), invInertiaTensor(glm::mat3(0.f)), bounce(0.f), damping(0.98f), frictionCoef(0.8f)
+			: invMass(0.f), invInertiaTensor(glm::mat3(0.f)), bounce(0.f), frictionCoef(0.6f)
 		{
 		}
 
-		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.f, float damping = 0.98f, float frictionCoef = 0.8f)
-			: invMass(1.f / mass), bounce(bounce), damping(damping), frictionCoef(frictionCoef)
+		RigidBodyComponent(float mass, glm::vec3 halfSize, float bounce = 0.5f, float frictionCoef = 0.6f)
+			: invMass(1.f / mass), bounce(bounce), frictionCoef(frictionCoef)
 		{
 			// I_xx = 1/12 * m * (h^2 + d^2)	
 			// I_yy = 1/12 * m * (w^2 + d^2)
@@ -49,8 +48,8 @@ namespace Quack
 			invInertiaTensor[2][2] = 1.f / (1.f / 12.f * mass * (halfSize.x * halfSize.x + halfSize.y * halfSize.y));
 		}
 
-		RigidBodyComponent(float mass, float radius, float bounce = 0.3f, float damping = 0.98f, float frictionCoef = 0.8f)
-			: invMass(1.f / mass), bounce(bounce), damping(damping), frictionCoef(frictionCoef)
+		RigidBodyComponent(float mass, float radius, float bounce = 0.5f, float frictionCoef = 0.6f)
+			: invMass(1.f / mass), bounce(bounce), frictionCoef(frictionCoef)
 		{
 			// I_diag = 2/5mr^2
 			float invInertia = 1.f / (2.f / 5.f * mass * radius * radius);
@@ -72,6 +71,7 @@ namespace Quack
 		glm::vec3 halfSize;
 		float radius;
 		std::unique_ptr<Shape> shape; // Only for debug
+		mutable glm::vec3 shapeColor = glm::vec3(0.f, 0.5f, 1.f); // Only for debug
 		ColliderType type;
 
 		ColliderComponent(glm::vec3 halfSize)
@@ -105,6 +105,8 @@ namespace Quack
 			orientation.y = rotationAxis.y * sin(angle);
 			orientation.z = rotationAxis.z * sin(angle);
 			orientation.w = cos(angle);
+
+			orientation = glm::normalize(orientation);
 		}
 	};
 

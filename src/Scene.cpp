@@ -149,7 +149,7 @@ namespace Quack
 		glm::vec4 cubeColor = glm::vec4(0.1f, 0.5f, 0.7f, 1.f);
 
 		glm::vec3 frontPosition = glm::vec3(-1.f, halfSize.y, -5.f);
-		glm::vec3 sidePosition = glm::vec3(frontPosition.x + halfSize.z * 0.5f, frontPosition.y + halfSize.y * 2, frontPosition.z + halfSize.z * 0.5f);
+		glm::vec3 sidePosition = glm::vec3(frontPosition.x + halfSize.z * 0.5f, frontPosition.y + halfSize.y * 2 + 0.2f, frontPosition.z + halfSize.z * 0.5f);
 		int sign = 1;
 
 		for (int i = 0; i < 4; i++)
@@ -158,7 +158,7 @@ namespace Quack
 			{
 				Entity front = CreateEntity();
 				front.AddComponent<TransformComponent>(frontPosition);
-				auto& r = front.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				auto& r = front.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
 				//r.gravity = glm::vec3(0.f);
 				front.AddComponent<ColliderComponent>(halfSize);
 				front.AddComponent<ShapeComponent>(new NormalCube(halfSize), cubeColor);
@@ -167,14 +167,14 @@ namespace Quack
 
 				Entity side = CreateEntity();
 				side.AddComponent<TransformComponent>(sidePosition, 90.f, glm::vec3(0.f, 1.f, 0.f));
-				auto& r2 = side.AddComponent<RigidBodyComponent>(1.f, halfSize);
+				auto& r2 = side.AddComponent<RigidBodyComponent>(1.f, halfSize, 0.f);
 				//r2.gravity = glm::vec3(0.f);
 				side.AddComponent<ColliderComponent>(halfSize);
 				side.AddComponent<ShapeComponent>(new NormalCube(halfSize), cubeColor);
 				sidePosition.z = frontPosition.z + halfSize.z * 0.5f * sign;
 			}
-			frontPosition.y += halfSize.y * 4;
-			sidePosition.y += halfSize.y * 4;
+			frontPosition.y += halfSize.y * 4 + 0.3f;
+			sidePosition.y += halfSize.y * 4 + 0.3f;
 		}
 	}
 
@@ -203,7 +203,7 @@ namespace Quack
 					glm::vec3 position = glm::vec3(center.x + x * spacing - offset, center.y + y * spacing, center.z + z * spacing - offset);
 
 					entity.AddComponent<TransformComponent>(position);
-					entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f));
+					entity.AddComponent<RigidBodyComponent>(1.f, glm::vec3(0.5f), 0.f);
 					entity.AddComponent<ColliderComponent>(glm::vec3(0.5f));
 					entity.AddComponent<ShapeComponent>(new NormalCube(glm::vec3(0.5f)), cubeColor);
 				}

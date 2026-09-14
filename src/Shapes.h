@@ -111,12 +111,12 @@ namespace Quack
 				-halfSize.x, -halfSize.y,  halfSize.z,  -1.0f, 0.0f, 0.0f,
 				-halfSize.x,  halfSize.y,  halfSize.z,  -1.0f, 0.0f, 0.0f,
 
-				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 0.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  1.0f, 0.0f, 0.0f,
 				 halfSize.x,  halfSize.y, -halfSize.z,  1.0f, 0.0f, 0.0f,
 				 halfSize.x, -halfSize.y, -halfSize.z,  1.0f, 0.0f, 0.0f,
 				 halfSize.x, -halfSize.y, -halfSize.z,  1.0f, 0.0f, 0.0f,
 				 halfSize.x, -halfSize.y,  halfSize.z,  1.0f, 0.0f, 0.0f,
-				 halfSize.x,  halfSize.y,  halfSize.z,  0.0f, 0.0f, 0.0f,
+				 halfSize.x,  halfSize.y,  halfSize.z,  1.0f, 0.0f, 0.0f,
 
 				-halfSize.x, -halfSize.y, -halfSize.z,  0.0f, -1.0f, 0.0f,
 				 halfSize.x, -halfSize.y, -halfSize.z,  0.0f, -1.0f, 0.0f,
@@ -284,6 +284,57 @@ namespace Quack
 					indices.push_back(startIndex + i);
 					indices.push_back(startIndex + i + 1);
 				}
+			}
+
+			SetupBuffers(false);
+		}
+	};
+
+	class Polygon : public Shape
+	{
+	public:
+		Polygon(int verticesCount)
+		{
+			switch (verticesCount)
+			{
+			case 3: // triangle
+				vertices = {
+					-1.f, 0.f,  1.f, // 0: bottom-left
+					 1.f, 0.f,  1.f, // 1: bottom-right
+					 1.f, 0.f, -1.f, // 2: top-right
+				};
+
+				indices = {
+					0, 1,  1, 2,  2, 0
+				};
+				break;
+			case 4: // quad
+				vertices = {
+					-1.f, 0.f,  1.f, // 0: bottom-left
+					 1.f, 0.f,  1.f, // 1: bottom-right
+					 1.f, 0.f, -1.f, // 2: top-right
+					-1.f, 0.f, -1.f, // 3: top-left
+				};
+
+				indices = {
+					0, 1,  1, 2,  2, 3,  3, 0
+				};
+				break;
+			case 5: // pentagon
+				vertices = {
+					-0.7f,  0.f,  1.f,  // 0: bottom-left
+					 0.7f,  0.f,  1.f,  // 1: bottom-right
+					 1.2f, 0.f,  -0.1f,  // 2: top-right
+					 0.f,  0.f, -1.f,  // 3: top-center
+					-1.2f, 0.f,  -0.1f,  // 4: top-left
+				};
+
+				indices = {
+					0, 1,  1, 2,  2, 3,  3, 4,  4, 0
+				};
+				break;
+			default:
+				break;
 			}
 
 			SetupBuffers(false);

@@ -70,7 +70,7 @@ namespace Quack
 			trans[1] = normalize(transform.transform[1]);
 			trans[2] = normalize(transform.transform[2]);
 
-			Renderer::DrawOutline(*collision.shape->vao, *collision.shape->ibo, trans, glm::vec3(0.f, 0.5f, 1.f));
+			Renderer::DrawOutline(*collision.shape->vao, *collision.shape->ibo, trans, collision.shapeColor);
 		}
 	}
 

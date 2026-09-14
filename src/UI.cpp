@@ -77,7 +77,7 @@ namespace Quack
 			ImGui::DragInt3("Size", size, 1.f, 1, INT_MAX, "%d", ImGuiSliderFlags_AlwaysClamp);
 			
 			static float pos[3] = { 0.f, 6.f, -4.f };
-			ImGui::DragFloat3("Position", pos);
+			ImGui::DragFloat3("Position##1", pos);
 
 			float buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
 			if (ImGui::Button("Boxes", ImVec2(buttonWidth, 0.0f)))
@@ -109,7 +109,7 @@ namespace Quack
 			ImGui::SeparatorText("Shape type:");
 
 			const char* shapeType[] = { "Sphere", "Cube" };
-			static int shapeIdx = 0;
+			static int shapeIdx = 1;
 
 			RenderCombo("Shape", shapeType, IM_ARRAYSIZE(shapeType), shapeIdx);
 
@@ -133,7 +133,7 @@ namespace Quack
 			RenderCombo("Entity type", entityType, IM_ARRAYSIZE(entityType), entityTypeIdx);
 
 			// Values for physics component
-			static float mass = 1.f, bounce = 0.7f, friction = 0.98f, velocity[3];
+			static float mass = 1.f, bounce = 0.5f, friction = 0.6f, velocity[3];
 			static bool bShowAdvanced, bGravity = true;
 
 			if (entityTypeIdx == 0) // Rigid Body
@@ -157,7 +157,7 @@ namespace Quack
 			ImGui::SeparatorText("World orientation:");
 
 			static float position[3] = { 0.f, 5.f, -5.f };
-			ImGui::DragFloat3("##Position", position, 0.1f, 0.f, 0.f, "%.2f");
+			ImGui::DragFloat3("Position##2", position, 0.1f, 0.f, 0.f, "%.2f");
 
 			static float angle, axis[3];
 			ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 0.0f, "%.2f");

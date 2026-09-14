@@ -105,6 +105,21 @@ namespace Quack
 		glLineWidth(1.0f);
 	}
 
+	void Renderer::DrawAxes(glm::vec3 x, glm::vec3 y, glm::vec3 z, glm::vec3 start /*= glm::vec3(0.f)*/)
+	{
+		DrawLine(start, start + x, glm::vec3(1.f, 0.f, 0.f));
+		DrawLine(start, start + y, glm::vec3(0.f, 1.f, 0.f));
+		DrawLine(start, start + z, glm::vec3(0.f, 0.f, 1.f));
+	}
+
+	void Renderer::DrawPolygon(unsigned int lineCount, const glm::vec3* lineArray, glm::vec3 color /*= glm::vec3(0.f, 1.f, 0.f)*/)
+	{
+		for (int i = 0; i < lineCount; i++)
+		{
+			DrawLine(lineArray[i], lineArray[(i + 1) % lineCount], color);
+		}
+	}
+
 	//static std::vector<glm::vec3> points;
 
 	//void Renderer::DrawDebug()
